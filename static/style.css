@@ -1,0 +1,134 @@
+html {
+    color: black;
+    font-size: 18px;
+    background-color: cadetblue;
+}
+
+body {
+    width: 85%;
+    height: 100%;
+    padding: 0em 1em;
+    margin: 0em auto;
+    background-color: whitesmoke;
+}
+
+a {
+    color: rgb(158, 12, 243);
+    text-decoration: none;
+}
+a:hover {
+    color: coral;
+    font-weight: bold;
+}
+
+table {
+    margin-top: 1em;
+}
+
+td {
+    text-align: center;
+    padding: 0em 1em;
+}
+
+.photoFlex ~ table td {
+    padding: 0em;
+}
+
+a img {
+    max-width: 2em;
+}
+
+img {
+    max-width: 40%;
+}
+
+nav {
+    background-color: cornsilk;
+    border-bottom: 1px solid black;
+    box-shadow: 0 0 3px 3px #141414;
+    position: sticky;
+    top: 1em;
+    z-index: 100;
+    margin: 0em 0em 1em 0em;
+}
+
+nav a {
+    padding: 0em 1.75em;
+    margin-top: 1em;
+    text-decoration: none;
+    color: black;
+    font-size: 1.5vw;
+    
+}
+
+nav a:link {
+    color: black;
+} 
+
+
+nav a:hover {
+    color: #33333b;
+    text-shadow: black 1px 0px;
+    font-weight: normal;
+}
+
+nav + section {
+    margin-top: 3em;
+    border-bottom: 1px solid black;
+}
+
+.photoFlex {
+    display:flex;
+}
+
+.photoFlex img {
+    max-width: 500px;
+    max-height: 130px;
+    margin: auto auto;
+}
+
+.buttons {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+}
+
+.buttons a {
+    margin-left: 2em;
+}
+
+.buttons b {
+    margin-right: 55% ;
+}
+
+.button {
+    font-weight: bold;
+    padding: 0.25em 0.25em;
+    border: 1px solid black;
+    color: blue;
+}
+
+.icon {
+    max-width: 50px;
+}
+
+form {
+    padding: 1.25em;
+    border: 1px solid black;
+    width: 60%;
+    margin: 0em auto;
+    font-size: 1.5em;
+}
+
+footer {
+    border-top-left-radius: 2em;
+    border-top-right-radius: 2em;
+    margin-top: 3em;
+    padding: 1em 2em;
+    background-color: rgb(46, 13, 70);
+    color: ivory;
+}
+
+table + table {
+    margin-top: 3em;
+}
