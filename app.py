@@ -51,7 +51,7 @@ def take_order():
     return render_template("take_order.html")
 
 @app.route("/take_order/<meal>", methods=["GET","POST"])
-def take_order(meal):
+def add_order(meal):
     order = []
     if request.cookies.get("order"):
         order = request.cookies.get("order")
