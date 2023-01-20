@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, session, g, request
 from database import get_db,close_db
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegisterForm, LoginForm
+#from forms import RegisterForm, LoginForm
 from functools import wraps
 
 app = Flask(__name__)
@@ -38,6 +38,29 @@ def index():
 @app.route("/home", methods=["GET","POST"])
 def home():     
     return render_template("home.html")
+
+@app.route("/waiter_menu", methods=["GET","POST"])
+def waiter_menu():     
+    return render_template("waiter_menu.html")
+
+@app.route("/take_order", methods=["GET","POST"])
+def take_order():   
+    if request.cookies.get("order"):
+        order = request.cookies.get("order")
+        return render_template("take_order.html", order=order)
+    return render_template("take_order.html")
+
+@app.route("/take_order/<meal>", methods=["GET","POST"])
+def take_order(meal):
+    order = []
+    if request.cookies.get("order"):
+        order = request.cookies.get("order")
+    order.append(str(meal))
+    
+    response = make_response(render_template("take_order.html", order=order))
+    response.set_cookie('order', order, max_age=(60*60*24))
+    return response
+
 
 """
 

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <title>Order</title>
+{% endblock %}
+
+{% block main_content %}
+<h1>Order</h1>
+<section>
+    <h2>Current Order</h2>
+    {% if order %}
+    <ul>
+        {% for meal in order %}
+            <li>{{ meal }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</section>
+<section>
+    <ul>
+        <li>
+            <a href="{{ url_for('take_order') }}">Burger and chips</a>
+        </li>
+        
+    </ul>
+</section>
+{% endblock %} 
