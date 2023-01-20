@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css' ) }}" />
+    {% block title %}
+    {% endblock %}
+</head>
+
+<body>
+    <nav>
+        <a href="{{ url_for('home') }}">Home</a>
+    </nav>
+    <section>
+        {% if g.user %}
+            <p class="buttons">
+                <a class="button" href="{{ url_for('logout') }}">Log out</a>
+                <a class="button" href="{{ url_for('login') }}">Change Account</a>
+            </p>
+        {% else %}
+            <p>
+                <a class="button" href="{{ url_for('register') }}">Register</a>
+                <a class="button" href="{{ url_for('auto_login_check') }}">Login</a>
+            </p>
+        {% endif %}
+    </section>
+    {% block main_content %}
+    {% endblock %}
+</body>
+
+</html>
