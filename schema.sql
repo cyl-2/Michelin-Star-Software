@@ -2,8 +2,23 @@ DROP TABLE IF EXISTS staff;
 
 CREATE TABLE staff 
 (
-    staff_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    role TEXT NOT NULL,
+    staff_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    email TEXT NOT NULL,
+    username TEXT NOT NULL,
+    code TEXT,
+    role TEXT,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    password TEXT NOT NULL
+);
+
+DROP TABLE IF EXISTS customer;
+
+CREATE TABLE customer
+(
+    customer_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    code TEXT,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     password TEXT NOT NULL

@@ -1,8 +1,9 @@
-from flask import Flask, render_template, redirect, url_for, session, g, request, make_response
+from flask import Flask, render_template, redirect, url_for, session, g, request, make_response, flash
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-#from forms import RegisterForm, LoginForm
+from forms import RegistrationForm, LoginForm
 from functools import wraps
+from flask_mysqldb import MySQL 
 
 app = Flask(__name__)
 
@@ -12,6 +13,17 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
+app.config['MYSQL_USER'] = '' # someone's deets
+app.config['MYSQL_PASSWORD'] = '' # someone's deets
+app.config['MYSQL_HOST'] = 'cs1.ucc.ie'
+app.config['MYSQL_DB'] = '' # someone's deets
+app.config['MYSQL_CURSORCLASS']= 'DictCursor'
+
+mysql = MySQL(app)
+
+@app.before_request
+def logged_in():
+    g.user = session.get("username", None)
 
 def login_required(view):
     """
@@ -24,6 +36,15 @@ def login_required(view):
         return view(**kwargs)
     return wrapped_view
 
+def manager_only(view):
+    @wraps(view)
+    def wrapped_view(**kwargs):
+        if g.user != "manager":
+            return redirect(url_for("home"))
+        return view(**kwargs)
+    return wrapped_view
+
+
 @app.route("/", methods=["GET","POST"])
 def index():
     """
@@ -35,25 +56,48 @@ def index():
 def home():     
     return render_template("home.html")
 
-"""
-
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    form = RegisterForm()
+# Register for an account
+@app.route("/registration", methods=["GET", "POST"])
+def registration():
+    cur = mysql.connection.cursor()
+    form = RegistrationForm()
     if form.validate_on_submit():
-        username = form.username.data
+        username = form.username.data.strip()
+        email = form.email.data.strip().lower()
         password = form.password.data
         first_name = form.first_name.data
-        surname = form.surname.data
-        # if username in database
-            form.username.errors.append("Username already taken")
+        last_name = form.last_name.data
+        code = "None" # this is for my 'forgot password' idea that I'd upload later
+
+        '''
+            Assuming that only customers can create new accounts
+            New staff accounts will be created by the manager and then credentials will
+            be provided to the staff member
+        '''
+
+        cur.execute("SELECT * FROM customer WHERE email = %s", (email,))
+        r1 = cur.fetchone()
+
+        cur.execute("SELECT * FROM customer WHERE username = %s", (username,))
+        r2 = cur.fetchone()
+
+        if r1 is not None:
+            form.email.errors.append("Sorry, the email you entered already exists, please use another email.")
+        elif r2 is not None:
+            form.username.errors.append("Sorry, the username you entered already exists, please create a new username.")
+        elif password.isupper() or password.isdigit() or password.islower() or password.isalpha():
+            form.password.errors.append("Create a STRONG password with one uppercase character, one lowercase character and one number")
         else:
-            # add user to database
+            cur.execute("""INSERT INTO customer (username, email, first_name, last_name, password, code)
+                        VALUES (%s,%s,%s,%s,%s,%s);""", (username, email, first_name, last_name, generate_password_hash(password), code))
+            mysql.connection.commit()
+            flash("Successful Registration! Please login now")
+            return redirect( url_for("login"))
 
             response = make_response(redirect("auto_login_check"))
             response.set_cookie("username",username,max_age=(60*60*24))
             return response
-    return render_template("register.html",form=form)
+    return render_template("registration.html", form=form, title="Registration")
 
 
 @app.route("/login", methods=["GET","POST"])
@@ -62,7 +106,9 @@ def login():
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
+
         user = db.execute("SELECT password FROM login WHERE username = ?",(username,)).fetchone()
+        
         if user is not None:
             if not check_password_hash(user["password"],password ):
                 form.password.errors.append("Incorrect password")
@@ -107,4 +153,3 @@ def logout():
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template("error.html"),404
-"""
