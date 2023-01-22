@@ -35,4 +35,7 @@ class EmployeeForm(FlaskForm):
     last_name = StringField("Last name: ", default="", validators=[InputRequired()])
     email = StringField("Email: ", default="", validators=[InputRequired()])
     role = StringField("Role: ", default="", validators=[InputRequired()])
+    access_level = SelectField("Choose an option", 
+                                        choices = [("managerial", "Managerial"),
+                                                    ("ordinary staff", "Ordinary staff")], validators=[InputRequired()])
     submit = SubmitField("Create")

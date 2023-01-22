@@ -29,6 +29,12 @@
             {{ error }}
         {% endfor %}
         <br>
+        {{ form.access_level.label }}
+        {{ form.access_level(class="text") }}
+        {% for error in form.access_level.errors %}
+            {{ error }}
+        {% endfor %}
+        <br>
         {{ form.submit(class="submit") }}
     </form>
 

@@ -27,10 +27,10 @@ app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
-app.config['MYSQL_USER'] = '' # someone's deets
+app.config['MYSQL_USER'] = 'root' # someone's deets
 app.config['MYSQL_PASSWORD'] = '' # someone's deets
-app.config['MYSQL_HOST'] = 'cs1.ucc.ie'
-app.config['MYSQL_DB'] = '' # someone's deets
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_DB'] = 'world' # someone's deets
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
@@ -245,12 +245,13 @@ def add_new_employee():
     if form.validate_on_submit():
         role = form.role.data
         email = form.email.data
+        access_level = form.access_level.data
         first_name = form.first_name.data
         last_name = form.last_name.data
         password = get_random_password()
         
-        cur.execute("""INSERT INTO staff (email, role, first_name, last_name, password)
-                            VALUES (%s,%s,%s,%s,%s);""", (email, role, first_name, last_name, generate_password_hash(password)))
+        cur.execute("""INSERT INTO staff (email, role, access_level, first_name, last_name, password)
+                            VALUES (%s,%s,%s,%s,%s,%s);""", (email, role, access_level, first_name, last_name, generate_password_hash(password)))
         mysql.connection.commit()
         
         # Notify employee's email about their new account
@@ -304,3 +305,13 @@ def reply_email(id):
         mail.send(msg)
         flash("Message sent successfully.")
     return render_template("manager/reply_email.html",form=form, title="Reply", query=query)
+
+
+
+
+
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
