@@ -12,20 +12,19 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField("Submit")
 
 class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[InputRequired("Email doesn't exist")])
+    email = StringField('Email Address', validators=[InputRequired("Email doesn't exist")])
     password = PasswordField("Password", validators=[InputRequired()])
-    confirm = PasswordField("Confirm password", validators=[InputRequired("Password doesn't match"), EqualTo("password")])
     submit = SubmitField("Login")
 
 class ContactForm(FlaskForm):
-    email = StringField(validators=[InputRequired()])
+    email = StringField("Email Address", [validators.Length(min=6, max=100)])
     name = StringField(validators=[InputRequired()])
     subject = StringField(validators=[InputRequired()])
     message = TextAreaField(validators=[InputRequired()], widget=TextArea())
     submit = SubmitField("Send message")
 
 class ReplyForm(FlaskForm):
-    email = StringField(validators=[InputRequired()])
+    email = StringField("Email Address", [validators.Length(min=6, max=100)])
     subject = StringField(validators=[InputRequired()])
     message = TextAreaField(validators=[InputRequired()], widget=TextArea())
     submit = SubmitField("Send message")
@@ -33,7 +32,7 @@ class ReplyForm(FlaskForm):
 class EmployeeForm(FlaskForm):
     first_name = StringField("First name: ", default="", validators=[InputRequired()])
     last_name = StringField("Last name: ", default="", validators=[InputRequired()])
-    email = StringField("Email: ", default="", validators=[InputRequired()])
+    email = StringField("Email Address", [validators.Length(min=6, max=100)])
     role = StringField("Role: ", default="", validators=[InputRequired()])
     access_level = SelectField("Choose an option", 
                                         choices = [("managerial", "Managerial"),

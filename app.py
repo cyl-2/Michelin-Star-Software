@@ -37,52 +37,68 @@ mysql = MySQL(app)
 
 @app.before_request
 def logged_in():
-    g.user = session.get("email", None)
+    g.user = session.get("username", None)
+    g.access = session.get("access_level", None)
 
 def login_required(view):
-    """
-    if login needed, auto login if possible
-    """
     @wraps(view)
     def wrapped_view(**kwargs):
-        if g.user == None:
-            return redirect(url_for("auto_login_check",next=request.url))
+        if g.user is None:
+            return redirect(url_for("customer_login")) #,next=request.url))
+        return view(**kwargs)
+    return wrapped_view
+
+def staff_only(view):
+    @wraps(view)
+    def wrapped_view(**kwargs):
+        if g.access != "ordinary staff":
+            return redirect(url_for("index")) #,next=request.url))
         return view(**kwargs)
     return wrapped_view
 
 def manager_only(view):
     @wraps(view)
     def wrapped_view(**kwargs):
-        g.user = session.get("role", None)
-        if g.user != "Manager":
-            return redirect(url_for("home"))
+        if g.access != "managerial":
+            return redirect(url_for("index"))
         return view(**kwargs)
     return wrapped_view
 
 
-@app.route("/auto_login_check", methods=["GET","POST"])
-def auto_login_check():
+@app.route("/auto_login_check_customer", methods=["GET","POST"])
+def auto_login_check_customer():
     if request.cookies.get("email"):
         session.clear()
-        session["email"] = request.cookies.get("email")
+        session["username"] = request.cookies.get("email")
         next_page = request.args.get("next")
         if not next_page:
-            return redirect("home")
+            return redirect("index")
         else:
             return redirect( next_page )
-    return redirect( "login" )
+    return redirect( "customer_login" )
 
+@app.route("/auto_login_check_staff", methods=["GET","POST"])
+def auto_login_check_staff():
+    if request.cookies.get("email"):
+        session.clear()
+        session["username"] = request.cookies.get("email")
+        next_page = request.args.get("next")
+        if not next_page:
+            return redirect("index")
+        else:
+            return redirect( next_page )
+    return redirect( "staff_login" )
 
 @app.route("/delete_cookie/<cookie>",methods=["GET","POST"])
 def delete_cookie(cookie):
-    response = redirect(url_for('home'))
+    response = redirect(url_for('index'))
     response.set_cookie(cookie, '', expires=0)
     return response
 
 @app.route("/logout", methods=["GET","POST"])
 def logout():
     session.clear()
-    return redirect(url_for("home"))
+    return redirect(url_for("index"))
 
 @app.errorhandler(404)
 def page_not_found(error):
@@ -90,15 +106,8 @@ def page_not_found(error):
 
 @app.route("/", methods=["GET","POST"])
 def index():
-    """
-    start route must be "/", directs straight to home page 
-    """
-    return redirect("home")
-
-@app.route("/home", methods=["GET","POST"])
-def home():     
-    return render_template("home.html")
-
+    return render_template("home.html", title = "Home")
+    
 # Register for an account
 @app.route("/registration", methods=["GET", "POST"])
 def registration():
@@ -131,42 +140,101 @@ def registration():
             flash("Successful Registration! Please login now")
             return redirect( url_for("login"))
 
-            response = make_response(redirect("auto_login_check"))
-            response.set_cookie("email",email,max_age=(60*60*24))
-            return response
-    return render_template("accounts/registration.html", form=form, title="Registration")
+            #response = make_response(redirect("auto_login_check"))
+            #response.set_cookie("email",email,max_age=(60*60*24))
+            #return response
+    return render_template("customer/registration.html", form=form, title="Registration")
 
-# Login to account
-@app.route("/login", methods=["GET","POST"])
-def login():
+# Login to customer account
+@app.route("/customer_login", methods=["GET", "POST"])
+def customer_login():
+    cur = mysql.connection.cursor()
     form = LoginForm()
     if form.validate_on_submit():
-        username = form.username.data
+        email = form.email.data.strip()
         password = form.password.data
-        user = db.execute("SELECT password FROM login WHERE username = ?",(username,)).fetchone()
-        if user is not None:
-            if not check_password_hash(user["password"],password ):
-                form.password.errors.append("Incorrect password")
+        
+        cur.execute("SELECT * FROM customer WHERE email = %s", (email,))
+        customer = cur.fetchone()
+
+        if 'counter' not in session:
+            session['counter'] = 0
+
+        if customer is None:
+            form.email.errors.append("Email doesn't exist, please check your spelling")
+        elif not check_password_hash(customer["password"], password):
+            form.password.errors.append("Incorrect password")
+            session['counter'] = session.get('counter') + 1
+            if session.get('counter')==3:
+                flash(Markup('Oh no, are you having trouble logging in? Sucks to be you'))
+                session.pop('counter', None)
+        else:
+            session.clear()
+            session["username"] = email
+            return redirect(url_for("customer_profile"))
+            '''next_page = request.args.get("next")
+            if not next_page:
+                response = make_response( redirect( url_for('index')) )
             else:
-                session.clear()
-                session["username"] = username
-                next_page = request.args.get("next")
+                response = make_response( redirect(next_page) )
+            response.set_cookie("username",username,max_age=(60*60*24*7))
+            return response'''
+    return render_template("customer/customer_login.html", form=form, title="Login")
+
+# Login to staff account
+@app.route("/staff_login", methods=["GET", "POST"])
+def staff_login():
+    cur = mysql.connection.cursor()
+    form = LoginForm()
+    if form.validate_on_submit():
+        email = form.email.data.strip()
+        password = form.password.data
+
+        cur.execute("SELECT * FROM staff WHERE email = %s", (email,))
+        staff = cur.fetchone()
+
+        if 'counter' not in session:
+            session['counter'] = 0
+
+        if staff is None:
+            form.email.errors.append("Email doesn't exist, please check your spelling")
+        elif not check_password_hash(staff["password"], password):
+            form.password.errors.append("Incorrect password")
+            session['counter'] = session.get('counter') + 1
+            if session.get('counter')==3:
+                flash(Markup('Oh no, are you having trouble logging in? Sucks to be you'))
+                session.pop('counter', None)
+        else:
+            session.clear()
+            session["username"] = email
+            if staff["access_level"] == "managerial":
+                return redirect(url_for("manager"))
+            elif staff["access_level"] == "ordinary staff":
+                return redirect(url_for("staff_profile"))
+                '''next_page = request.args.get("next")
                 if not next_page:
-                    response = make_response( redirect( url_for('home')) )
+                    response = make_response( redirect( url_for('index')) )
                 else:
                     response = make_response( redirect(next_page) )
                 response.set_cookie("username",username,max_age=(60*60*24*7))
-                return response
-    return render_template("accounts/login.html", form=form, title="Login")
+                return response'''
+    return render_template("staff/staff_login.html", form=form, title="Login")
 
-# Main profile
-@app.route("/profile")
+# Customer profile
+@app.route("/customer_profile")
 @login_required
-def profile():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM customer WHERE email = %s", (g.user,))
-    user = cur.fetchone()
-    return render_template("profile.html", title="My Profile", user=user)
+def customer_profile():
+    #cur = mysql.connection.cursor()
+    #cur.execute("SELECT * FROM customer WHERE email = %s", (g.user,))
+    #user = cur.fetchone()
+    return render_template("customer/profile.html", title="My Profile")#, user=user)
+
+# Staff profile
+@app.route("/staff_profile")
+@staff_only
+def staff_profile():
+    return render_template("staff/staff_profile.html", title="My Profile")
+
 
 # Contact form so that customers can send enquiries
 @app.route("/contact_us", methods=["GET", "POST"])
@@ -222,7 +290,7 @@ def get_random_password():
     return password
 
 # Manager account
-#@manager_only
+@manager_only
 @app.route("/manager")
 def manager():
     return render_template("manager/dashboard.html")
