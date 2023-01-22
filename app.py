@@ -27,10 +27,10 @@ app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
-app.config['MYSQL_USER'] = 'cyl1' # someone's deets
-app.config['MYSQL_PASSWORD'] = 'eidoa' # someone's deets
+app.config['MYSQL_USER'] = '' # someone's deets
+app.config['MYSQL_PASSWORD'] = '' # someone's deets
 app.config['MYSQL_HOST'] = 'cs1.ucc.ie'
-app.config['MYSQL_DB'] = 'cs2208_cyl1' # someone's deets
+app.config['MYSQL_DB'] = '' # someone's deets
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
