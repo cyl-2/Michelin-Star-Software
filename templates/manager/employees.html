@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+    <p> <a href="{{ url_for('add_new_employee') }}"> Add new employee </a> </p>
+
+    {% if employees %}
+    <table>
+        <tr> 
+            <th> Staff ID </th>
+            <th> Role </th>
+            <th> First Name </th>
+            <th> Last Name </th>
+        </tr>
+
+        {% for employee in employees %}
+        <tr> 
+            <td> {{ employee ["staff_id"] }} </td>
+            <td> {{ employee ["role"] }} </td>
+            <td> {{ employee ["first_name"] }} </td>
+            <td> {{ employee ["last_name"] }} </td>
+        </tr>
+        {% endfor %}
+
+        {% else %}
+        <p> No employee data available </p>
+    {% endif %}
+    </table>
+{% endblock %}

@@ -14,12 +14,6 @@
         {{ error }}
     {% endfor %}
     <br/>
-    {{ form.username.label }}
-    {{ form.username() }}
-    {% for error in form.username.errors %}
-        {{ error }}
-    {% endfor %}
-    <br/>
     {{ form.first_name.label }}
     {{ form.first_name() }}
     {% for error in form.first_name.errors %}

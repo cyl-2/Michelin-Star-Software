@@ -4,7 +4,6 @@ from wtforms.validators import InputRequired, EqualTo, NumberRange
 from wtforms.widgets import TextArea
 
 class RegistrationForm(FlaskForm):
-    username = StringField('Username', [validators.Length(min=5, max=25)])
     email = StringField("Email Address", [validators.Length(min=6, max=100)])
     password = PasswordField("Password:", validators=[InputRequired()])
     confirm = PasswordField("Confirm Password:", validators=[InputRequired(), EqualTo("password")])
@@ -13,7 +12,7 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField("Submit")
 
 class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[InputRequired("Username doesn't exist")])
+    email = StringField('Email', validators=[InputRequired("Email doesn't exist")])
     password = PasswordField("Password", validators=[InputRequired()])
     confirm = PasswordField("Confirm password", validators=[InputRequired("Password doesn't match"), EqualTo("password")])
     submit = SubmitField("Login")
@@ -30,3 +29,10 @@ class ReplyForm(FlaskForm):
     subject = StringField(validators=[InputRequired()])
     message = TextAreaField(validators=[InputRequired()], widget=TextArea())
     submit = SubmitField("Send message")
+
+class EmployeeForm(FlaskForm):
+    first_name = StringField("First name: ", default="", validators=[InputRequired()])
+    last_name = StringField("Last name: ", default="", validators=[InputRequired()])
+    email = StringField("Email: ", default="", validators=[InputRequired()])
+    role = StringField("Role: ", default="", validators=[InputRequired()])
+    submit = SubmitField("Create")

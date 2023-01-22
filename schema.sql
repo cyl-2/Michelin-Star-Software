@@ -4,9 +4,8 @@ CREATE TABLE staff
 (
     staff_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     email TEXT NOT NULL,
-    username TEXT NOT NULL,
     code TEXT,
-    role TEXT,
+    role TEXT NOT NULL,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     password TEXT NOT NULL
