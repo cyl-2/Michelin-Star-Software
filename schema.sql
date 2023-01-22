@@ -105,3 +105,15 @@ CREATE TABLE stats
     tip INTEGER NOT NULL,
     tables INTEGER NOT NULL
 );
+
+DROP TABLE IF EXISTS user_queries;
+
+CREATE TABLE user_queries
+(
+    query_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    name TEXT NOT NULL,
+    message TEXT NOT NULL,
+    date DATE NOT NULL
+);

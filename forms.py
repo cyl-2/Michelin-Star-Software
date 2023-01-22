@@ -1,6 +1,7 @@
 from wtforms import SubmitField, StringField, SelectField, PasswordField, TextAreaField, IntegerField, DateField, DecimalField, RadioField, validators
 from flask_wtf import FlaskForm
 from wtforms.validators import InputRequired, EqualTo, NumberRange
+from wtforms.widgets import TextArea
 
 class RegistrationForm(FlaskForm):
     username = StringField('Username', [validators.Length(min=5, max=25)])
@@ -16,3 +17,16 @@ class LoginForm(FlaskForm):
     password = PasswordField("Password", validators=[InputRequired()])
     confirm = PasswordField("Confirm password", validators=[InputRequired("Password doesn't match"), EqualTo("password")])
     submit = SubmitField("Login")
+
+class ContactForm(FlaskForm):
+    email = StringField(validators=[InputRequired()])
+    name = StringField(validators=[InputRequired()])
+    subject = StringField(validators=[InputRequired()])
+    message = TextAreaField(validators=[InputRequired()], widget=TextArea())
+    submit = SubmitField("Send message")
+
+class ReplyForm(FlaskForm):
+    email = StringField(validators=[InputRequired()])
+    subject = StringField(validators=[InputRequired()])
+    message = TextAreaField(validators=[InputRequired()], widget=TextArea())
+    submit = SubmitField("Send message")
