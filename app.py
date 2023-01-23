@@ -1,12 +1,13 @@
 from flask import Flask, render_template, redirect, url_for, session, g, request, make_response, flash
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm
+from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm
 from functools import wraps
 from flask_mysqldb import MySQL 
 from flask_mail import Mail, Message
 from datetime import datetime
 import random
+from random import sample
 import string
 
 app = Flask(__name__)
@@ -262,6 +263,84 @@ def contact_us():
         mail.send(msg)
         flash("Message sent. We will reply to you in 2-3 business days.")
     return render_template("customer/enquiry_form.html",form=form, title="Contact Us")
+
+# Change password
+@app.route("/change_password/<table>", methods=["GET", "POST"])
+#@login_required
+def change_password(table):
+    cur = mysql.connection.cursor()
+    form = NewPasswordForm()
+    if form.validate_on_submit():
+        new_password = form.new_password.data
+
+        if new_password.isupper() or new_password.islower() or new_password.isdigit():
+            form.new_password.errors.append("Create a STRONG password with one uppercase character, one lowercase character and one number")
+        else:
+            if table == 'staff':
+                cur.execute("""UPDATE staff SET password=%s WHERE email=%s;""", (generate_password_hash(new_password),g.user))
+            else:
+                cur.execute("""UPDATE customer SET password=%s WHERE email=%s;""", (generate_password_hash(new_password),g.user))
+            mysql.connection.commit()
+            session.clear()
+            flash("Successfully changed password! Please login now.")
+            if table == 'staff':
+                return redirect(url_for("staff_login"))
+            else:
+                return redirect(url_for("customer_login"))
+    return render_template("password_management/change_password.html", title ="Change password", form=form)
+
+# Reset password feature
+@app.route("/forgot_password", methods=["GET", "POST"])
+def forgot_password():
+    cur = mysql.connection.cursor()
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        table = form.role.data
+
+        pin = sample(range(10000, 99999), 1)
+
+        random_code = ""
+        for i in pin:
+            random_code += str(i)
+
+        if table == 'staff':
+            cur.execute("SELECT * FROM staff WHERE email = %s", (email,))
+            user = cur.fetchone()
+        else:
+            cur.execute("SELECT * FROM customer WHERE email = %s", (email,))
+            user = cur.fetchone()
+
+        if user is None:
+            form.email.errors.append("There is no account associated with this email, please check your spelling")
+        else:
+            msg = ""
+            cur.execute("""UPDATE staff SET code=%s WHERE email=%s""", (random_code,email))
+            mysql.connection.commit()
+            msg = Message(f"Hello, {user['first_name']}", sender='no.reply.please.and.thank.you@gmail.com', recipients=[user["email"]])
+            msg.body = f"""
+            Hello,
+            To reset your password, enter this code: 
+            {random_code}"""
+            mail.send(msg)
+            flash("Great news! An email containing a 5 digit code has been sent to your email account. Enter the code below!")
+            return redirect(url_for("confirm_code", email=email, random_code=random_code, table=table))
+    return render_template("password_management/forgot_password.html", form=form, title= "Forgot Password")
+
+# Checks whether the code the user received corresponds to the one in the database
+@app.route("/confirm_code/<email>/<random_code>/<table>", methods=["GET", "POST"])
+def confirm_code(email,random_code,table):
+    form = CodeForm()
+    if form.validate_on_submit():
+        code = form.code.data.strip()
+
+        if code != random_code:
+            form.code.errors.append("Oh no, that's not the code in your email!")
+        else:
+            flash("Code correct! Now you can reset your password :)")
+            session["username"] = email
+            return redirect(url_for("change_password", table=table))
+    return render_template("password_management/confirm_code.html", form=form, title= "Confirm code")
 
 ##############################################################################################################################################
 ##############################################################################################################################################

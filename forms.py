@@ -38,3 +38,19 @@ class EmployeeForm(FlaskForm):
                                         choices = [("managerial", "Managerial"),
                                                     ("ordinary staff", "Ordinary staff")], validators=[InputRequired()])
     submit = SubmitField("Create")
+
+class NewPasswordForm(FlaskForm):
+    new_password = PasswordField("New Password", validators=[InputRequired()])
+    password2 = PasswordField("Confirm new password", validators=[InputRequired("Password doesn't match"), EqualTo("new_password")])
+    submit = SubmitField("Change password")
+
+class ResetPasswordForm(FlaskForm):
+    role = RadioField("Are you a...", 
+    choices = [("customer", "Customer"),
+                ("staff", "Staff member")], validators=[InputRequired()])
+    email = StringField("Email Address", validators=[InputRequired("Please fill in an email address")])
+    submit = SubmitField("Change password")
+
+class CodeForm(FlaskForm):
+    code = StringField('Enter the 5 digit code here', validators=[InputRequired("Wrong code")])
+    submit = SubmitField("Submit")
