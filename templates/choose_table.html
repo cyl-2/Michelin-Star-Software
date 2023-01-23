@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <title>Choose Table</title>
+{% endblock %}
+
+{% block main_content %}
+<script type ='text/javascript'> 
+    let hOffset, vOffset = 0; 
+    let selectedTable = null; 
+
+    window.addEventListener('DOMContentLoaded', setupEvents);  
+    function setupEvents() {  
+        let allTables = document.getElementsByTagName('div');  
+        for (let i = 0; i < allTables.length; i++) {  
+            allTables[i].addEventListener('mousedown', startDrag); 
+        } 
+    } 
+
+    function startDrag(evt) { 
+        evt.preventDefault();
+        evt.stopPropagation();
+        let allTables = document.getElementsByTagName('div');  
+        for (let i = 0; i < allTables.length; i++) allTables[i].style.zIndex = 0; 
+
+        selectedTable = evt.target; 
+        selectedTable.style.zIndex = 1;
+    
+        document.addEventListener('mousemove', dragTable, false); 
+        document.addEventListener('mouseup', stopDrag, false); 
+        selectedTable = evt.target; 
+
+        hOffset = parseInt(evt.clientX) - parseInt(selectedTable.style.left); 
+        vOffset = parseInt(evt.clientY) - parseInt(selectedTable.style.top); 
+
+    
+        return false; 
+    }  
+
+    function dragTable(evt) { 
+        evt.preventDefault();
+        evt.stopPropagation();
+        selectedTable.style.left = (parseInt(evt.clientX) - hOffset) + 'px'; 
+        selectedTable.style.top = (parseInt(evt.clientY) - vOffset) + 'px'; 
+        return false; 
+    }  
+
+    function stopDrag() { 
+
+    document.removeEventListener('mousemove', dragTable, false); 
+    document.removeEventListener('mouseup', stopDrag, false); 
+    } 
+</script> 
+<h1>Choose Table</h1>
+<section>
+    <div style="position:absolute;  left: {{ table_positions[1][0] }}; top: {{ table_positions[1][1] }}; border: 1px solid black;">
+        <a href="{{ url_for('take_order', table=1) }}">
+            <section>
+                <img src="{{ url_for('static', filename='table.png' ) }}"/>
+                <p>Table 1</p>
+            </section>
+        </a>
+    </div>
+    <div style="position: absolute; left: {{ table_positions[2][0] }}; top: {{ table_positions[2][1] }}; border: 1px solid black;">
+        <a href="{{ url_for('take_order', table=2) }}" >
+            <section>
+                <img src="{{ url_for('static', filename='table.png' ) }}"/>
+                <p>Table 2</p>
+            </section>
+        </a>
+    </div>
+    <div style="position: absolute; left: {{ table_positions[3][0] }}; top: {{ table_positions[3][1] }}; border: 1px solid black;">
+        <a href="{{ url_for('take_order', table=3) }}" >
+            <section>
+                <img src="{{ url_for('static', filename='table.png' ) }}"/>
+                <p>Table 3</p>
+            </section>
+        </a>
+    </div>
+    <div style="position: absolute; left: {{ table_positions[4][0] }}; top: {{ table_positions[4][1] }}; border: 1px solid black;">
+        <a href="{{ url_for('take_order', table=4) }}" >
+            <section>
+                <img src="{{ url_for('static', filename='table.png' ) }}" />
+                <p>Table 4</p>
+            </section>
+        </a>
+    </div>
+</section>
+<p><a href="{{ url_for('move_tables') }}" >Move Tables</a></p>
+{% endblock %} 

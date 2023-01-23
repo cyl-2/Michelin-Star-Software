@@ -63,11 +63,20 @@ DROP TABLE IF EXISTS tables;
 
 CREATE TABLE tables
 (   
-    table_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    table_id INTEGER PRIMARY KEY,
     seats INTEGER NOT NULL,
-    x INTEGER NOT NULL,
-    y INTEGER NOT NULL
+    x TEXT NOT NULL,
+    y TEXT NOT NULL
 );
+
+INSERT INTO tables
+  ( table_id, seats, x, y )
+VALUES
+  (1, 4, "100px", "100px"), 
+  (2, 4, "200px", "200px"), 
+  (3, 4, "300px", "300px"),
+  (4, 4, "400px", "400px");
+SELECT * FROM tables;
 
 DROP TABLE IF EXISTS bookings;
 

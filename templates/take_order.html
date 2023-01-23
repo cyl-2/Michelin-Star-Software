@@ -7,19 +7,31 @@
 {% block main_content %}
 <h1>Order</h1>
 <section>
-    <h2>Current Order</h2>
+    <p><a href="{{ url_for('choose_table') }}">Change Table</a></p>
+    
     {% if order %}
+    <p><a href="{{ url_for('cancel_order',table=table) }}">Cancel Order</a></p>
+    <h2>Current Order</h2>
+    
     <ul>
         {% for meal in order %}
-            <li>{{ meal }}</li>
+            <li>{{ meal }} - <a href="{{ url_for('remove_order', table=table, meal=meal) }}">Remove</a></li>
         {% endfor %}
     </ul>
+    
     {% endif %}
 </section>
 <section>
+    <h2>Menu</h2>
     <ul>
         <li>
-            <a href="{{ url_for('take_order') }}">Burger and chips</a>
+            <a href="{{ url_for('add_order', table=table, meal='Burger and chips') }}">Burger and chips</a>
+        </li>
+        <li>
+            <a href="{{ url_for('add_order', table=table, meal='Fish and chips') }}">Fish and chips</a>
+        </li>
+        <li>
+            <a href="{{ url_for('add_order', table=table, meal='Chicken and chips') }}">Chicken and chips</a>
         </li>
         
     </ul>
