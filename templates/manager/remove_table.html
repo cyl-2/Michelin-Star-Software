@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <title>Remove Table</title>
+{% endblock %}
+
+{% block main_content %}
+<h1>Remove Table</h1>
+<section>
+    {% for table_index in table_positions %}
+        <div style="position:absolute;  left: {{ table_positions[table_index][0] }}; top: {{ table_positions[table_index][1] }}; border: 1px solid black;">
+            <a href="{{ url_for('remove_table', table=table_index) }}">
+                <section>
+                    <img src="{{ url_for('static', filename='table.png' ) }}"/>
+                    <p>Table {{ table_index }}</p>
+                </section>
+            </a>
+        </div>
+    {% endfor %}
+</section>
+{% endblock %} 

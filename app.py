@@ -7,7 +7,12 @@ from flask_mysqldb import MySQL
 import json
 import sqlite3
 
+"""
+remove meal - meal has been selected but then order not placed
+cancel meal - meal order has been placed but then cancelled
 
+cancel order - tables order was selected but not placed
+"""
 
 app = Flask(__name__)
 
@@ -67,20 +72,41 @@ def choose_table():
     return render_template("choose_table.html", table_positions=table_positions)
 
 @app.route("/<int:table>/take_order", methods=["GET","POST"])
-def take_order(table):   
-    if request.cookies.get("order"):
-        order = json.loads(request.cookies.get("order"))
-        return render_template("take_order.html", table=table, order=order)
-    return render_template("take_order.html", table=table)
+def take_order(table):  
+    con = sqlite3.connect('app.db')
+    with con:    
+        cur = con.cursor()    
+
+        cur.execute('SELECT * FROM dish')
+        meals = cur.fetchall()
+        
+        cur.execute(
+            """
+                SELECT dish.name, orders.status, order_id
+                FROM orders JOIN dish 
+                ON orders.dish_id = dish.dish_id
+                WHERE orders.table_id = ? 
+                AND orders.status != ?
+                AND orders.status != ?
+            """,(table,'complete', 'cancelled')
+        )
+        ordered = cur.fetchall()
+        
+    if request.cookies.get("ordering"+str(table)):
+        ordering = json.loads(request.cookies.get("ordering"+str(table)))
+
+        return render_template("take_order.html", table=table, ordering=ordering, meals=meals, ordered=ordered)
+    
+    return render_template("take_order.html", table=table, meals=meals, ordered=ordered)
 
 @app.route("/<int:table>/add_order/<meal>", methods=["GET","POST"])
 def add_order(table, meal):
-    order = []
-    if request.cookies.get("order"):
-        order = json.loads(request.cookies.get("order"))
-    
+    ordering = []
+    if request.cookies.get("ordering"+str(table)):
+        ordering = json.loads(request.cookies.get("ordering"+str(table)))
     con = sqlite3.connect('app.db')
-    with con:    
+    with con:   
+        # If not enough ingredients to make the meal, not added to order
         cur = con.cursor()
 
         cur.execute('SELECT dish_id FROM dish WHERE name = ?',(meal,))
@@ -97,48 +123,80 @@ def add_order(table, meal):
             if value[0] < min:
                 min = value[0]
         if min > 0:
-            order.append(str(meal))
+            ordering.append(str(meal))
         else:
-            response = make_response(redirect(url_for('take_order', table=1)))
-    response = make_response(redirect(url_for('take_order', table=1)))
-    response.set_cookie('order', json.dumps(order), max_age=(60*60*24))
+            response = make_response(redirect(url_for('take_order', table=table)))
+    response = make_response(redirect(url_for('take_order', table=table)))
+    response.set_cookie('ordering'+str(table), json.dumps(ordering), max_age=(60*60*24))
     return response
 
-@app.route("/<int:table>/remove_order/<meal>", methods=["GET","POST"])
-def remove_order(table, meal):
-    order = json.loads(request.cookies.get("order"))
-    for i in range(len(order)):
-        if meal == order[i]:
+@app.route("/<int:table>/remove_meal/<meal>", methods=["GET","POST"])
+def remove_meal(table, meal):
+    ordering = json.loads(request.cookies.get("ordering"+str(table)))
+    for i in range(len(ordering)):
+        if meal == ordering[i]:
             index = i
-    order.pop(index)
+    ordering.pop(index)
     
-    response = make_response(render_template("take_order.html", table=table, order=order))
-    response.set_cookie('order', json.dumps(order), max_age=(60*60*24))
+    response = make_response(redirect(url_for("take_order", table=table)))
+    response.set_cookie('ordering'+str(table), json.dumps(ordering), max_age=(60*60*24))
     return response
+
+@app.route("/<int:table>/cancel_meal/<int:meal_id>", methods=["GET","POST"])
+def cancel_meal(table, meal_id):
+    
+    con = sqlite3.connect('app.db')
+    with con:    
+        cur = con.cursor()
+                
+        cur.execute("DELETE FROM orders WHERE order_id = ? AND table_id = ?;",(meal_id, table ))
+        con.commit()
+    
+    return redirect(url_for("take_order", table=table))
 
 @app.route("/<int:table>/cancel_order", methods=["GET","POST"])
 def cancel_order(table):
     
-    response = make_response(render_template("take_order.html", table=table))
-    response.set_cookie('order', '', expires=0)
+    response = make_response(redirect(url_for("take_order", table=table)))
+    response.set_cookie('ordering'+str(table), '', expires=0)
     return response
 
+
 @app.route("/<int:table>/complete_order", methods=["GET","POST"])
-def complete_order(table):   
-    if request.cookies.get("order"):
-        order = json.loads(request.cookies.get("order"))
-        for meal in order:
-            con = sqlite3.connect('app.db')
-            with con:    
+def complete_order(table):  
+    con = sqlite3.connect('app.db')
+    with con:    
+        cur = con.cursor()    
+
+        
+
+    if request.cookies.get("ordering"+str(table)):
+        ordering = json.loads(request.cookies.get("ordering"+str(table)))
+        con = sqlite3.connect('app.db')
+        with con:  
+            cur.execute(
+                """
+                    SELECT dish.name, orders.status 
+                    FROM orders JOIN dish 
+                    ON orders.dish_id = dish.dish_id
+                    WHERE orders.table_id = ? 
+                    AND orders.status != ?
+                    AND orders.status != ?
+                """,(table,'complete', 'cancelled')
+            )
+            ordered = cur.fetchall()
+            
+            for meal in ordering:
                 cur = con.cursor()
 
                 cur.execute('SELECT dish_id, cook_time FROM dish WHERE name = ?',(meal,))
                 data = cur.fetchone()
-                
-                cur.execute("INSERT INTO orders VALUES (?, ?);",(data[0], data[1]))
+                cur.execute("INSERT INTO orders (time, dish_id, table_id, status) VALUES (?, ?, ?, 'waiting');",(data[1], data[0], table))
                 con.commit()
-                
-    return redirect(url_for('choose_table'))
+    
+    response = make_response(redirect(url_for('take_order', table=table)))
+    response.set_cookie('ordering'+str(table), json.dumps([]), max_age=(60*60*24))
+    return response
 
 @app.route("/move_tables", methods=["GET","POST"])
 def move_tables():
@@ -192,3 +250,27 @@ def add_table():
                 return redirect(url_for('choose_table'))
 
     return render_template("manager/add_table.html", form=form)
+
+@app.route("/remove_table_menu", methods=["GET","POST"])
+def remove_table_menu():
+    con = sqlite3.connect('app.db')
+    with con:    
+        cur = con.cursor()    
+
+        cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
+        data = cur.fetchall()
+    
+    table_positions = {}
+    for i in range(len(data)):
+        table_positions[data[i][0]] = (data[i][1], data[i][2])
+    return render_template("manager/remove_table.html", table_positions=table_positions)
+
+@app.route("/<int:table>/remove_table", methods=["GET", "POST"])
+def remove_table(table):
+    con = sqlite3.connect('app.db')
+    with con:   
+        cur = con.cursor() 
+        cur.execute("DELETE FROM tables WHERE table_id = ?;",(table,))
+        con.commit()
+    return redirect(url_for('remove_table_menu'))
+            

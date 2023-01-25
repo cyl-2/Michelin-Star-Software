@@ -85,9 +85,13 @@ DROP TABLE IF EXISTS orders;
 
 CREATE TABLE orders
 (
+    order_id INTEGER PRIMARY KEY AUTOINCREMENT,
     time INTEGER NOT NULL,
-    dish_id INTEGER NOT NULL
+    dish_id INTEGER NOT NULL,
+    table_id INTEGER NOT NULL,
+    status TEXT
 );
+
 
 DROP TABLE IF EXISTS tables;
 
@@ -106,8 +110,12 @@ VALUES
   (2, 4, "200px", "200px"), 
   (3, 4, "300px", "300px"),
   (4, 4, "400px", "400px");
-SELECT * FROM dish;
-SELECT * FROM tables;
+
+SELECT dish.name, orders.status 
+SELECT * 
+FROM orders JOIN dish 
+ON orders.dish_id = dish.dish_id
+WHERE orders.table_id = 2 AND orders.status != 'complete';
 
 DROP TABLE IF EXISTS bookings;
 

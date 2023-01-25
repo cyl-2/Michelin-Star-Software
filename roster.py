@@ -22,10 +22,11 @@ class Employee:
 
 # Example Roster
 e0001 = Employee("Tommy", 13, 1)
-e0002 = Employee("Carl", 13, 1 )
+e0002 = Employee("Carl", 13, 1)
 e0003 = Employee("John", 13, 1)
 e0004 = Employee("Conor", 13, 1)
-roster = [e0001, e0002, e0003, e0004]
+e0005 = Employee("James", 13, 1)
+roster = [e0001, e0002, e0003, e0004, e0005]
 roster.sort(key=lambda x: x.start_time)
 
 
@@ -33,20 +34,19 @@ def calculateEmployeeBreaks(roster):
     breakList = []
     current_time = 0
     for employee in roster:
+        # If the employee has a break
         if (employee.break_length > 0):
-            
             # Set the employee to begin their break 1/4 of their shift in
             break_start = employee.start_time + ((employee.hours_worked / 4))
-            if (break_start < current_time):
+            # if the time of the last employees break end time is less than the new employees break start time
+            if ((break_start < current_time) and (break_end > employee.end_time)):
+                # Add the previous employees break time to the employees start time
                 break_start += prev_employee.break_length
             break_end = break_start + employee.break_length
-
             # Add when the employee is due to go on break and when they return to the list
             breakList.append([employee.name, break_start, break_end])
             prev_employee = employee
             current_time = break_end
-            
     print(breakList)
-
-
+    
 calculateEmployeeBreaks(roster)
