@@ -10,18 +10,18 @@
 
 <body>
     <nav>
-        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('index') }}">Home</a>
     </nav>
     <section>
         {% if g.user %}
             <p class="buttons">
                 <a class="button" href="{{ url_for('logout') }}">Log out</a>
-                <a class="button" href="{{ url_for('login') }}">Change Account</a>
             </p>
         {% else %}
             <p>
-                <a class="button" href="{{ url_for('register') }}">Register</a>
-                <a class="button" href="{{ url_for('auto_login_check') }}">Login</a>
+                <a class="button" href="{{ url_for('registration') }}">Customer Register</a>
+                <a class="button" href="{{ url_for('customer_login') }}">Customer Login</a>
+                <a class="button" href="{{ url_for('staff_login') }}">Staff Login</a>
             </p>
         {% endif %}
     </section>

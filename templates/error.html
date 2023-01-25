@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+<div> 
+<p> Oh no! Something went terribly wrong.
+        <br> I will redirect you to the home page.
+        <br>
+        Please wait a few seconds! </p>
+
+    <script>
+        setTimeout(function(){
+            window.location.href ="{{ ( url_for('index') ) }}";
+        }, 3000);
+    </script>
+</div>
+{% endblock %}
