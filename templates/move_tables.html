@@ -55,13 +55,9 @@
 </script> 
 <h1>Move Table</h1>
 <section>
-    <img id='table1' src="{{ url_for('static', filename='table.png' ) }}" style="position:absolute;  left: {{ table_positions[1][0] }}; top: {{ table_positions[1][1] }}; border: 1px solid black; width: 50px;"/>
-
-    <img id='table2' src="{{ url_for('static', filename='table.png' ) }}" style="position: absolute; left: {{ table_positions[2][0] }}; top: {{ table_positions[2][1] }}; border: 1px solid black; width: 50px;"/>
-
-    <img id='table3' src="{{ url_for('static', filename='table.png' ) }}" style="position: absolute; left: {{ table_positions[3][0] }}; top: {{ table_positions[3][1] }}; border: 1px solid black; width: 50px;"/>
-
-    <img id='table4' src="{{ url_for('static', filename='table.png' ) }}" style="position: absolute; left: {{ table_positions[4][0] }}; top: {{ table_positions[4][1] }}; border: 1px solid black; width: 50px;"/>
+    {% for table_index in table_positions %}
+    <img id='table{{ table_index }}' src="{{ url_for('static', filename='table.png' ) }}" style="position:absolute;  left: {{ table_positions[ table_index ][0] }}; top: {{ table_positions[ table_index ][1] }}; border: 1px solid black; width: 50px;"/>
+    {% endfor %}
 
 </section>
 <p><a href="{{ url_for('move_tables') }}" >Reset</a></p>
@@ -73,11 +69,11 @@
         
         let link;
         co_ords = []
-        for (let i=0; i<4; i++){
-            table = document.getElementById('table'+(i+1).toString());
+        {% for table_index in table_positions %}
+            table = document.getElementById('table'+({{table_index}}).toString());
             co_ords.push(table.style.left);
             co_ords.push(table.style.top);
-        }
+        {% endfor %}
 
         document.getElementById("save_changes").innerHTML = '<a href="{{ url_for('save_tables') }}">Save Changes</a>';
     }

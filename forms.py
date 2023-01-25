@@ -1,11 +1,10 @@
-from wtforms import SubmitField, StringField, SelectField, PasswordField, TextAreaField, IntegerField, DateField, DecimalField, RadioField
+from wtforms import SubmitField, IntegerField
 from flask_wtf import FlaskForm
-from wtforms.validators import InputRequired, EqualTo, NumberRange
-"""
-class RegisterForm(FlaskForm):
-    password = PasswordField("Password:", validators=[InputRequired()])
-    confirm = PasswordField("Confirm Password:", validators=[InputRequired(), EqualTo("password")])
-    first_name = StringField("First name", validators=[InputRequired()])
-    surname = StringField("Last name", validators=[InputRequired()])
-    submit = SubmitField("Submit")
-"""
+from wtforms.validators import InputRequired, NumberRange
+
+class TableForm(FlaskForm):
+    table_number = IntegerField( validators=[InputRequired(), NumberRange(1,100)])
+    seats = IntegerField(validators=[InputRequired(), NumberRange(1,25)])
+    x = IntegerField(validators=[InputRequired(), NumberRange(0,500)])
+    y = IntegerField(validators=[InputRequired(), NumberRange(0,500)])
+    submit = SubmitField("Create Table")

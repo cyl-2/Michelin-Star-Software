@@ -18,7 +18,7 @@
             <li>{{ meal }} - <a href="{{ url_for('remove_order', table=table, meal=meal) }}">Remove</a></li>
         {% endfor %}
     </ul>
-    
+    <a href="{{ url_for('complete_order', table=table) }}" >Complete Order</a>
     {% endif %}
 </section>
 <section>
