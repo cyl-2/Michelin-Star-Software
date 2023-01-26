@@ -230,13 +230,6 @@ def customer_profile():
     #user = cur.fetchone()
     return render_template("customer/profile.html", title="My Profile")#, user=user)
 
-# Staff profile
-@app.route("/staff_profile")
-@staff_only
-def staff_profile():
-    return render_template("staff/staff_profile.html", title="My Profile")
-
-
 # Contact form so that customers can send enquiries
 @app.route("/contact_us", methods=["GET", "POST"])
 def contact_us():
@@ -341,6 +334,45 @@ def confirm_code(email,random_code,table):
             session["username"] = email
             return redirect(url_for("change_password", table=table))
     return render_template("password_management/confirm_code.html", form=form, title= "Confirm code")
+
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
+'''
+            ALL FEATURES BELOW ARE RELATED TO THE STAFF
+'''
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
+
+# Staff profile
+@app.route("/staff_profile", methods=["GET", "POST"])
+#@staff_only
+def staff_profile():
+    return render_template("staff/staff_profile.html", title="My Profile")
+
+@app.route("/edit_profile", methods=["GET", "POST"])
+#@staff_only
+def edit_profile():
+    cur = mysql.connection.cursor()
+    form = EmployeeForm()
+    if form.validate_on_submit():
+        bio = form.bio.data
+        email = form.email.data
+        address = form.address.data
+        first_name = form.first_name.data
+        last_name = form.last_name.data
+
+        cur.execute("""UPDATE staff SET email=%s, address=%s, bio=%s, first_name=%s, last_name=%s
+                            WHERE staff_id=1""", (email, address, bio, first_name, last_name))
+        mysql.connection.commit()
+        cur.close()
+        flash("yay")
+    else:
+        cur.execute("SELECT * FROM staff WHERE email='cherrylincyl@gmail.com'") #, (g.user,))
+        profile = cur.fetchone()
+        cur.close()
+    return render_template("staff/edit_profile.html", form=form, profile=profile, title="My Profile")
 
 ##############################################################################################################################################
 ##############################################################################################################################################
