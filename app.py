@@ -119,7 +119,7 @@ def registration():
         password = form.password.data
         first_name = form.first_name.data
         last_name = form.last_name.data
-        code = "None" # this is for my 'forgot password' idea that I'd upload later
+        code = "None"
 
         '''
             Assuming that only customers can create new accounts
