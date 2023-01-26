@@ -418,12 +418,27 @@ def get_random_password():
     random.SystemRandom().shuffle(password_list)
     password = ''.join(password_list)
     return password
-
+    
 # Manager account
-@manager_only
+#@manager_only
 @app.route("/manager")
 def manager():
-    return render_template("manager/dashboard.html")
+    cur = mysql.connection.cursor()
+    date = datetime.now().date()
+
+    cur.execute("SELECT * FROM user_analytics")
+    user_analytics = cur.fetchone()
+    cur.execute("SELECT * FROM sales_analytics")
+    sales_analytics = cur.fetchone()
+
+    cur.execute("SELECT count(*) FROM user_queries where date(todays_date) = %s", (date,))
+    query_count = cur.fetchone()
+
+    cur.execute("SELECT * FROM roster_requests")
+    requests = cur.fetchall()
+
+    cur.close()
+    return render_template("manager/dashboard.html", requests=requests, user_analytics=user_analytics, sales_analytics=sales_analytics, query_count=query_count, title="Dashboard")
 
 #@manager_only
 @app.route("/roster_approve")
