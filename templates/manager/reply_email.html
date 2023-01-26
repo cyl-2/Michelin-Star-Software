@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
-{% block main_content %}
+{% block content %}
     <h1> Read/Reply </h1>
 
     <h2> Query </h2>
@@ -12,16 +12,16 @@
     <h2> Reply below </h2>    
     <form action="" method="post" novalidate> 
         {{ form.hidden_tag() }}
-        {{ form.email(class="text", placeholder="Recipient email address", value=query['email']) }}
+        {{ form.email(placeholder="Recipient email address", value=query['email']) }}
         <br>
-        {{ form.subject(class="text", placeholder="Enter in recipient's subject", value=query['subject']) }}
+        {{ form.subject(placeholder="Enter in recipient's subject", value=query['subject']) }}
         <br>
         {{ form.message(rows='10',cols='100', placeholder="Write reply here") }}
         <br>
-        {{ form.submit(class="submit") }}
+        {{ form.submit() }}
     </form>
 
-    <div class="flash">
+    <div>
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for message in messages %}
@@ -30,4 +30,4 @@
             {% endif %}
         {% endwith %}
     </div>    
-{% endblock %}
+{% endblock content %}

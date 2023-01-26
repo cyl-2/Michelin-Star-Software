@@ -1,50 +1,100 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
-{% block main_content %}
-    <h1> New Employee Registration </h1> 
+{% block content %}
 
-    <form action="" method="post" novalidate> 
-        {{ form.hidden_tag() }}
-        {{ form.first_name.label }}
-        {{ form.first_name(class="text") }}
-        {% for error in form.first_name.errors %}
-            {{ error }}
-        {% endfor %}
-        <br>
-        {{ form.last_name.label }}
-        {{ form.last_name(class="text") }}
-        {% for error in form.last_name.errors %}
-            {{ error }}
-        {% endfor %}
-        <br>
-        {{ form.email.label }}
-        {{ form.email(class="text") }}
-        {% for error in form.email.errors %}
-            {{ error }}
-        {% endfor %}
-        <br>
-        {{ form.role.label }}
-        {{ form.role(class="text") }}
-        {% for error in form.role.errors %}
-            {{ error }}
-        {% endfor %}
-        <br>
-        {{ form.access_level.label }}
-        {{ form.access_level(class="text") }}
-        {% for error in form.access_level.errors %}
-            {{ error }}
-        {% endfor %}
-        <br>
-        {{ form.submit(class="submit") }}
-    </form>
+<div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
 
-    <div class="flash">
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                    <p> {{ message }}</p>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        <div class="pcoded-content">
+            <div class="pcoded-inner-content">
+                <div class="main-body">
+                    <div class="page-wrapper">
+                        <!-- [ Main Content ] start -->
+                        <div class="row">
+                            <div class="col-sm-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>New Employee Registration</h5>
+                                    </div>
+                                    <div class="card-block">
+
+                                        <form action="" method="post" novalidate>
+                                            <div class="row">
+                                                <div class="col-sm-12 mb-4">
+                                                    <div class="form-group">
+                                                        {{ form.hidden_tag() }}
+                                                        {{ form.email.label }}
+                                                        {{ form.email(class="form-control", placeholder="Email Address") }}
+                                                        {% for error in form.email.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-sm-6 mb-4">
+                                                    <div class="form-group">
+                                                        
+                                                        {{ form.first_name.label }}
+                                                        {{ form.first_name(class="form-control", placeholder="First Name") }}
+                                                        {% for error in form.first_name.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>                      
+                                                <div class="col-sm-6 mb-4">
+                                                    <div class="form-group">
+                                                        {{ form.last_name.label }}
+                                                        {{ form.last_name(class="form-control", placeholder="Last Name") }}
+                                                        {% for error in form.last_name.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-sm-12 mb-4">
+                                                    <div class="form-group">
+                                                        {{ form.role.label }}
+                                                        {{ form.role(class="form-control", placeholder="Role") }}
+                                                        {% for error in form.role.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-12 mb-4">
+                                                    <div class="form-group">
+                                                        {{ form.access_level.label }}
+                                                        {{ form.access_level(class="form-control", placeholder="Choose An Option") }}
+                                                        {% for error in form.access_level.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                    <div class="col-sm-12 mb-2">
+                                                        <div class="form-group">
+                                                            {{ form.submit(class="btn btn-primary") }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+
+                                        <div>
+                                            {% with messages = get_flashed_messages() %}
+                                                {% if messages %}
+                                                    {% for message in messages %}
+                                                        <p> {{ message }}</p>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-{% endblock %}
+</div>
+
+{% endblock content %}

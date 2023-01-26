@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
-{% block main_content %}
+{% block content %}
     <h1> Enquiries </h1>
     
     {% if queries %}
@@ -28,4 +28,4 @@
         <p> No messages for now </p>
     {% endif %}
     </table>
-{% endblock %}
+{% endblock content %}

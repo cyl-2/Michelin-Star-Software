@@ -1,22 +1,22 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
-{% block main_content %}
+{% block content %}
     <h1> Contact Us </h1> 
     <p> If you have any queries, do send us a message! </p>
     <form action="" method="post" novalidate> 
         {{ form.hidden_tag() }}
-        {{ form.email(class="text", placeholder="Your email address") }}
+        {{ form.email(placeholder="Your email address") }}
         <br>
-        {{ form.name(class="text", placeholder="Your name") }}
+        {{ form.name(placeholder="Your name") }}
         <br>
-        {{ form.subject(class="text", placeholder="Subject") }}
+        {{ form.subject(placeholder="Subject") }}
         <br>
         {{ form.message(rows='10',cols='100', placeholder="Write your message here") }}
         <br>
-        {{ form.submit(class="submit") }}
+        {{ form.submit() }}
     </form>
 
-    <div class="flash">
+    <div>
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for message in messages %}
@@ -25,4 +25,4 @@
             {% endif %}
         {% endwith %}
     </div>    
-{% endblock %}
+{% endblock content %}

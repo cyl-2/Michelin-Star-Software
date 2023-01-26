@@ -1,10 +1,12 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
 {% block title %}
     <title>Register</title>
 {% endblock %}
 
-{% block main_content %}
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
 <form action="" method="POST" novalidate>
     {{ form.hidden_tag() }}
     
@@ -44,4 +46,4 @@
 
 </form>
 
-{% endblock %}
+{% endblock content %}
