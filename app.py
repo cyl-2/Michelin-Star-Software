@@ -28,7 +28,7 @@ app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
 app.config['MYSQL_USER'] = 'root' # someone's deets
-app.config['MYSQL_PASSWORD'] = 'Cherry0417!' # someone's deets
+app.config['MYSQL_PASSWORD'] = '' # someone's deets
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_DB'] = 'world' # someone's deets
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
@@ -542,6 +542,15 @@ def reply_email(id):
         mail.send(msg)
         flash("Message sent successfully.")
     return render_template("manager/reply_email.html",form=form, title="Reply", query=query)
+
+# Delete queries from users
+#@manager_only
+@app.route("/view_inventory")
+def view_inventory():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM ingredient;")
+    inventory = cur.fetchall()
+    return render_template("manager/inventory.html", inventory=inventory, title="Inventory List")
 
 if __name__ == "__main__":
     app.run()
