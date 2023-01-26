@@ -1,14 +1,13 @@
 from flask import Flask, render_template, redirect, url_for, session, g, request, make_response, flash
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, RosterRequestForm, ProfileForm
+from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, RosterRequestForm, ProfileForm, RejectRosterRequestForm
 from functools import wraps
 from flask_mysqldb import MySQL 
 from flask_mail import Mail, Message
 from datetime import datetime
-import random
+import random, string, time
 from random import sample
-import string
 
 app = Flask(__name__)
 
@@ -363,7 +362,7 @@ def edit_staff_profile():
         last_name = form.last_name.data
 
         cur.execute("""UPDATE staff SET address=%s, bio=%s, first_name=%s, last_name=%s
-                            WHERE email='cherrylincyl@gmail.com';""", (address, bio, first_name, last_name))
+                            WHERE email=%s;""", (address, bio, first_name, last_name, g.user))
         mysql.connection.commit()
         cur.close()
         flash ("successfully updated!")
@@ -433,24 +432,37 @@ def manager():
     cur.execute("SELECT count(*) FROM user_queries where date(todays_date) = %s", (date,))
     query_count = cur.fetchone()
 
-    cur.execute("SELECT * FROM roster_requests")
+    cur.execute("SELECT * FROM roster_requests WHERE status = 'Pending';")
     requests = cur.fetchall()
 
     cur.close()
     return render_template("manager/dashboard.html", requests=requests, user_analytics=user_analytics, sales_analytics=sales_analytics, query_count=query_count, title="Dashboard")
 
 #@manager_only
-@app.route("/roster_approve")
-def roster_approve():
-    #once button clicked, then update db to approved
-    #automate a notification sent to the employee
-    return render_template("manager/dashboard.html")
+@app.route("/roster_approve/<int:id>")
+def roster_approve(id):
+    cur = mysql.connection.cursor()
+    print("the id is", id)
+    status = "Approved"
+    cur.execute("""UPDATE roster_requests SET status=%s  WHERE request_id= %s;""", (status, id))
+    mysql.connection.commit()
+    flash("Approved")
+    cur.close()
+    return redirect(url_for("manager"))
 
 #@manager_only
-@app.route("/roster_reject")
-def roster_reject():
-    # send a message as to why its a no and update db
-    return render_template("manager/dashboard.html")
+@app.route("/roster_reject/<int:id>", methods=["GET", "POST"])
+def roster_reject(id):
+    cur = mysql.connection.cursor()
+    form = RejectRosterRequestForm()
+    if form.validate_on_submit():
+        response = form.response.data
+        status = 'Rejected'
+        cur.execute("""UPDATE roster_requests SET status=%s, response=%s WHERE request_id=%s;""", (status, response, id))
+        mysql.connection.commit()
+        cur.close()
+        return redirect(url_for("manager"))
+    return render_template("manager/roster_reject.html", form=form)
 
 # View and manage all employees
 #@manager_only

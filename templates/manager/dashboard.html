@@ -29,7 +29,7 @@
                                                 <div class="col-9">
                                                     <h3 class="f-w-300 d-flex align-items-center m-b-0"><i
                                                             class="feather icon-arrow-up text-c-green f-30 m-r-10"></i>€
-                                                        {{ salesAnalytics["daily_sales"] }} </h3>
+                                                        {{ sales_analytics["daily_sales"] }} </h3>
                                                 </div>
 
                                                 <div class="col-3 text-right">
@@ -54,7 +54,7 @@
                                                 <div class="col-9">
                                                     <h3 class="f-w-300 d-flex align-items-center  m-b-0"><i
                                                             class="feather icon-arrow-down text-c-red f-30 m-r-10"></i>€
-                                                        {{ salesAnalytics["monthly_sales"] }}</h3>
+                                                        {{ sales_analytics["monthly_sales"] }}</h3>
                                                 </div>
                                                 <div class="col-3 text-right">
                                                     <p class="m-b-0">xx%</p>
@@ -78,7 +78,7 @@
                                                 <div class="col-9">
                                                     <h3 class="f-w-300 d-flex align-items-center  m-b-0"><i
                                                             class="feather icon-arrow-up text-c-green f-30 m-r-10"></i>€
-                                                        {{ salesAnalytics["years_sales"] }}</h3>
+                                                        {{ sales_analytics["yearly_sales"] }}</h3>
                                                 </div>
                                                 <div class="col-3 text-right">
                                                     <p class="m-b-0">xx%</p>
@@ -103,7 +103,7 @@
                                                 <div class="col-9">
                                                     <h3 class="f-w-300 d-flex align-items-center m-b-0"><i
                                                             class="feather icon-arrow-up text-c-green f-30 m-r-10"></i>
-                                                        {{ userAnalytics["daily_users"] }}</h3>
+                                                        {{ user_analytics["daily_users"] }}</h3>
                                                 </div>
 
                                                 <div class="col-3 text-right">
@@ -128,7 +128,7 @@
                                                 <div class="col-9">
                                                     <h3 class="f-w-300 d-flex align-items-center  m-b-0"><i
                                                             class="feather icon-arrow-down text-c-red f-30 m-r-10"></i>
-                                                        {{ userAnalytics["new_daily_users"] }}</h3>
+                                                        {{ user_analytics["new_daily_users"] }}</h3>
                                                 </div>
                                                 <div class="col-3 text-right">
                                                     <p class="m-b-0">???%</p>
@@ -150,7 +150,7 @@
                                             <h6 class="mb-4">Pending Customer Queries</h6>
                                             <div class="row d-flex align-items-center">
                                                 <div class="col-9">
-                                                    <h3 class="f-w-300 d-flex align-items-center  m-b-0"> {{ query_count }} new requests</h3>
+                                                    <h3 class="f-w-300 d-flex align-items-center  m-b-0"> {{ query_count['count(*)'] }} new requests</h3>
                                                 </div>
                                             </div>
                                             <div class="progress m-t-30" style="height: 7px;">
@@ -169,6 +169,7 @@
                                         <div class="card-header">
                                             <h5>Recent Roster Requests</h5>
                                         </div>
+                                        
                                         <div class="card-block px-0 py-3">
                                             <div class="table-responsive">
                                                 {% if requests %}
@@ -205,9 +206,12 @@
                                                             <td class="text-right"><i class="fas fa-circle text-c-green f-10"></i>
                                                             </td>
                                                         
-                                                            <td><a href="{{ url_for('roster_reject') }}"
-                                                                    class="label theme-bg2 text-white f-12">Reject</a><a
-                                                                    href="{{ url_for('roster_approve') }}" class="label theme-bg text-white f-12">Approve</a>
+                                                            <td><a href="{{ url_for('roster_reject', id=req['request_id']) }}" onclick="togglePopup()"
+                                                                    class="label theme-bg2 text-white f-12">Reject</a>
+                                                
+                                                                <a href="{{ url_for('roster_approve', id=req['request_id']) }}" 
+                                                                    class="label theme-bg text-white f-12">Approve</a>
+
                                                             </td>
                                                         </tr>
                                                         {% endfor %}
@@ -230,9 +234,9 @@
             </div>
         </div>
     </div>
-    <!-- [ Main Content ] end -->            
+    
+    <!-- [ Main Content ] end -->     
 
-{% endblock content %}
+{% endblock content %} 
 
-<!-- Specific Page JS goes HERE  -->
-{% block javascripts %}{% endblock javascripts %}
+{% block javascripts %} {% endblock javascripts %}

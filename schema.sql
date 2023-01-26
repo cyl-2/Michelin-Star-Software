@@ -121,13 +121,14 @@ CREATE TABLE user_queries
     date_received TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-
 DROP TABLE IF EXISTS roster_requests;
 
 CREATE TABLE roster_requests
 (
+    request_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     employee TEXT NOT NULL,
     message TEXT,
+    response TEXT,
     date_received TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     status VARCHAR(20) default 'Pending'
 );

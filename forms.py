@@ -68,3 +68,7 @@ class CodeForm(FlaskForm):
 class RosterRequestForm(FlaskForm):
     message = TextAreaField("Message", widget=TextArea(), validators=[InputRequired("Enter a message")])
     submit = SubmitField("Submit")
+
+class RejectRosterRequestForm(FlaskForm):
+    response = TextAreaField("Reason for rejection", widget=TextArea(), validators=[InputRequired()])
+    submit = SubmitField("Confirm")
