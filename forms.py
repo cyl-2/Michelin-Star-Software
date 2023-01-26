@@ -30,9 +30,11 @@ class ReplyForm(FlaskForm):
     submit = SubmitField("Send message")
 
 class EmployeeForm(FlaskForm):
-    first_name = StringField("First name: ", default="", validators=[InputRequired()])
-    last_name = StringField("Last name: ", default="", validators=[InputRequired()])
-    email = StringField("Email Address", [validators.Length(min=6, max=100)])
+    first_name = StringField("First name ", validators=[InputRequired()])
+    last_name = StringField("Last name", validators=[InputRequired()])
+    email = StringField("Email Address",[validators.Length(min=6, max=100)])
+    address = TextAreaField("Address")
+    bio = TextAreaField("About Info", widget=TextArea())
     role = StringField("Role: ", default="", validators=[InputRequired()])
     access_level = SelectField("Choose an option", 
                                         choices = [("managerial", "Managerial"),
@@ -53,4 +55,8 @@ class ResetPasswordForm(FlaskForm):
 
 class CodeForm(FlaskForm):
     code = StringField('Enter the 5 digit code here', validators=[InputRequired("Wrong code")])
+    submit = SubmitField("Submit")
+
+class RosterRequestForm(FlaskForm):
+    message = TextAreaField("Message", widget=TextArea(), validators=[InputRequired("Enter a message")])
     submit = SubmitField("Submit")
