@@ -33,13 +33,21 @@ class EmployeeForm(FlaskForm):
     first_name = StringField("First name ", validators=[InputRequired()])
     last_name = StringField("Last name", validators=[InputRequired()])
     email = StringField("Email Address",[validators.Length(min=6, max=100)])
-    address = TextAreaField("Address")
+    address = StringField("Address", default="", validators=[InputRequired()])
     bio = TextAreaField("About Info", widget=TextArea())
     role = StringField("Role: ", default="", validators=[InputRequired()])
     access_level = SelectField("Choose an option", 
                                         choices = [("managerial", "Managerial"),
                                                     ("ordinary staff", "Ordinary staff")], validators=[InputRequired()])
     submit = SubmitField("Create")
+
+class ProfileForm(FlaskForm):
+    email = StringField("Email Address")
+    first_name = StringField("First name ", validators=[InputRequired()])
+    last_name = StringField("Last name", validators=[InputRequired()])
+    address = StringField("Address", default="")
+    bio = TextAreaField("About Info", widget=TextArea())
+    submit = SubmitField("Update")
 
 class NewPasswordForm(FlaskForm):
     new_password = PasswordField("New Password", validators=[InputRequired()])

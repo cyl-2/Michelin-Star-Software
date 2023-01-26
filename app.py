@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, g, request, make_response, flash
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, RosterRequestForm
+from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, RosterRequestForm, ProfileForm
 from functools import wraps
 from flask_mysqldb import MySQL 
 from flask_mail import Mail, Message
@@ -29,7 +29,7 @@ app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
 app.config['MYSQL_USER'] = 'root' # someone's deets
-app.config['MYSQL_PASSWORD'] = '' # someone's deets
+app.config['MYSQL_PASSWORD'] = 'Cherry0417!' # someone's deets
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_DB'] = 'world' # someone's deets
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
@@ -64,7 +64,6 @@ def manager_only(view):
             return redirect(url_for("index"))
         return view(**kwargs)
     return wrapped_view
-
 
 @app.route("/auto_login_check_customer", methods=["GET","POST"])
 def auto_login_check_customer():
@@ -351,28 +350,28 @@ def confirm_code(email,random_code,table):
 def staff_profile():
     return render_template("staff/staff_profile.html", title="My Profile")
 
-@app.route("/edit_profile", methods=["GET", "POST"])
+@app.route("/edit_staff_profile", methods=["GET", "POST"])
 #@staff_only
-def edit_profile():
+def edit_staff_profile():
     cur = mysql.connection.cursor()
-    form = EmployeeForm()
+    form = ProfileForm()
+    profile=None
     if form.validate_on_submit():
         bio = form.bio.data
-        email = form.email.data
         address = form.address.data
         first_name = form.first_name.data
         last_name = form.last_name.data
 
-        cur.execute("""UPDATE staff SET email=%s, address=%s, bio=%s, first_name=%s, last_name=%s
-                            WHERE staff_id=1""", (email, address, bio, first_name, last_name))
+        cur.execute("""UPDATE staff SET address=%s, bio=%s, first_name=%s, last_name=%s
+                            WHERE email='cherrylincyl@gmail.com';""", (address, bio, first_name, last_name))
         mysql.connection.commit()
         cur.close()
-        flash("yay")
+        flash ("successfully updated!")
     else:
-        cur.execute("SELECT * FROM staff WHERE email='cherrylincyl@gmail.com'") #, (g.user,))
+        cur.execute("SELECT * FROM staff WHERE email=%s;", (g.user,))
         profile = cur.fetchone()
         cur.close()
-    return render_template("staff/edit_profile.html", form=form, profile=profile, title="My Profile")
+    return render_template("staff/edit_staff_profile.html", form=form, title="My Profile", profile=profile)
 
 @app.route("/roster_request", methods=["GET", "POST"])
 #@staff_only
@@ -445,11 +444,13 @@ def manager():
 def roster_approve():
     #once button clicked, then update db to approved
     #automate a notification sent to the employee
+    return render_template("manager/dashboard.html")
 
 #@manager_only
 @app.route("/roster_reject")
 def roster_reject():
     # send a message as to why its a no and update db
+    return render_template("manager/dashboard.html")
 
 # View and manage all employees
 #@manager_only
@@ -486,7 +487,7 @@ def add_new_employee():
         '''
         flash ("New employee successfully added!")
         return redirect(url_for("view_all_employees"))
-    return render_template("manager/new_staff_form.html", form=form, title="Add New Employee")   
+    return render_template("manager/add_new_staff.html", form=form, title="Add New Employee")   
 
 # View queries from users
 #@manager_only
