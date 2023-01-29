@@ -42,7 +42,7 @@ class EmployeeForm(FlaskForm):
     submit = SubmitField("Create")
 
 class ProfileForm(FlaskForm):
-    email = StringField("Email Address")
+    email = StringField("Email Address", validators=[InputRequired()])
     first_name = StringField("First name ", validators=[InputRequired()])
     last_name = StringField("Last name", validators=[InputRequired()])
     address = StringField("Address", default="")

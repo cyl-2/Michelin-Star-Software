@@ -37,7 +37,7 @@ mysql = MySQL(app)
 
 @app.before_request
 def logged_in():
-    g.user = "cherrylincyl@gmail.com" #session.get("username", None)
+    g.user = session.get("username", None)
     g.access = session.get("access_level", None)
 
 def login_required(view):
@@ -167,7 +167,7 @@ def customer_login():
             form.password.errors.append("Incorrect password")
             session['counter'] = session.get('counter') + 1
             if session.get('counter')==3:
-                flash(Markup('Oh no, are you having trouble logging in? Sucks to be you')) # reset password link need to go here
+                flash(Markup('Oh no, are you having trouble logging in? Click <a href="forgot_password">here</a> to reset your password.')) # reset password link need to go here
                 session.pop('counter', None)
         else:
             session.clear()
@@ -204,7 +204,7 @@ def staff_login():
             form.password.errors.append("Incorrect password")
             session['counter'] = session.get('counter') + 1
             if session.get('counter')==3:
-                flash(Markup('Oh no, are you having trouble logging in? Click <a href="forgot_password">here</a> to reset your password.')) # reset password link need to go here
+                flash(Markup('Oh no, are you having trouble logging in? Click <a href="forgot_password">here</a> to reset your password.'))
                 session.pop('counter', None)
         else:
             session.clear()
