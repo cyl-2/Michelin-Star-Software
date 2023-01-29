@@ -28,7 +28,7 @@ app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
 app.config['MYSQL_USER'] = 'root' # someone's deets
-app.config['MYSQL_PASSWORD'] = 'Cherry0417!' # someone's deets
+app.config['MYSQL_PASSWORD'] = '' # someone's deets
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_DB'] = 'world' # someone's deets
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
@@ -506,6 +506,16 @@ def add_new_employee():
         flash ("New employee successfully added!")
         return redirect(url_for("view_all_employees"))
     return render_template("manager/add_new_staff.html", form=form, title="Add New Employee")   
+
+# Remove existing employee
+@app.route("/remove_employee/<int:id>")
+#@manager_only
+def remove_employee(id):
+    cur = mysql.connection.cursor()
+    cur.execute("""DELETE FROM staff WHERE staff_id=%s""", (id,))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for("view_all_employees"))  
 
 # View queries from users
 #@manager_only
