@@ -20,8 +20,8 @@
             {% for i in range(staff_breaks|length) %}
             <td>
                 {% for staff in staff_breaks %}
-                    {% if staff["name"] ==  staff[i]["name"] %}
-                        {% if staff["time"] == str(j+0)+":00" %}
+                    {% if staff["name"] ==  staff_breaks[i]["name"] %}
+                        {% if staff["time"] == (j+0)|string+":00" %}
                             {{ staff["name"] }}
                         {% endif %}
                     {% endif %}

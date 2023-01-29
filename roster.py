@@ -21,32 +21,31 @@ class Employee:
             self.break_length = .5
 
 # Example Roster
-e0001 = Employee("Tommy", 13, 1)
-e0002 = Employee("Carl", 13, 1)
-e0003 = Employee("John", 13, 1)
-e0004 = Employee("Conor", 13, 1)
-e0005 = Employee("James", 13, 1)
-roster = [e0001, e0002, e0003, e0004, e0005]
-roster.sort(key=lambda x: x.start_time)
+e0001 = Employee("1", 9, 17)
+e0002 = Employee("2", 9, 15)
+e0003 = Employee("3", 9, 17)
+e0004 = Employee("4", 9, 17)
+e0005 = Employee("5", 9, 17)
+e0006 = Employee("6", 9, 17)
+e0007 = Employee("7", 9, 17)
+e0008 = Employee("8", 9, 17)
+e0009 = Employee("9", 9, 17)
 
+roster = [e0001, e0002, e0003, e0004, e0005, e0006, e0007, e0008, e0009]
+roster.sort(key=lambda x: x.start_time)
+available_breaks = [8.00,  9.00, 10.00, 11.00, 12.00, 13.00, 14.00, 15.00, 16.00, 17.00, 18.00]
 
 def calculateEmployeeBreaks(roster):
-    breakList = []
-    current_time = 0
+    breakList = {}
+    i = 0
     for employee in roster:
         # If the employee has a break
         if (employee.break_length > 0):
-            # Set the employee to begin their break 1/4 of their shift in
-            break_start = employee.start_time + ((employee.hours_worked / 4))
-            # if the time of the last employees break end time is less than the new employees break start time
-            if ((break_start < current_time) and (break_end > employee.end_time)):
-                # Add the previous employees break time to the employees start time
-                break_start += prev_employee.break_length
-            break_end = break_start + employee.break_length
-            # Add when the employee is due to go on break and when they return to the list
-            breakList.append([employee.name, break_start, break_end])
-            prev_employee = employee
-            current_time = break_end
+            if i >= len(available_breaks) or (available_breaks[i] > (employee.end_time - employee.break_length)):
+                i = 0
+            breakList[employee.name] = available_breaks[i]
+            i+=1
+
     print(breakList)
-    
+
 calculateEmployeeBreaks(roster)

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <title>Roster Timetable</title>
+{% endblock %}
+
+{% block main_content %}
+    <h1>Roster Timetable</h1>
+
+    <table>
+        <tr>
+            <th scope="col">Staff ID</th>
+            <th scope="col">Name</th>
+            <th scope="col">Sunday</th>
+            <th scope="col">Monday</th>
+            <th scope="col">Tuesday</th>
+            <th scope="col">Wednesday</th>
+            <th scope="col">Thursday</th>
+            <th scope="col">Friday</th>
+            <th scope="col">Saturday</th>
+        </tr>
+        {% for staff in roster %}
+        <tr>
+            <th scope="row">{{ staff[0] }}</th>
+            <td scope="row">{{ staff[10] }}</td>
+            
+            {% for i in range(7) %}
+                <td>
+                    {{ staff[i+1] }}
+                </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+
+
+{% endblock %}

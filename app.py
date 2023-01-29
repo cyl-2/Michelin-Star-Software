@@ -25,11 +25,12 @@ Session(app)
 app.config['MYSQL_USER'] = 'root' # someone's deets
 app.config['MYSQL_PASSWORD'] = '' # someone's deets
 app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_DB'] = 'world' # someone's deets
+app.config['MYSQL_DB'] = 'bens_restaurant' # someone's deets
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
 
+#cur = mysql.connection.cursor()
 
 def login_required(view):
     """
@@ -82,7 +83,7 @@ def take_order(table):
         
         cur.execute(
             """
-                SELECT dish.name, orders.status, order_id
+                SELECT dish.name, orders.status, order_id, dish.dishType
                 FROM orders JOIN dish 
                 ON orders.dish_id = dish.dish_id
                 WHERE orders.table_id = ? 
@@ -274,3 +275,17 @@ def remove_table(table):
         con.commit()
     return redirect(url_for('remove_table_menu'))
             
+@app.route("/break_timetable", methods=["GET","POST"])
+def break_timetable():
+    staff_breaks = [{'name':'Ben', 'time':'9:00'},{'name':'John', 'time':'13:00'},{'name':'Tim', 'time':'8 :00'}]
+    return render_template("manager/break_timetable.html", staff_breaks=staff_breaks)
+
+@app.route("/roster_timetable", methods=["GET","POST"])
+def roster_timetable():
+    con = sqlite3.connect('app.db')
+    with con:   
+        cur = con.cursor() 
+        cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
+        roster = cur.fetchall() 
+    return render_template("manager/roster_timetable.html", roster=roster)
+

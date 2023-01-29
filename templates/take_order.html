@@ -23,13 +23,35 @@
 </section>
 <section>
     <h2>Menu</h2>
+    <h3>Starters</h3>
     <ul>
         {% for meal in meals %}
-        <li>
-            <a href="{{ url_for('add_order', table=table, meal=meal[1]) }}">{{ meal[1] }} - €{{ meal[2] }}:00</a>
-        </li>
-        {% endfor %}
-        
+            {% if meal[5] == 'starter' %}
+                <li>
+                    <a href="{{ url_for('add_order', table=table, meal=meal[1]) }}">{{ meal[1] }} - €{{ meal[2] }}:00</a>
+                </li>
+            {% endif %}
+        {% endfor %} 
+    </ul>
+    <h3>Mains</h3>
+    <ul>
+        {% for meal in meals %}
+            {% if meal[5] == 'main' %}
+                <li>
+                    <a href="{{ url_for('add_order', table=table, meal=meal[1]) }}">{{ meal[1] }} - €{{ meal[2] }}:00</a>
+                </li>
+            {% endif %}
+        {% endfor %} 
+    </ul>
+    <h3>Dessert</h3>
+    <ul>
+        {% for meal in meals %}
+            {% if meal[5] == 'dessert' %}
+                <li>
+                    <a href="{{ url_for('add_order', table=table, meal=meal[1]) }}">{{ meal[1] }} - €{{ meal[2] }}:00</a>
+                </li>
+            {% endif %}
+        {% endfor %} 
     </ul>
 </section>
 <section>
