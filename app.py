@@ -136,6 +136,7 @@ def registration():
             cur.execute("""INSERT INTO customer ( email, first_name, last_name, password, code)
                         VALUES (%s,%s,%s,%s,%s);""", (email, first_name, last_name, generate_password_hash(password), code))
             mysql.connection.commit()
+            cur.close()
             flash("Successful Registration! Please login now")
             return redirect( url_for("customer_login"))
 
@@ -155,6 +156,7 @@ def customer_login():
         
         cur.execute("SELECT * FROM customer WHERE email = %s", (email,))
         customer = cur.fetchone()
+        cur.close()
 
         if 'counter' not in session:
             session['counter'] = 0
@@ -191,6 +193,7 @@ def staff_login():
 
         cur.execute("SELECT * FROM staff WHERE email = %s", (email,))
         staff = cur.fetchone()
+        cur.close()
 
         if 'counter' not in session:
             session['counter'] = 0
@@ -244,6 +247,7 @@ def contact_us():
         cur.execute("""INSERT INTO user_queries (name, email, subject, message)
                         VALUES (%s,%s,%s,%s);""", (name, email, subject, message))
         mysql.connection.commit()
+        cur.close()
 
         msg = Message(subject, sender='no.reply.please.and.thank.you@gmail.com', recipients=['no.reply.please.and.thank.you@gmail.com'])   
         msg.body = f"""
@@ -273,6 +277,8 @@ def change_password(table):
             mysql.connection.commit()
             session.clear()
             flash("Successfully changed password! Please login now.")
+            cur.close()
+
             if table == 'staff':
                 return redirect(url_for("staff_login"))
             else:
@@ -307,6 +313,8 @@ def forgot_password():
             msg = ""
             cur.execute("""UPDATE staff SET code=%s WHERE email=%s""", (random_code,email))
             mysql.connection.commit()
+            cur.close()
+
             msg = Message(f"Hello, {user['first_name']}", sender='no.reply.please.and.thank.you@gmail.com', recipients=[user["email"]])
             msg.body = f"""
             Hello,
@@ -314,15 +322,20 @@ def forgot_password():
             {random_code}"""
             mail.send(msg)
             flash("Great news! An email containing a 5 digit code has been sent to your email account. Enter the code below!")
-            return redirect(url_for("confirm_code", email=email, random_code=random_code, table=table))
+            return redirect(url_for("confirm_code", email=email, table=table))
     return render_template("password_management/forgot_password.html", form=form, title= "Forgot Password")
 
 # Checks whether the code the user received corresponds to the one in the database
-@app.route("/confirm_code/<email>/<random_code>/<table>", methods=["GET", "POST"])
-def confirm_code(email,random_code,table):
+@app.route("/confirm_code/<email>/<table>", methods=["GET", "POST"])
+def confirm_code(email, table):
     form = CodeForm()
     if form.validate_on_submit():
         code = form.code.data.strip()
+
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT code FROM staff WHERE email=%s;", (email,) )
+        random_code = cur.fetchone()
+        cur.close()
 
         if code != random_code:
             form.code.errors.append("Oh no, that's not the code in your email!")
@@ -351,7 +364,6 @@ def staff_profile():
 @app.route("/edit_staff_profile", methods=["GET", "POST"])
 #@staff_only
 def edit_staff_profile():
-    cur = mysql.connection.cursor()
     form = ProfileForm()
     profile=None
     if form.validate_on_submit():
@@ -361,12 +373,14 @@ def edit_staff_profile():
         last_name = form.last_name.data
         g.user = 'cherrylincyl@gmail.com'
 
+        cur = mysql.connection.cursor()
         cur.execute("""UPDATE staff SET address=%s, bio=%s, first_name=%s, last_name=%s
                             WHERE email=%s;""", (address, bio, first_name, last_name, g.user))
         mysql.connection.commit()
         cur.close()
         flash ("successfully updated!")
     else:
+        cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM staff WHERE email=%s;", (g.user,))
         profile = cur.fetchone()
         cur.close()
@@ -477,6 +491,7 @@ def view_all_employees():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM staff")
     employees = cur.fetchall()
+    cur.close()
     return render_template("manager/employees.html", employees=employees, title="Employee Data")
 
 # Add new employee
@@ -504,6 +519,7 @@ def add_new_employee():
         mail.send(msg)
         '''
         flash ("New employee successfully added!")
+        cur.close()
         return redirect(url_for("view_all_employees"))
     return render_template("manager/add_new_staff.html", form=form, title="Add New Employee")   
 
@@ -524,6 +540,7 @@ def view_query():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM user_queries")
     queries = cur.fetchall()
+    cur.close()
     return render_template("manager/queries.html", queries=queries)
 
 # Delete queries from users
@@ -535,6 +552,7 @@ def delete_query(id):
     cur.fetchone()
     mysql.connection.commit()
     flash ("Deleted!")
+    cur.close()
     return redirect(url_for("view_query"))
 
 # Manager can reply to user queries
@@ -557,6 +575,7 @@ def reply_email(id):
         msg.body = f"""{message}"""
         mail.send(msg)
         flash("Message sent successfully.")
+        cur.close()
     return render_template("manager/reply_email.html",form=form, title="Reply", query=query)
 
 # Delete queries from users
@@ -566,6 +585,7 @@ def view_inventory():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM ingredient;")
     inventory = cur.fetchall()
+    cur.close()
     return render_template("manager/inventory.html", inventory=inventory, title="Inventory List")
 
 if __name__ == "__main__":
