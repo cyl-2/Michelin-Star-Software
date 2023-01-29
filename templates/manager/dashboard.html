@@ -69,7 +69,7 @@
                                     </div>
                                 </div>
                                 <!--[ Monthly  sales section ] end-->
-                                <!--[ year  sales section ] starts-->
+                                <!--[ yearly sales section ] starts-->
                                 <div class="col-md-12 col-xl-4">
                                     <div class="card yearly-sales">
                                         <div class="card-block">
@@ -92,7 +92,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!--[ year  sales section ] end-->
+                                <!--[ yearly sales section ] end-->
 
                                 <!--[ daily users section ] start-->
                                 <div class="col-md-6 col-xl-4">
@@ -163,69 +163,167 @@
                                 </div>
                                 <!--[ year  sales section ] end-->
 
-                                <!--[ Recent Users ] start-->
+                                <!--[ Recent Roster Requests ] start-->
                                 <div class="col-xl-12">
-                                    <div class="card Recent-Users">
-                                        <div class="card-header">
-                                            <h5>Recent Roster Requests</h5>
-                                        </div>
+                                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                                        <li class="nav-item">
+                                            <a class="nav-link active show" id="profile-tab" data-toggle="tab"
+                                                href="#profile" role="tab" aria-controls="profile" aria-selected="true">
+                                                Pending</a>
+                                        </li>
+
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="home-tab" data-toggle="tab" href="#home" role="tab"
+                                                aria-controls="home" aria-selected="false">Approved</a>
+                                        </li>
                                         
-                                        <div class="card-block px-0 py-3">
-                                            <div class="table-responsive">
-                                                {% if requests %}
-
-                                                <table class="table table-hover">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Employee</th>
-                                                            <th>Message</th>
-                                                            <th>Received</th>
-                                                            <th>Status</th>
-                                                            <th></th>
-                                                            <th class="text-right"></th>
-                                                        </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                        {% for req in requests %}
-                                                        <tr>
-                                                            <td>
-                                                                <h6 class="m-0"><img class="rounded-circle m-r-10"
-                                                                                        style="width:40px;"
-                                                                                        src="/static/assets/images/user/avatar-1.jpg"
-                                                                                        alt="activity-user">{{ req["employee"] }}</h6>
-                                                            </td>
-                                                            <td>
-                                                                <h6 class="m-0">{{ req["message"] }}</h6>
-                                                            </td>
-                                                            <td>
-                                                                <h6 class="m-0">{{ req["date_received"] }}</h6>
-                                                            </td>
-                                                            <td>
-                                                                <h6 class="m-0 text-c-green">{{ req["status"] }}</h6>
-                                                            </td>
-                                                            <td class="text-right"><i class="fas fa-circle text-c-green f-10"></i>
-                                                            </td>
-                                                        
-                                                            <td><a href="{{ url_for('roster_reject', id=req['request_id']) }}" onclick="togglePopup()"
-                                                                    class="label theme-bg2 text-white f-12">Reject</a>
-                                                
-                                                                <a href="{{ url_for('roster_approve', id=req['request_id']) }}" 
-                                                                    class="label theme-bg text-white f-12">Approve</a>
-
-                                                            </td>
-                                                        </tr>
-                                                        {% endfor %}
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact"
+                                                role="tab" aria-controls="contact" aria-selected="false">Rejected</a>
+                                        </li>
+                                    </ul>
+                                    <div class="tab-content" id="myTabContent">
+                                        <div class="tab-pane fade" id="home" role="tabpanel" aria-labelledby="home-tab">
+                                            {% if approved_requests %}
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Employee</th>
+                                                        <th>Message</th>
+                                                        <th>Received</th>
+                                                        <th>Status</th>
+                                                        <th></th>
+                                                        <th class="text-right"></th>
                                                     </tr>
-                                                    </tbody>
-                                                </table>
-                                                {% else %}
-                                                    <p> No requests for now </p>
-                                                {% endif %}
+                                                    </thead>
+                                                    <tbody>
+                                                    {% for req in approved_requests %}
+                                                    <tr>
+                                                        <td>
+                                                            <h6 class="m-0"><img class="rounded-circle m-r-10"
+                                                                                    style="width:40px;"
+                                                                                    src="/static/assets/images/user/avatar-1.jpg"
+                                                                                    alt="activity-user">{{ req["employee"] }}</h6>
+                                                        </td>
+                                                        <td>
+                                                            <h6 class="m-0">{{ req["message"] }}</h6>
+                                                        </td>
+                                                        <td>
+                                                            <h6 class="m-0">{{ req["date_received"] }}</h6>
+                                                        </td>
+                                                        <td>
+                                                            <h6 class="m-0 text-c-green">{{ req["status"] }}</h6>
+                                                        </td>
+                                                        <td class="text-right"><i class="fas fa-circle text-c-green f-10"></i>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                            {% else %}
+                                                <p> No approved requests for now </p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="tab-pane fade active show" id="profile" role="tabpanel"
+                                                aria-labelledby="profile-tab">
+                                                {% if pending_requests %}
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Employee</th>
+                                                        <th>Message</th>
+                                                        <th>Received</th>
+                                                        <th>Status</th>
+                                                        <th class="text-center"></th>
+                                                        <th class="text-right"></th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {% for req in pending_requests %}
+                                                    <tr>
+                                                        <td>
+                                                            <h6 class="m-0"><img class="rounded-circle m-r-10"
+                                                                                    style="width:40px;"
+                                                                                    src="/static/assets/images/user/avatar-1.jpg"
+                                                                                    alt="activity-user">{{ req["employee"] }}</h6>
+                                                        </td>
+                                                        <td>
+                                                            <h6 class="m-0">{{ req["message"] }}</h6>
+                                                        </td>
+                                                        <td>
+                                                            <h6 class="m-0">{{ req["date_received"] }}</h6>
+                                                        </td>
+                                                        <td>
+                                                            <h6 class="m-0 text-c-purple">{{ req["status"] }}</h6>
+                                                        </td>
+                                                        <td><a href="{{ url_for('roster_reject', id=req['request_id']) }}"
+                                                                class="label theme-bg2 text-white f-12">Reject</a>
+
+                                                            <a href="{{ url_for('roster_approve', id=req['request_id']) }}"
+                                                                class="label theme-bg text-white f-12">Approve</a>
+                                                        </td>
+                                                        <td class="text-right"><i class="fas fa-circle text-c-purple f-10"></i>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                            {% else %}
+                                                <p> No requests for now </p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="tab-pane fade" id="contact" role="tabpanel"
+                                            aria-labelledby="contact-tab">
+                                            {% if rejected_requests %}
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Employee</th>
+                                                        <th>Employee Message</th>
+                                                        <th>Received</th>
+                                                        <th>Status</th>
+                                                        <th>Reason For Rejection</th>
+                                                        <th class="text-right"></th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {% for req in rejected_requests %}
+                                                    <tr>
+                                                        <td>
+                                                            <h6 class="m-0"><img class="rounded-circle m-r-10"
+                                                                                    style="width:40px;"
+                                                                                    src="/static/assets/images/user/avatar-1.jpg"
+                                                                                    alt="activity-user">{{ req["employee"] }}</h6>
+                                                        </td>
+                                                        <td>
+                                                            <h6 class="m-0">{{ req["message"] }}</h6>
+                                                        </td>
+                                                        <td>
+                                                            <h6 class="m-0">{{ req["date_received"] }}</h6>
+                                                        </td>
+                                                        <td>
+                                                            <h6 class="m-0 text-c-red">{{ req["status"] }}</h6>
+                                                        </td>
+                                                        <td>
+                                                            <h6 class="m-0">{{ req["response"] }}</h6>
+                                                        </td>
+                                                        <td class="text-right">
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            {% else %}
+                                                <p> No rejected requests for now </p>
+                                            {% endif %}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <!--[ Recent Users ] end-->
+                                <!--[ Recent Roster Requests ] end-->
                             </div>
                             <!-- [ Main Content ] end -->
                         </div>

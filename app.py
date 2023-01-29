@@ -28,7 +28,7 @@ app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
 app.config['MYSQL_USER'] = 'root' # someone's deets
-app.config['MYSQL_PASSWORD'] = '' # someone's deets
+app.config['MYSQL_PASSWORD'] = 'Cherry0417!' # someone's deets
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_DB'] = 'world' # someone's deets
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
@@ -37,7 +37,7 @@ mysql = MySQL(app)
 
 @app.before_request
 def logged_in():
-    g.user = session.get("username", None)
+    g.user = "cherrylincyl@gmail.com" #session.get("username", None)
     g.access = session.get("access_level", None)
 
 def login_required(view):
@@ -240,10 +240,9 @@ def contact_us():
         email = form.email.data.lower().strip()
         subject = form.subject.data
         message = form.message.data
-        date = datetime.now().date()
 
-        cur.execute("""INSERT INTO user_queries (name, email, subject, message, date)
-                        VALUES (%s,%s,%s,%s,%s);""", (name, email, subject, message, date))
+        cur.execute("""INSERT INTO user_queries (name, email, subject, message)
+                        VALUES (%s,%s,%s,%s);""", (name, email, subject, message))
         mysql.connection.commit()
 
         msg = Message(subject, sender='no.reply.please.and.thank.you@gmail.com', recipients=['no.reply.please.and.thank.you@gmail.com'])   
@@ -360,6 +359,7 @@ def edit_staff_profile():
         address = form.address.data
         first_name = form.first_name.data
         last_name = form.last_name.data
+        g.user = 'cherrylincyl@gmail.com'
 
         cur.execute("""UPDATE staff SET address=%s, bio=%s, first_name=%s, last_name=%s
                             WHERE email=%s;""", (address, bio, first_name, last_name, g.user))
@@ -379,7 +379,7 @@ def roster_request():
     form = RosterRequestForm()
     if form.validate_on_submit():
         message = form.message.data
-        cur.execute("SELECT * FROM staff where email='cherrylincyl@gmail.com'")#, (g.user,))
+        cur.execute("SELECT * FROM staff where email=%s", (g.user,))
         employee = cur.fetchone()
         employee = employee["first_name"] + " " + employee["last_name"]
 
@@ -432,11 +432,17 @@ def manager():
     cur.execute("SELECT count(*) FROM user_queries where date(todays_date) = %s", (date,))
     query_count = cur.fetchone()
 
-    cur.execute("SELECT * FROM roster_requests WHERE status = 'Pending';")
-    requests = cur.fetchall()
+    cur.execute("SELECT * FROM roster_requests WHERE status = 'Pending'")
+    pending_requests = cur.fetchall()
+
+    cur.execute("SELECT * FROM roster_requests WHERE status = 'Approved' ORDER BY last_updated DESC")
+    approved_requests = cur.fetchall()
+
+    cur.execute("SELECT * FROM roster_requests WHERE status = 'Rejected' ORDER BY last_updated DESC")
+    rejected_requests = cur.fetchall()
 
     cur.close()
-    return render_template("manager/dashboard.html", requests=requests, user_analytics=user_analytics, sales_analytics=sales_analytics, query_count=query_count, title="Dashboard")
+    return render_template("manager/dashboard.html", rejected_requests=rejected_requests,approved_requests=approved_requests, pending_requests=pending_requests, user_analytics=user_analytics, sales_analytics=sales_analytics, query_count=query_count, title="Dashboard")
 
 #@manager_only
 @app.route("/roster_approve/<int:id>")
@@ -444,7 +450,7 @@ def roster_approve(id):
     cur = mysql.connection.cursor()
     print("the id is", id)
     status = "Approved"
-    cur.execute("""UPDATE roster_requests SET status=%s  WHERE request_id= %s;""", (status, id))
+    cur.execute("""UPDATE roster_requests SET status=%s, last_updated=CURRENT_TIMESTAMP WHERE request_id= %s;""", (status, id))
     mysql.connection.commit()
     flash("Approved")
     cur.close()
@@ -458,7 +464,7 @@ def roster_reject(id):
     if form.validate_on_submit():
         response = form.response.data
         status = 'Rejected'
-        cur.execute("""UPDATE roster_requests SET status=%s, response=%s WHERE request_id=%s;""", (status, response, id))
+        cur.execute("""UPDATE roster_requests SET status=%s, response=%s, last_updated=CURRENT_TIMESTAMP WHERE request_id=%s;""", (status, response, id))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for("manager"))

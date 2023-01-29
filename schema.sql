@@ -11,7 +11,8 @@ CREATE TABLE staff
     last_name TEXT NOT NULL,
     bio TEXT,
     address TEXT,
-    password TEXT NOT NULL
+    password TEXT NOT NULL,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 DROP TABLE IF EXISTS customer;
@@ -23,7 +24,8 @@ CREATE TABLE customer
     code TEXT,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
-    password TEXT NOT NULL
+    password TEXT NOT NULL,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 DROP TABLE IF EXISTS roster;
@@ -130,7 +132,8 @@ CREATE TABLE roster_requests
     message TEXT,
     response TEXT,
     date_received TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    status VARCHAR(20) default 'Pending'
+    status VARCHAR(20) default 'Pending',
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 DROP TABLE IF EXISTS user_analytics;
@@ -150,3 +153,30 @@ CREATE TABLE sales_analytics
     monthly_sales DECIMAL,
     yearly_sales DECIMAL
 );
+
+
+############
+TRIGGER TO UPDATE STATUS AFTER UPDATING QUANTITY IN INGREDIENT TABLE
+
+CREATE DEFINER=`root`@`localhost` TRIGGER `ingredient_BEFORE_UPDATE` BEFORE UPDATE ON `ingredient` FOR EACH ROW BEGIN
+	IF NEW.quantity <= 10 THEN
+        SET NEW.status = 'RED';
+    END IF;
+    IF NEW.quantity >= 11 THEN
+        SET NEW.status = 'AMBER';
+    END IF;
+    IF NEW.quantity >= 50 THEN
+        SET NEW.status = 'GREEN';
+    END IF;
+END
+
+############
+CLEARS CODE AFTER 10 SECONDS OF INSERTING
+
+CREATE EVENT clear_code
+ON SCHEDULE
+EVERY 5 SECOND
+STARTS (CURRENT_TIMESTAMP + INTERVAL 10 SECOND)
+DO 
+UPDATE staff
+SET code = null WHERE TIMESTAMPDIFF(SECOND, last_updated, NOW()) >= 10 ;
