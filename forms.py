@@ -33,9 +33,9 @@ class EmployeeForm(FlaskForm):
     first_name = StringField("First name ", validators=[InputRequired()])
     last_name = StringField("Last name", validators=[InputRequired()])
     email = StringField("Email Address",[validators.Length(min=6, max=100)])
-    address = StringField("Address", default="", validators=[InputRequired()])
+    address = StringField("Address", validators=[InputRequired()])
     bio = TextAreaField("About Info", widget=TextArea())
-    role = StringField("Role: ", default="", validators=[InputRequired()])
+    role = StringField("Role: ", validators=[InputRequired()])
     access_level = SelectField("Choose an option", 
                                         choices = [("managerial", "Managerial"),
                                                     ("ordinary staff", "Ordinary staff")], validators=[InputRequired()])
@@ -45,7 +45,7 @@ class ProfileForm(FlaskForm):
     email = StringField("Email Address", validators=[InputRequired()])
     first_name = StringField("First name ", validators=[InputRequired()])
     last_name = StringField("Last name", validators=[InputRequired()])
-    address = StringField("Address", default="")
+    address = StringField("Address")
     bio = TextAreaField("About Info", widget=TextArea())
     submit = SubmitField("Update")
 
