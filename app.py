@@ -28,7 +28,7 @@ app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
 app.config['MYSQL_USER'] = 'root' # someone's deets
-app.config['MYSQL_PASSWORD'] = '' # someone's deets
+app.config['MYSQL_PASSWORD'] = 'Cherry0417!' # someone's deets
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_DB'] = 'world' # someone's deets
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
@@ -201,7 +201,7 @@ def staff_login():
             form.password.errors.append("Incorrect password")
             session['counter'] = session.get('counter') + 1
             if session.get('counter')==3:
-                flash(Markup('Oh no, are you having trouble logging in? Sucks to be you')) # reset password link need to go here
+                flash(Markup('Oh no, are you having trouble logging in? Click <a href="forgot_password">here</a> to reset your password.')) # reset password link need to go here
                 session.pop('counter', None)
         else:
             session.clear()
