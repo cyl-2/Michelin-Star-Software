@@ -6,8 +6,9 @@
 
 {% block main_content %}
     <h1>Roster Timetable</h1>
+    <p><a href="{{ url_for('roster_timetable') }}">View Roster</a></p>
     <p><a href="{{ url_for('delete_from_roster') }}">Delete From Roster</a></p>
-    <p><a href="{{ url_for('add_to_roster_timetable') }}">Add Slot to Roster</a></p>
+
     <table>
         <tr>
             <th scope="col">Staff ID</th>
@@ -34,5 +35,29 @@
         {% endfor %}
     </table>
 
+    <h2>Add Shift to Roster<h2>
+    <form action="" method="post" novalidate> 
+        {{ form.hidden_tag() }}
+
+        {{ form.staff_id.label }}
+        {{ form.staff_id() }}
+        {% for error in form.staff_id.errors %}
+            {{ error }}
+        {% endfor %}
+        <br>
+        {{ form.day.label }}
+        {{ form.day() }}
+        {% for error in form.day.errors %}
+            {{ error }}
+        {% endfor %}
+        <br>
+        {{ form.time.label }}
+        {{ form.time() }}
+        {% for error in form.time.errors %}
+            {{ error }}
+        {% endfor %}
+        <br>
+        {{ form.submit(class="submit") }}
+    </form>
 
 {% endblock %}

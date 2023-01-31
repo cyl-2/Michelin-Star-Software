@@ -28,23 +28,23 @@ e0004 = Employee("4", 9, 17)
 e0005 = Employee("5", 9, 17)
 e0006 = Employee("6", 9, 17)
 e0007 = Employee("7", 9, 17)
-e0008 = Employee("8", 9, 17)
+e0008 = Employee("8", 9, 18)
 e0009 = Employee("9", 9, 17)
 
 roster = [e0001, e0002, e0003, e0004, e0005, e0006, e0007, e0008, e0009]
-roster.sort(key=lambda x: x.start_time)
-available_breaks = [8.00,  9.00, 10.00, 11.00, 12.00, 13.00, 14.00, 15.00, 16.00, 17.00, 18.00]
-
+roster.sort(key=lambda x: x.start_time) # Sort the Employees based on who started first
+available_breaks = [10.00, 11.00, 12.00, 13.00, 14.00, 15.00, 16.00, 20.00, 21.00]
 def calculateEmployeeBreaks(roster):
-    breakList = {}
+    breakList = []
     i = 0
     for employee in roster:
-        # If the employee has a break
-        if (employee.break_length > 0):
-            if i >= len(available_breaks) or (available_breaks[i] > (employee.end_time - employee.break_length)):
-                i = 0
-            breakList[employee.name] = available_breaks[i]
-            i+=1
+        if (employee.break_length > 0): # If the employee has a break
+            if i >= len(available_breaks):
+                i = 0 # Go back to the start of the list if it goes over the size
+            if (available_breaks[i] < (employee.end_time - employee.break_length) and 
+                (available_breaks[i] > employee.start_time)): # If the break will be during the employees shift
+                breakList.append({'name' : employee.name, 'time' : str(available_breaks[i])}) # Add the Employees break to the Break List
+            i += 1
 
     print(breakList)
 

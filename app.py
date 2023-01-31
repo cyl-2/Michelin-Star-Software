@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, g, request, make_response
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import TableForm
+from forms import TableForm, AddToRosterForm
 from functools import wraps
 from flask_mysqldb import MySQL 
 import json
@@ -22,11 +22,12 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-app.config['MYSQL_USER'] = 'root' # someone's deets
-app.config['MYSQL_PASSWORD'] = '' # someone's deets
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_DB'] = 'bens_restaurant' # someone's deets
+app.config['MYSQL_USER'] = 'bc23' # someone's deets
+app.config['MYSQL_PASSWORD'] = 'PaZARIX9' # someone's deets
+app.config['MYSQL_HOST'] = 'csgate.ucc.ie'
+app.config['MYSQL_DB'] = 'mydb' # someone's deets
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
+
 
 mysql = MySQL(app)
 
@@ -48,6 +49,8 @@ def index():
     """
     start route must be "/", directs straight to home page 
     """
+    cur = mysql.connection.cursor()
+    
     return redirect("home")
 
 @app.route("/home", methods=["GET","POST"])
@@ -286,6 +289,47 @@ def roster_timetable():
     with con:   
         cur = con.cursor() 
         cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
-        roster = cur.fetchall() 
+        roster = cur.fetchall()
     return render_template("manager/roster_timetable.html", roster=roster)
 
+@app.route("/delete_from_roster", methods=["GET","POST"])
+def delete_from_roster():
+    con = sqlite3.connect('app.db')
+    with con:   
+        cur = con.cursor() 
+        cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
+        roster = cur.fetchall() 
+    return render_template("manager/delete_from_roster.html", roster=roster)
+
+@app.route("/remove_roster_slot/<int:staff_id>/<int:day>", methods=["GET","POST"])
+def remove_roster_slot(staff_id, day):
+    print(day)
+    week = ['mon','tue','wed','thu','fri','sat','sun']
+    con = sqlite3.connect('app.db')
+    with con:   
+        cur = con.cursor() 
+        cur.execute("UPDATE roster SET "+week[day]+" = '' WHERE staff_id = ?;",(staff_id,))
+        con.commit()
+    return redirect(url_for('delete_from_roster'))
+
+@app.route("/add_to_roster_timetable", methods=["GET","POST"])
+def add_to_roster_timetable():
+    con = sqlite3.connect('app.db')
+    with con:   
+        cur = con.cursor() 
+        
+        form = AddToRosterForm()
+        if form.validate_on_submit():
+            staff_id = form.staff_id.data
+            cur.execute("SELECT * FROM staff WHERE staff_id = ?",(staff_id,))
+            staff = cur.fetchone() 
+            if staff is not None:
+                day = form.day.data
+                time = form.time.data
+                cur.execute("UPDATE roster SET "+day+" = ? WHERE staff_id = ?;",(time, staff_id,))
+                con.commit()
+            else:
+                form.staff_id.errors = "Staff ID does not exists"
+        cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
+        roster = cur.fetchall() 
+    return render_template("manager/add_to_roster_timetable.html", roster=roster, form=form)
