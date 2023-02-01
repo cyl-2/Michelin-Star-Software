@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <title>Move Table</title>
+{% endblock %}
+
+{% block main_content %}
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<script type ='text/javascript'> 
+    let hOffset, vOffset = 0; 
+    let selectedTable = null; 
+
+    window.addEventListener('DOMContentLoaded', setupEvents);  
+    function setupEvents() {  
+        let allTables = document.getElementsByTagName('img');  
+        for (let i = 0; i < allTables.length; i++) {  
+            allTables[i].addEventListener('mousedown', startDrag); 
+        } 
+    } 
+
+    function startDrag(evt) { 
+        evt.preventDefault();
+        evt.stopPropagation();
+        let allTables = document.getElementsByTagName('img');  
+        for (let i = 0; i < allTables.length; i++) allTables[i].style.zIndex = 0; 
+
+        selectedTable = evt.target; 
+        selectedTable.style.zIndex = 1;
+    
+        document.addEventListener('mousemove', dragTable, false); 
+        document.addEventListener('mouseup', stopDrag, false); 
+        selectedTable = evt.target; 
+
+        hOffset = parseInt(evt.clientX) - parseInt(selectedTable.style.left); 
+        vOffset = parseInt(evt.clientY) - parseInt(selectedTable.style.top); 
+
+    
+        return false; 
+    }  
+
+    function dragTable(evt) { 
+        evt.preventDefault();
+        evt.stopPropagation();
+        selectedTable.style.left = (parseInt(evt.clientX) - hOffset) + 'px'; 
+        selectedTable.style.top = (parseInt(evt.clientY) - vOffset) + 'px'; 
+        return false; 
+    }  
+
+    function stopDrag() { 
+        
+        document.removeEventListener('mousemove', dragTable, false); 
+        document.removeEventListener('mouseup', stopDrag, false);
+        readyToSave(); 
+    } 
+</script> 
+<h1>Move Table</h1>
+<section>
+    {% for table_index in table_positions %}
+    <img id='table{{ table_index }}' src="{{ url_for('static', filename='table.png' ) }}" style="position:absolute;  left: {{ table_positions[ table_index ][0] }}; top: {{ table_positions[ table_index ][1] }}; border: 1px solid black; width: 50px;"/>
+    {% endfor %}
+
+</section>
+<p><a href="{{ url_for('move_tables') }}" >Reset</a></p>
+<p id="save_changes" onclick="sendData()"></p>
+<script>
+    let co_ords = [];
+    function readyToSave(){
+        var table;
+        
+        let link;
+        co_ords = []
+        {% for table_index in table_positions %}
+            table = document.getElementById('table'+({{table_index}}).toString());
+            co_ords.push(table.style.left);
+            co_ords.push(table.style.top);
+        {% endfor %}
+
+        document.getElementById("save_changes").innerHTML = '<a href="{{ url_for('save_tables') }}">Save Changes</a>';
+    }
+
+
+    function sendData(){
+        $.ajax(
+            {
+            url:"/save_tables",
+            type:"POST",
+            contentType: "application/json",
+            data: JSON.stringify(co_ords)
+            }
+        );
+    }
+</script>
+{% endblock %} 

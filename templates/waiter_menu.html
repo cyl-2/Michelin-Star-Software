@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <title>Menu</title>
+{% endblock %}
+
+{% block main_content %}
+<h1>Menu</h1>
+<section>
+    <p><a href="{{ url_for('choose_table') }}">Take Order</a></p>
+ 
+
+    <p><a href="{{ url_for('roster_timetable') }}">Roster</a></p>
+        <!--
+    <p><a class="button" href="{{ url_for('home') }}">Roster</a></p>
+    <p><a class="button" href="{{ url_for('home') }}">Clock Out</a></p>
+    -->
+    
+</section>
+{% endblock %}

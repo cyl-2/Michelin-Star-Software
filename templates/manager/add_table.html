@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+    <h1> Add Table </h1> 
+
+    <form action="" method="post" novalidate> 
+        {{ form.hidden_tag() }}
+
+        {{ form.table_number.label }}
+        {{ form.table_number() }}
+        {% for error in form.table_number.errors %}
+            {{ error }}
+        {% endfor %}
+        <br>
+        {{ form.seats.label }}
+        {{ form.seats() }}
+        {% for error in form.seats.errors %}
+            {{ error }}
+        {% endfor %}
+        <br>
+        {{ form.x.label }}
+        {{ form.x() }}
+        {% for error in form.x.errors %}
+            {{ error }}
+        {% endfor %}
+        <br>
+        {{ form.y.label }}
+        {{ form.y() }}
+        {% for error in form.y.errors %}
+            {{ error }}
+        {% endfor %}
+        <br>
+        {{ form.submit(class="submit") }}
+    </form>
+
+{% endblock %}
