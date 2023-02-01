@@ -22,7 +22,7 @@
                 {% for staff in staff_breaks %}
                     {% if staff["name"] ==  staff_breaks[i]["name"] %}
                         {% if staff["time"] == (j+0)|string+":00" %}
-                            {{ staff["name"] }}
+                            1 hour
                         {% endif %}
                     {% endif %}
                 {% endfor %}

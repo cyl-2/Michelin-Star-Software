@@ -6,6 +6,7 @@
 
 {% block main_content %}
     <h1>Roster Timetable</h1>
+    <p><a href="{{ url_for('generate_roster') }}">Generate Roster</a></p>
     <p><a href="{{ url_for('delete_from_roster') }}">Delete From Roster</a></p>
     <p><a href="{{ url_for('add_to_roster_timetable') }}">Add Slot to Roster</a></p>
     <table>
@@ -22,14 +23,16 @@
         </tr>
         {% for staff in roster %}
         <tr>
-            <th scope="row">{{ staff[0] }}</th>
-            <td scope="row">{{ staff[10] }}</td>
+            <th scope="row">{{ staff['staff_id'] }}</th>
+            <td scope="row">{{ staff['first_name'] }}</td>
+            <td>{{ staff['mon'] }}</td>
+            <td>{{ staff['tue'] }}</td>
+            <td>{{ staff['wed'] }}</td>
+            <td>{{ staff['thu'] }}</td>
+            <td>{{ staff['fri'] }}</td>
+            <td>{{ staff['sat'] }}</td>
+            <td>{{ staff['sun'] }}</td>
             
-            {% for i in range(7) %}
-                <td>
-                    {{ staff[i+1] }}
-                </td>
-            {% endfor %}
         </tr>
         {% endfor %}
     </table>

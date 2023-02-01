@@ -22,14 +22,30 @@
         </tr>
         {% for staff in roster %}
         <tr>
-            <th scope="row">{{ staff[0] }}</th>
-            <td scope="row">{{ staff[10] }}</td>
+            <th scope="row">{{ staff['staff_id'] }}</th>
+            <td scope="row">{{ staff['first_name'] }}</td>
+            <td>
+                <a href="{{ url_for('remove_roster_slot', staff_id=staff['staff_id'], day=0) }}">{{ staff['mon'] }}</a>
+            </td>
+            <td>
+                <a href="{{ url_for('remove_roster_slot', staff_id=staff['staff_id'], day=1) }}">{{ staff['tue'] }}</a>
+            </td>
+            <td>
+                <a href="{{ url_for('remove_roster_slot', staff_id=staff['staff_id'], day=2) }}">{{ staff['wed'] }}</a>
+            </td>
+            <td>
+                <a href="{{ url_for('remove_roster_slot', staff_id=staff['staff_id'], day=3) }}">{{ staff['thu'] }}</a>
+            </td>
+            <td>
+                <a href="{{ url_for('remove_roster_slot', staff_id=staff['staff_id'], day=4) }}">{{ staff['fri'] }}</a>
+            </td>
+            <td>
+                <a href="{{ url_for('remove_roster_slot', staff_id=staff['staff_id'], day=5) }}">{{ staff['sat'] }}</a>
+            </td>
+            <td>
+                <a href="{{ url_for('remove_roster_slot', staff_id=staff['staff_id'], day=6) }}">{{ staff['sun'] }}</a>
+            </td>
             
-            {% for i in range(7) %}
-                <td>
-                    <a href="{{ url_for('remove_roster_slot', staff_id=staff[0], day=i) }}">{{ staff[i+1] }}</a>
-                </td>
-            {% endfor %}
         </tr>
         {% endfor %}
     </table>

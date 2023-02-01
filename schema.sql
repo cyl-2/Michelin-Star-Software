@@ -19,7 +19,27 @@ VALUES
   ( 'manager', 'Aodh', '', '');
   
 
+DROP TABLE IF EXISTS shift_requirements;
 
+CREATE TABLE shift_requirements 
+(
+    day TEXT,
+    opening_time INTEGER,
+    closing_time INTEGER,
+    min_workers INTEGER,
+    unavailable TEXT
+);
+
+INSERT INTO shift_requirements
+  ( day, opening_time, closing_time, min_workers, unavailable )
+VALUES
+  ('mon', 9, 5, 2, '[1]'),
+  ('tue', 0, 24, 2, '[5]'),
+  ('wed', 9, 5, 2, '[]'),
+  ('thu', 9, 5, 2, '[]'),
+  ('fri', 9, 5, 2, '[]'),
+  ('sat', 9, 5, 2, '[]'),
+  ('sun', 9, 5, 2, '[]');
 
 DROP TABLE IF EXISTS roster;
 
