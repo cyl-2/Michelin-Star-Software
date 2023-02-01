@@ -37,7 +37,7 @@ mysql = MySQL(app)
 
 @app.before_request
 def logged_in():
-    g.user = 'cherrylincyl@gmail.com' #session.get("username", None)
+    g.user = session.get("username", None)
     g.access = session.get("access_level", None)
 
 def login_required(view):
@@ -148,12 +148,12 @@ def registration():
 # Login to customer account
 @app.route("/customer_login", methods=["GET", "POST"])
 def customer_login():
-    cur = mysql.connection.cursor()
     form = LoginForm()
     if form.validate_on_submit():
         email = form.email.data.strip()
         password = form.password.data
-        
+
+        cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM customer WHERE email = %s", (email,))
         customer = cur.fetchone()
         cur.close()
@@ -172,6 +172,14 @@ def customer_login():
         else:
             session.clear()
             session["username"] = email
+            
+            # cur = mysql.connection.cursor()
+            # cur.execute("SELECT last_updated FROM customer WHERE email = %s", (email,))
+            # last_login = cur.fetchone()
+            ''' if the date value stored at last_login is NOT today's date (eg if today is the 2nd Feb, and the last_login date value is the 1st)
+             THEN execute this query -> cur.execute("""UPDATE customer set last_updated=CURRENT_TIMESTAMP WHERE email=%s""", (email,)) '''
+            #cur.close()
+
             return redirect(url_for("customer_profile"))
             '''next_page = request.args.get("next")
             if not next_page:
@@ -311,8 +319,12 @@ def forgot_password():
             form.email.errors.append("There is no account associated with this email, please check your spelling")
         else:
             msg = ""
-            cur.execute("""UPDATE staff SET code=%s WHERE email=%s""", (random_code,email))
-            mysql.connection.commit()
+            if table == 'staff':
+                cur.execute("""UPDATE staff SET code=%s, last_updated=CURRENT_TIMESTAMP WHERE email=%s""", (random_code,email))
+                mysql.connection.commit()
+            else:
+                cur.execute("""UPDATE customer SET code=%s, last_updated=CURRENT_TIMESTAMP WHERE email=%s""", (random_code,email))
+                mysql.connection.commit()
             cur.close()
 
             msg = Message(f"Hello, {user['first_name']}", sender='no.reply.please.and.thank.you@gmail.com', recipients=[user["email"]])
@@ -333,8 +345,14 @@ def confirm_code(email, table):
         code = form.code.data.strip()
 
         cur = mysql.connection.cursor()
-        cur.execute("SELECT code FROM staff WHERE email=%s;", (email,) )
-        random_code = cur.fetchone()
+
+        if table == 'staff':
+            cur.execute("SELECT code FROM staff WHERE email=%s;", (email,) )
+            random_code = cur.fetchone()
+        else:
+            cur.execute("SELECT code FROM customer WHERE email=%s;", (email,) )
+            random_code = cur.fetchone()
+            
         cur.close()
 
         if code != random_code:
