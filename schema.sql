@@ -2,7 +2,10 @@ DROP TABLE IF EXISTS staff;
 
 CREATE TABLE staff 
 (
-    staff_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    staff_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    email TEXT NOT NULL,
+    code TEXT,
+    access_level TEXT NOT NULL,
     role TEXT NOT NULL,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
@@ -40,6 +43,18 @@ VALUES
   ('fri', 9, 5, 2, '[]'),
   ('sat', 9, 5, 2, '[]'),
   ('sun', 9, 5, 2, '[]');
+
+DROP TABLE IF EXISTS customer;
+
+CREATE TABLE customer
+(
+    customer_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    code TEXT,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    password TEXT NOT NULL
+);
 
 DROP TABLE IF EXISTS roster;
 
@@ -185,4 +200,16 @@ CREATE TABLE stats
     meal_cost INTEGER NOT NULL,
     tip INTEGER NOT NULL,
     tables INTEGER NOT NULL
+);
+
+DROP TABLE IF EXISTS user_queries;
+
+CREATE TABLE user_queries
+(
+    query_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    name TEXT NOT NULL,
+    message TEXT NOT NULL,
+    date DATE NOT NULL
 );
