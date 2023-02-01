@@ -1,0 +1,86 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Profile {% endblock %} 
+
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <div class="pcoded-main-container">
+        <div class="pcoded-wrapper">
+
+            <div class="pcoded-content">
+                <div class="pcoded-inner-content">
+                    <div class="main-body">
+                        <div class="page-wrapper">
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5>Edit Info</h5>
+                                        </div>
+                                        <div class="card-block">
+                                            <form action="" method="post" novalidate>
+                                                <div class="row">
+                                                    <div class="col-sm-12 mb-4">
+                                                        <div class="form-group">
+                                                            {{ form.hidden_tag() }}
+                                                            {{ form.message.label }}
+                                                            {{ form.message(class="form-control", placeholder="Write a request") }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-12 mb-2">
+                                                        <div class="form-group">
+                                                            {{ form.submit(value="Send", class="btn btn-primary") }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <div>
+                                                {% with messages = get_flashed_messages() %}
+                                                    {% if messages %}
+                                                        {% for message in messages %}
+                                                            <p> {{ message }}</p>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="card">
+                                        <div class="card-block">
+                                            <div class="d-flex align-items-center justify-content-center flex-column">
+                                                <div class="w-50 p-3">
+                                                    <img src="/static/assets/images/user/profile.jpg" alt="profile image"
+                                                        class="img-fluid rounded-circle">
+                                                </div>
+                                                <div class="text-center">
+                                                    <h4 class="font-weight-bold h6">
+                                                        {{ g.user }}
+                                                    </h4>
+                                                </div>
+                                            </div>
+
+                                            <div class="small font-weight-light mt-4 text-center text-muted">
+                                                <p>
+                                                    This page is your private space.
+                                                    <br />
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- [ Main Content ] end -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <!-- [ Main Content ] end -->
+
+{% endblock content %}

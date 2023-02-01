@@ -1,33 +1,59 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
-{% block main_content %}
-    <h1> Read/Reply </h1>
+{% block content %}
+<div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
 
-    <h2> Query </h2>
-    <p> Name: {{ query ["name"] }}
-        <br> Email: {{ query ["email"] }}
-    <br> Message: {{ query ["message"] }}
-    <br> <a href="{{ url_for('delete_query', id=query['query_id']) }}"> Delete message </a> (Only delete the message after you respond to the query!)</p>
+        <div class="pcoded-content">
+            <div class="pcoded-inner-content">
+                <div class="main-body">
+                    <div class="page-wrapper">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5>Read/Reply</h5>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6> Query </h6>
+                                                <p> Name: {{ query ["name"] }}
+                                                    <br> Email: {{ query ["email"] }}
+                                                <br> Message: {{ query ["message"] }}
+                                                <br> <a href="{{ url_for('delete_query', id=query['query_id']) }}"> Delete message </a> (Only delete the message after you respond to the query!)</p>
 
-    <h2> Reply below </h2>    
-    <form action="" method="post" novalidate> 
-        {{ form.hidden_tag() }}
-        {{ form.email(class="text", placeholder="Recipient email address", value=query['email']) }}
-        <br>
-        {{ form.subject(class="text", placeholder="Enter in recipient's subject", value=query['subject']) }}
-        <br>
-        {{ form.message(rows='10',cols='100', placeholder="Write reply here") }}
-        <br>
-        {{ form.submit(class="submit") }}
-    </form>
+                                                <h6> Reply below </h6>    
+                                                <form action="" method="post" novalidate> 
+                                                    {{ form.hidden_tag() }}
+                                                    {{ form.email(class="form-control", placeholder="Recipient email address", value=query['email']) }}
+                                                    <br>
+                                                    {{ form.subject(class="form-control", placeholder="Enter in recipient's subject", value=query['subject']) }}
+                                                    <br>
+                                                    {{ form.message(class="form-control", rows='10',cols='100', placeholder="Write reply here") }}
+                                                    <br>
+                                                    {{ form.submit(class="btn btn-primary shadow-2 mb-4") }}
+                                                </form>
 
-    <div class="flash">
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                    <p> {{ message }}</p>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-    </div>    
-{% endblock %}
+                                                <div>
+                                                    {% with messages = get_flashed_messages() %}
+                                                        {% if messages %}
+                                                            {% for message in messages %}
+                                                                <p> {{ message }}</p>
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                </div>    
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
