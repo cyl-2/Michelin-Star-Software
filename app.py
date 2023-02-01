@@ -37,7 +37,7 @@ mysql = MySQL(app)
 
 @app.before_request
 def logged_in():
-    g.user = session.get("username", None)
+    g.user = 'cherrylincyl@gmail.com' #session.get("username", None)
     g.access = session.get("access_level", None)
 
 def login_required(view):
@@ -371,7 +371,6 @@ def edit_staff_profile():
         address = form.address.data
         first_name = form.first_name.data
         last_name = form.last_name.data
-        g.user = 'cherrylincyl@gmail.com'
 
         cur = mysql.connection.cursor()
         cur.execute("""UPDATE staff SET address=%s, bio=%s, first_name=%s, last_name=%s
@@ -500,7 +499,9 @@ def view_all_employees():
 def add_new_employee():
     cur = mysql.connection.cursor()
     form = EmployeeForm()
+    print("after the form")
     if form.validate_on_submit():
+        print("valid")
         role = form.role.data
         email = form.email.data
         access_level = form.access_level.data
@@ -508,18 +509,18 @@ def add_new_employee():
         last_name = form.last_name.data
         password = get_random_password()
         
-        cur.execute("""INSERT INTO staff (email, role, access_level, first_name, last_name, password)
-                            VALUES (%s,%s,%s,%s,%s,%s);""", (email, role, access_level, first_name, last_name, generate_password_hash(password)))
+        cur.execute("""INSERT INTO staff (email, role, access_level, first_name, last_name, password, last_updated)
+                            VALUES (%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP);""", (email, role, access_level, first_name, last_name, generate_password_hash(password)))
         mysql.connection.commit()
-        '''
+    
         # Notify employee's email about their new account
         message = "Please sign into your account with your email and password:" + password
         msg = Message("Welcome on board! We're happy you joined us.", sender='no.reply.please.and.thank.you@gmail.com', recipients=[email])   
         msg.body = f"""{message}"""
         mail.send(msg)
-        '''
+        
         flash ("New employee successfully added!")
-        cur.close()
+        #cur.close()
         return redirect(url_for("view_all_employees"))
     return render_template("manager/add_new_staff.html", form=form, title="Add New Employee")   
 
