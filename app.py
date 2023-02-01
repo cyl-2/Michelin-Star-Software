@@ -32,7 +32,7 @@ app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
 app.config['MYSQL_USER'] = 'root' # someone's deets
-app.config['MYSQL_PASSWORD'] = 'PaZARIX9' # someone's deets
+app.config['MYSQL_PASSWORD'] = '' # someone's deets
 app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_DB'] = 'sys' # someone's deets
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
