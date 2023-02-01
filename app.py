@@ -19,7 +19,6 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-#cur = mysql.connection.cursor()
 # For the email function
 mail= Mail(app)
 app.config['MAIL_SERVER']='smtp.gmail.com'
@@ -32,8 +31,8 @@ mail.init_app(app)
 
 app.config['MYSQL_USER'] = 'root' # someone's deets
 app.config['MYSQL_PASSWORD'] = '' # someone's deets
-app.config['MYSQL_HOST'] = '127.0.0.1'
-app.config['MYSQL_DB'] = 'sys' # someone's deets
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_DB'] = 'world' # someone's deets
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
@@ -51,264 +50,6 @@ def login_required(view):
         return view(**kwargs)
     return wrapped_view
 
-@app.route("/waiter_menu", methods=["GET","POST"])
-def waiter_menu():     
-    return render_template("staff/waiter_menu.html")
-
-@app.route("/choose_table", methods=["GET","POST"])
-def choose_table():
-    cur = mysql.connection.cursor()
-        
-    cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
-    data = cur.fetchall()
-    table_positions = {}
-    for i in range(len(data)):
-        table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
-    return render_template("staff/choose_table.html", table_positions=table_positions)
-
-@app.route("/<int:table>/take_order", methods=["GET","POST"])
-def take_order(table):  
-    cur = mysql.connection.cursor()
-    cur.execute('SELECT * FROM dish')
-    meals = cur.fetchall()
-        
-    cur.execute(
-        """
-            SELECT dish.name, orders.status, order_id, dish.dishType
-            FROM orders JOIN dish 
-            ON orders.dish_id = dish.dish_id
-            WHERE orders.table_id = %s 
-            AND orders.status != %s
-            AND orders.status != %s
-        """,(table,'complete', 'cancelled')
-    )
-    ordered = cur.fetchall()
-    
-    if request.cookies.get("ordering"+str(table)):
-        ordering = json.loads(request.cookies.get("ordering"+str(table)))
-        return render_template("staff/take_order.html", table=table, ordering=ordering, meals=meals, ordered=ordered)
-    
-    return render_template("staff/take_order.html", table=table, meals=meals, ordered=ordered)
-
-@app.route("/<int:table>/add_order/<meal>", methods=["GET","POST"])
-def add_order(table, meal):
-    ordering = []
-    if request.cookies.get("ordering"+str(table)):
-        ordering = json.loads(request.cookies.get("ordering"+str(table)))
-    cur = mysql.connection.cursor()
-       
-    # If not enough ingredients to make the meal, not added to order
-
-
-    cur.execute('SELECT dish_id FROM dish WHERE name = %s',(meal,))
-    dish_ids = cur.fetchall()
-    
-    for id in dish_ids:
-        cur.execute('SELECT ingredient_id FROM dish_ingredient WHERE dish_id = %s',(id['dish_id'],))
-        ingredient_ids = cur.fetchall()
-    
-    min = 100
-    for id in ingredient_ids:
-        cur.execute('SELECT MIN(quantity) FROM ingredient WHERE ingredient_id = %s',(id['ingredient_id'],))
-        value = cur.fetchone()
-        if value['MIN(quantity)'] < min:
-            min = value['MIN(quantity)']
-    if min > 0:
-        ordering.append(str(meal))
-    else:
-        response = make_response(redirect(url_for('take_order', table=table)))
-    response = make_response(redirect(url_for('take_order', table=table)))
-    response.set_cookie('ordering'+str(table), json.dumps(ordering), max_age=(60*60*24))
-    return response
-
-@app.route("/<int:table>/remove_meal/<meal>", methods=["GET","POST"])
-def remove_meal(table, meal):
-    ordering = json.loads(request.cookies.get("ordering"+str(table)))
-    for i in range(len(ordering)):
-        if meal == ordering[i]:
-            index = i
-    ordering.pop(index)
-    
-    response = make_response(redirect(url_for("take_order", table=table)))
-    response.set_cookie('ordering'+str(table), json.dumps(ordering), max_age=(60*60*24))
-    return response
-
-@app.route("/<int:table>/cancel_meal/<int:meal_id>", methods=["GET","POST"])
-def cancel_meal(table, meal_id):
-    
-    cur = mysql.connection.cursor()
-     
-    cur.execute("DELETE FROM orders WHERE order_id = %s AND table_id = %s;",(meal_id, table ))
-    mysql.connection.commit()
-    
-    return redirect(url_for("take_order", table=table))
-
-@app.route("/<int:table>/cancel_order", methods=["GET","POST"])
-def cancel_order(table):
-    
-    response = make_response(redirect(url_for("take_order", table=table)))
-    response.set_cookie('ordering'+str(table), '', expires=0)
-    return response
-
-
-@app.route("/<int:table>/complete_order", methods=["GET","POST"])
-def complete_order(table):  
-    cur = mysql.connection.cursor()
-        
-    if request.cookies.get("ordering"+str(table)):
-        ordering = json.loads(request.cookies.get("ordering"+str(table)))
-        
-        for meal in ordering:
-            cur.execute('SELECT dish_id, cook_time FROM dish WHERE name = %s',(meal,))
-            data = cur.fetchone()
-            cur.execute("INSERT INTO orders (time, dish_id, table_id, status) VALUES (%s, %s, %s., 'waiting');",(data['cook_time'], data['dish_id'], table))
-            mysql.connection.commit()
-    
-    response = make_response(redirect(url_for('take_order', table=table)))
-    response.set_cookie('ordering'+str(table), json.dumps([]), max_age=(60*60*24))
-    return response
-
-@app.route("/move_tables", methods=["GET","POST"])
-def move_tables():
-    cur = mysql.connection.cursor()
-        
-    cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
-    data = cur.fetchall()
-    
-    table_positions = {}
-    for i in range(len(data)):
-        table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
-    
-    return render_template("staff/move_tables.html", table_positions=table_positions)
-
-@app.route('/save_tables', methods=['GET','POST'])
-def save_tables():
-    co_ords = request.get_json()
-    if co_ords is not None:
-        cur = mysql.connection.cursor()
-        for i in range(int(len(co_ords)/2)):
-            cur.execute("UPDATE tables SET x = '"+co_ords[i*2]+"', y = '"+co_ords[(i*2)+1]+"' WHERE table_id ="+str(i+1)+"; ")
-            mysql.connection.commit()
-        
-    return redirect(url_for('choose_table'))
-    
-@app.route("/add_table", methods=["GET", "POST"])
-def add_table():
-    form = TableForm()
-    if form.validate_on_submit():
-        table_number = form.table_number.data
-        seats = form.seats.data
-        x = str(form.x.data) + 'px'
-        y = str(form.y.data) + 'px'
-
-        cur = mysql.connection.cursor()
-            
-        cur.execute('SELECT * FROM tables WHERE table_id = %s',(table_number,))
-        data = cur.fetchall()
-        if len(data) > 0:
-            form.table_number.errors.append("Table Number already in use")
-            return render_template("manager/add_table.html", form=form)
-        else:
-            cur.execute("INSERT INTO tables VALUES (%s, %s, %s, %s);",(table_number, seats, x, y))
-            mysql.connection.commit()
-            return redirect(url_for('choose_table'))
-
-    return render_template("manager/add_table.html", form=form)
-
-@app.route("/remove_table_menu", methods=["GET","POST"])
-def remove_table_menu():
-    cur = mysql.connection.cursor()
-    cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
-    data = cur.fetchall()
-    
-    table_positions = {}
-    for i in range(len(data)):
-        table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
-    return render_template("manager/remove_table.html", table_positions=table_positions)
-
-@app.route("/<int:table>/remove_table", methods=["GET", "POST"])
-def remove_table(table):
-    cur = mysql.connection.cursor()
-        
-    cur.execute("DELETE FROM tables WHERE table_id = %s;",(table,))
-    mysql.connection.commit()
-    return redirect(url_for('remove_table_menu'))
-            
-@app.route("/break_timetable", methods=["GET","POST"])
-def break_timetable():
-    staff_breaks = [{'name':'Ben', 'time':'9:00'},{'name':'John', 'time':'13:00'},{'name':'Tim', 'time':'8:00'}]
-    return render_template("manager/break_timetable.html", staff_breaks=staff_breaks)
-
-@app.route("/generate_roster", methods=["GET","POST"])
-def generate_roster():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM shift_requirements;")
-    requirements = cur.fetchall()
-    cur.execute("SELECT staff_id FROM staff;")
-    data = cur.fetchall()
-    employees = []
-    for id in data:
-        employees.append(id['staff_id'])
-    roster = Roster()
-    print(requirements)
-    result = roster.generate(requirements, employees)
-    cur.execute("UPDATE roster SET mon = '', tue = '', wed = '', thu = '', fri = '', sat = '', sun = '';")
-    mysql.connection.commit()
-    for day in result:
-        for shift in result[day]:
-            for person in result[day][shift]:##
-                command = 'UPDATE roster SET '+ day +' = %s WHERE staff_id = %s;'
-                cur.execute(command,( shift, person))
-                mysql.connection.commit()
-    return redirect(url_for('roster_timetable'))
-
-
-@app.route("/roster_timetable", methods=["GET","POST"])
-def roster_timetable():
-    cur = mysql.connection.cursor()
-        
-        
-    cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
-    roster = cur.fetchall()
-    return render_template("manager/roster_timetable.html", roster=roster)
-
-@app.route("/delete_from_roster", methods=["GET","POST"])
-def delete_from_roster():
-    cur = mysql.connection.cursor()
-       
-        
-    cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
-    roster = cur.fetchall() 
-    return render_template("manager/delete_from_roster.html", roster=roster)
-
-@app.route("/remove_roster_slot/<int:staff_id>/<int:day>", methods=["GET","POST"])
-def remove_roster_slot(staff_id, day):
-    week = ['mon','tue','wed','thu','fri','sat','sun']
-    cur = mysql.connection.cursor()
-           
-    cur.execute("UPDATE roster SET "+week[day]+" = '' WHERE staff_id = %s;",(staff_id,))
-    mysql.connection.commit()
-    return redirect(url_for('delete_from_roster'))
-
-@app.route("/add_to_roster_timetable", methods=["GET","POST"])
-def add_to_roster_timetable():
-    cur = mysql.connection.cursor()
-    
-    form = AddToRosterForm()
-    if form.validate_on_submit():
-        staff_id = form.staff_id.data
-        cur.execute("SELECT * FROM staff WHERE staff_id = %s",(staff_id,))
-        staff = cur.fetchone() 
-        if staff is not None:
-            day = form.day.data
-            time = form.time.data
-            cur.execute("UPDATE roster SET "+day+" = %s WHERE staff_id = %s;",(time, staff_id,))
-            mysql.connection.commit()
-        else:
-            form.staff_id.errors = "Staff ID does not exists"
-    cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
-    roster = cur.fetchall() 
-    return render_template("manager/add_to_roster_timetable.html", roster=roster, form=form)
 def staff_only(view):
     @wraps(view)
     def wrapped_view(**kwargs):
@@ -367,7 +108,16 @@ def page_not_found(error):
 @app.route("/", methods=["GET","POST"])
 def index():
     return render_template("home.html", title = "Home")
-    
+
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
+'''
+            ALL FEATURES BELOW ARE RELATED TO ACCOUNT REGISTRATION/LOGIN, AND PASSWORD MANAGEMENT
+'''
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
 # Register for an account
 @app.route("/registration", methods=["GET", "POST"])
 def registration():
@@ -491,42 +241,6 @@ def staff_login():
                 return response'''
     return render_template("staff/staff_login.html", form=form, title="Login")
 
-# Customer profile
-@app.route("/customer_profile")
-@login_required
-def customer_profile():
-    #cur = mysql.connection.cursor()
-    #cur.execute("SELECT * FROM customer WHERE email = %s", (g.user,))
-    #user = cur.fetchone()
-    return render_template("customer/profile.html", title="My Profile")#, user=user)
-
-# Contact form so that customers can send enquiries
-@app.route("/contact_us", methods=["GET", "POST"])
-def contact_us():
-    cur = mysql.connection.cursor()
-    form = ContactForm()
-    if form.validate_on_submit() == False:
-      flash('All fields are required.')
-    else:
-        name = form.name.data
-        email = form.email.data.lower().strip()
-        subject = form.subject.data
-        message = form.message.data
-
-        cur.execute("""INSERT INTO user_queries (name, email, subject, message)
-                        VALUES (%s,%s,%s,%s);""", (name, email, subject, message))
-        mysql.connection.commit()
-        cur.close()
-
-        msg = Message(subject, sender='no.reply.please.and.thank.you@gmail.com', recipients=['no.reply.please.and.thank.you@gmail.com'])   
-        msg.body = f"""
-        From: {name} <{email}>
-        {message}
-        """
-        mail.send(msg)
-        flash("Message sent. We will reply to you in 2-3 business days.")
-    return render_template("customer/enquiry_form.html",form=form, title="Contact Us")
-
 # Change password
 @app.route("/change_password/<table>", methods=["GET", "POST"])
 #@login_required
@@ -624,6 +338,16 @@ def confirm_code(email, table):
             return redirect(url_for("change_password", table=table))
     return render_template("password_management/confirm_code.html", form=form, title= "Confirm code")
 
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
+'''
+            ALL FEATURES BELOW ARE RELATED TO THE KITCHEN STAFF
+'''
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
+
 @app.route('/kitchen', methods=['GET','POST'])
 def kitchen():
     cur = mysql.connection.cursor()
@@ -645,7 +369,6 @@ def kitchen():
     return render_template('kitchen.html',orderlist=orderlist)
 
 @app.route('/<int:dish_id>,<int:time>/kitchenUpdate', methods=['GET','POST'])
-
 def kitchenUpdate(dish_id, time):
     cur = mysql.connection.cursor()
     cur.execute('''UPDATE orders
@@ -671,17 +394,15 @@ def kitchenSentOut(dish_id, time):
 
     return redirect(url_for('kitchen'))
 
-
 ##############################################################################################################################################
 ##############################################################################################################################################
 ##############################################################################################################################################
 '''
-            ALL FEATURES BELOW ARE RELATED TO THE STAFF
+            ALL FEATURES BELOW ARE RELATED TO THE WAITER STAFF
 '''
 ##############################################################################################################################################
 ##############################################################################################################################################
 ##############################################################################################################################################
-
 # Staff profile
 @app.route("/staff_profile", methods=["GET", "POST"])
 #@staff_only
@@ -711,6 +432,192 @@ def edit_staff_profile():
         profile = cur.fetchone()
         cur.close()
     return render_template("staff/edit_staff_profile.html", form=form, title="My Profile", profile=profile)
+    
+@app.route("/waiter_menu", methods=["GET","POST"])
+def waiter_menu():     
+    return render_template("staff/waiter_menu.html")
+
+@app.route("/choose_table", methods=["GET","POST"])
+def choose_table():
+    cur = mysql.connection.cursor()
+        
+    cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
+    data = cur.fetchall()
+    table_positions = {}
+    for i in range(len(data)):
+        table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
+    return render_template("staff/choose_table.html", table_positions=table_positions)
+
+@app.route("/<int:table>/take_order", methods=["GET","POST"])
+def take_order(table):  
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT * FROM dish')
+    meals = cur.fetchall()
+        
+    cur.execute(
+        """
+            SELECT dish.name, orders.status, order_id, dish.dishType
+            FROM orders JOIN dish 
+            ON orders.dish_id = dish.dish_id
+            WHERE orders.table_id = %s 
+            AND orders.status != %s
+            AND orders.status != %s
+        """,(table,'complete', 'cancelled')
+    )
+    ordered = cur.fetchall()
+    
+    if request.cookies.get("ordering"+str(table)):
+        ordering = json.loads(request.cookies.get("ordering"+str(table)))
+        return render_template("staff/take_order.html", table=table, ordering=ordering, meals=meals, ordered=ordered)
+    
+    return render_template("staff/take_order.html", table=table, meals=meals, ordered=ordered)
+
+@app.route("/<int:table>/add_order/<meal>", methods=["GET","POST"])
+def add_order(table, meal):
+    ordering = []
+    if request.cookies.get("ordering"+str(table)):
+        ordering = json.loads(request.cookies.get("ordering"+str(table)))
+    cur = mysql.connection.cursor()
+       
+    # If not enough ingredients to make the meal, not added to order
+
+    cur.execute('SELECT dish_id FROM dish WHERE name = %s',(meal,))
+    dish_ids = cur.fetchall()
+    
+    for id in dish_ids:
+        cur.execute('SELECT ingredient_id FROM dish_ingredient WHERE dish_id = %s',(id['dish_id'],))
+        ingredient_ids = cur.fetchall()
+    
+    min = 100
+    for id in ingredient_ids:
+        cur.execute('SELECT MIN(quantity) FROM ingredient WHERE ingredient_id = %s',(id['ingredient_id'],))
+        value = cur.fetchone()
+        if value['MIN(quantity)'] < min:
+            min = value['MIN(quantity)']
+    if min > 0:
+        ordering.append(str(meal))
+    else:
+        response = make_response(redirect(url_for('take_order', table=table)))
+    response = make_response(redirect(url_for('take_order', table=table)))
+    response.set_cookie('ordering'+str(table), json.dumps(ordering), max_age=(60*60*24))
+    return response
+
+@app.route("/<int:table>/remove_meal/<meal>", methods=["GET","POST"])
+def remove_meal(table, meal):
+    ordering = json.loads(request.cookies.get("ordering"+str(table)))
+    for i in range(len(ordering)):
+        if meal == ordering[i]:
+            index = i
+    ordering.pop(index)
+    
+    response = make_response(redirect(url_for("take_order", table=table)))
+    response.set_cookie('ordering'+str(table), json.dumps(ordering), max_age=(60*60*24))
+    return response
+
+@app.route("/<int:table>/cancel_meal/<int:meal_id>", methods=["GET","POST"])
+def cancel_meal(table, meal_id):
+    
+    cur = mysql.connection.cursor()
+     
+    cur.execute("DELETE FROM orders WHERE order_id = %s AND table_id = %s;",(meal_id, table ))
+    mysql.connection.commit()
+    
+    return redirect(url_for("take_order", table=table))
+
+@app.route("/<int:table>/cancel_order", methods=["GET","POST"])
+def cancel_order(table):
+    
+    response = make_response(redirect(url_for("take_order", table=table)))
+    response.set_cookie('ordering'+str(table), '', expires=0)
+    return response
+
+@app.route("/<int:table>/complete_order", methods=["GET","POST"])
+def complete_order(table):  
+    cur = mysql.connection.cursor()
+        
+    if request.cookies.get("ordering"+str(table)):
+        ordering = json.loads(request.cookies.get("ordering"+str(table)))
+        
+        for meal in ordering:
+            cur.execute('SELECT dish_id, cook_time FROM dish WHERE name = %s',(meal,))
+            data = cur.fetchone()
+            cur.execute("INSERT INTO orders (time, dish_id, table_id, status) VALUES (%s, %s, %s., 'waiting');",(data['cook_time'], data['dish_id'], table))
+            mysql.connection.commit()
+    
+    response = make_response(redirect(url_for('take_order', table=table)))
+    response.set_cookie('ordering'+str(table), json.dumps([]), max_age=(60*60*24))
+    return response
+
+@app.route("/move_tables", methods=["GET","POST"])
+def move_tables():
+    cur = mysql.connection.cursor()
+        
+    cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
+    data = cur.fetchall()
+    
+    table_positions = {}
+    for i in range(len(data)):
+        table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
+    
+    return render_template("staff/move_tables.html", table_positions=table_positions)
+
+@app.route('/save_tables', methods=['GET','POST'])
+def save_tables():
+    co_ords = request.get_json()
+    if co_ords is not None:
+        cur = mysql.connection.cursor()
+        for i in range(int(len(co_ords)/2)):
+            cur.execute("UPDATE tables SET x = '"+co_ords[i*2]+"', y = '"+co_ords[(i*2)+1]+"' WHERE table_id ="+str(i+1)+"; ")
+            mysql.connection.commit()
+        
+    return redirect(url_for('choose_table'))
+    
+@app.route("/add_table", methods=["GET", "POST"])
+def add_table():
+    form = TableForm()
+    if form.validate_on_submit():
+        table_number = form.table_number.data
+        seats = form.seats.data
+        x = str(form.x.data) + 'px'
+        y = str(form.y.data) + 'px'
+
+        cur = mysql.connection.cursor()
+            
+        cur.execute('SELECT * FROM tables WHERE table_id = %s',(table_number,))
+        data = cur.fetchall()
+        if len(data) > 0:
+            form.table_number.errors.append("Table Number already in use")
+            return render_template("manager/add_table.html", form=form)
+        else:
+            cur.execute("INSERT INTO tables VALUES (%s, %s, %s, %s);",(table_number, seats, x, y))
+            mysql.connection.commit()
+            return redirect(url_for('choose_table'))
+
+    return render_template("manager/add_table.html", form=form)
+
+@app.route("/remove_table_menu", methods=["GET","POST"])
+def remove_table_menu():
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
+    data = cur.fetchall()
+    
+    table_positions = {}
+    for i in range(len(data)):
+        table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
+    return render_template("manager/remove_table.html", table_positions=table_positions)
+
+@app.route("/<int:table>/remove_table", methods=["GET", "POST"])
+def remove_table(table):
+    cur = mysql.connection.cursor()
+        
+    cur.execute("DELETE FROM tables WHERE table_id = %s;",(table,))
+    mysql.connection.commit()
+    return redirect(url_for('remove_table_menu'))
+            
+@app.route("/break_timetable", methods=["GET","POST"])
+def break_timetable():
+    staff_breaks = [{'name':'Ben', 'time':'9:00'},{'name':'John', 'time':'13:00'},{'name':'Tim', 'time':'8:00'}]
+    return render_template("manager/break_timetable.html", staff_breaks=staff_breaks)
 
 @app.route("/roster_request", methods=["GET", "POST"])
 #@staff_only
@@ -730,6 +637,60 @@ def roster_request():
 
         flash ("Request successfully sent!")
     return render_template("staff/roster_request.html", form=form,title="Roster Request")
+
+
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
+'''
+            ALL FEATURES BELOW ARE RELATED TO THE CUSTOMER
+'''
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
+
+# Customer profile
+@app.route("/customer_profile")
+@login_required
+def customer_profile():
+    #cur = mysql.connection.cursor()
+    #cur.execute("SELECT * FROM customer WHERE email = %s", (g.user,))
+    #user = cur.fetchone()
+    return render_template("customer/profile.html", title="My Profile")#, user=user)
+
+# Contact form so that customers can send enquiries
+@app.route("/contact_us", methods=["GET", "POST"])
+def contact_us():
+    cur = mysql.connection.cursor()
+    form = ContactForm()
+    if form.validate_on_submit() == False:
+      flash('All fields are required.')
+    else:
+        name = form.name.data
+        email = form.email.data.lower().strip()
+        subject = form.subject.data
+        message = form.message.data
+
+        cur.execute("""INSERT INTO user_queries (name, email, subject, message)
+                        VALUES (%s,%s,%s,%s);""", (name, email, subject, message))
+        mysql.connection.commit()
+        cur.close()
+
+        msg = Message(subject, sender='no.reply.please.and.thank.you@gmail.com', recipients=['no.reply.please.and.thank.you@gmail.com'])   
+        msg.body = f"""
+        From: {name} <{email}>
+        {message}
+        """
+        mail.send(msg)
+        flash("Message sent. We will reply to you in 2-3 business days.")
+    return render_template("customer/enquiry_form.html",form=form, title="Contact Us")
+
+@app.route("/roster_timetable", methods=["GET","POST"])
+def roster_timetable():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
+    roster = cur.fetchall()
+    return render_template("manager/roster_timetable.html", roster=roster)
 
 ##############################################################################################################################################
 ##############################################################################################################################################
@@ -809,6 +770,65 @@ def roster_reject(id):
         cur.close()
         return redirect(url_for("manager"))
     return render_template("manager/roster_reject.html", form=form)
+
+@app.route("/generate_roster", methods=["GET","POST"])
+def generate_roster():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM shift_requirements;")
+    requirements = cur.fetchall()
+    cur.execute("SELECT staff_id FROM staff;")
+    data = cur.fetchall()
+    employees = []
+    for id in data:
+        employees.append(id['staff_id'])
+    roster = Roster()
+    print(requirements)
+    result = roster.generate(requirements, employees)
+    cur.execute("UPDATE roster SET mon = '', tue = '', wed = '', thu = '', fri = '', sat = '', sun = '';")
+    mysql.connection.commit()
+    for day in result:
+        for shift in result[day]:
+            for person in result[day][shift]:##
+                command = 'UPDATE roster SET '+ day +' = %s WHERE staff_id = %s;'
+                cur.execute(command,( shift, person))
+                mysql.connection.commit()
+    return redirect(url_for('roster_timetable'))
+
+@app.route("/delete_from_roster", methods=["GET","POST"])
+def delete_from_roster():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
+    roster = cur.fetchall() 
+    return render_template("manager/delete_from_roster.html", roster=roster)
+
+@app.route("/remove_roster_slot/<int:staff_id>/<int:day>", methods=["GET","POST"])
+def remove_roster_slot(staff_id, day):
+    week = ['mon','tue','wed','thu','fri','sat','sun']
+    cur = mysql.connection.cursor()
+           
+    cur.execute("UPDATE roster SET "+week[day]+" = '' WHERE staff_id = %s;",(staff_id,))
+    mysql.connection.commit()
+    return redirect(url_for('delete_from_roster'))
+
+@app.route("/add_to_roster_timetable", methods=["GET","POST"])
+def add_to_roster_timetable():
+    cur = mysql.connection.cursor()
+    
+    form = AddToRosterForm()
+    if form.validate_on_submit():
+        staff_id = form.staff_id.data
+        cur.execute("SELECT * FROM staff WHERE staff_id = %s",(staff_id,))
+        staff = cur.fetchone() 
+        if staff is not None:
+            day = form.day.data
+            time = form.time.data
+            cur.execute("UPDATE roster SET "+day+" = %s WHERE staff_id = %s;",(time, staff_id,))
+            mysql.connection.commit()
+        else:
+            form.staff_id.errors = "Staff ID does not exists"
+    cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
+    roster = cur.fetchall() 
+    return render_template("manager/add_to_roster_timetable.html", roster=roster, form=form)
 
 # View and manage all employees
 #@manager_only
