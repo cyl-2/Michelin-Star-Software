@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <title>Break Timetable</title>
+{% endblock %}
+
+{% block main_content %}
+    <h1>Break Timetable</h1>
+
+    <table>
+        <tr>
+            <th scope="col"></th>
+            {%  for staff in staff_breaks %}
+            <th scope="col">{{ staff['name'] }}</th>
+            {% endfor %}
+        </tr>
+        {% for j in range(24) %}
+        <tr>
+            <th scope="row">{{j + 0}}:00</th>
+            {% for i in range(staff_breaks|length) %}
+            <td>
+                {% for staff in staff_breaks %}
+                    {% if staff["name"] ==  staff_breaks[i]["name"] %}
+                        {% if staff["time"] == (j+0)|string+":00" %}
+                            1 hour
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+
+
+{% endblock %}
