@@ -33,8 +33,8 @@ mail.init_app(app)
 
 app.config['MYSQL_USER'] = 'root' # someone's deets
 app.config['MYSQL_PASSWORD'] = '' # someone's deets
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_DB'] = 'world' # someone's deets
+app.config['MYSQL_HOST'] = '127.0.0.1'
+app.config['MYSQL_DB'] = 'sys' # someone's deets
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
@@ -52,16 +52,9 @@ def login_required(view):
         return view(**kwargs)
     return wrapped_view
 
-@app.route("/", methods=["GET","POST"])
-def index():
-    """
-    start route must be "/", directs straight to home page 
-    """
-    return render_template("home.html")
-
 @app.route("/waiter_menu", methods=["GET","POST"])
 def waiter_menu():     
-    return render_template("waiter_menu.html")
+    return render_template("staff/waiter_menu.html")
 
 @app.route("/choose_table", methods=["GET","POST"])
 def choose_table():
@@ -72,7 +65,7 @@ def choose_table():
     table_positions = {}
     for i in range(len(data)):
         table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
-    return render_template("choose_table.html", table_positions=table_positions)
+    return render_template("staff/choose_table.html", table_positions=table_positions)
 
 @app.route("/<int:table>/take_order", methods=["GET","POST"])
 def take_order(table):  
@@ -94,9 +87,9 @@ def take_order(table):
     
     if request.cookies.get("ordering"+str(table)):
         ordering = json.loads(request.cookies.get("ordering"+str(table)))
-        return render_template("take_order.html", table=table, ordering=ordering, meals=meals, ordered=ordered)
+        return render_template("staff/take_order.html", table=table, ordering=ordering, meals=meals, ordered=ordered)
     
-    return render_template("take_order.html", table=table, meals=meals, ordered=ordered)
+    return render_template("staff/take_order.html", table=table, meals=meals, ordered=ordered)
 
 @app.route("/<int:table>/add_order/<meal>", methods=["GET","POST"])
 def add_order(table, meal):
@@ -189,7 +182,7 @@ def move_tables():
     for i in range(len(data)):
         table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
     
-    return render_template("move_tables.html", table_positions=table_positions)
+    return render_template("staff/move_tables.html", table_positions=table_positions)
 
 @app.route('/save_tables', methods=['GET','POST'])
 def save_tables():
