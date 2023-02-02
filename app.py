@@ -282,7 +282,7 @@ def manage_shift_requirements():#json.loads(json.dumps([1,2,3,4]))
         requirements = cur.fetchall()
         for requirement in requirements:
             requirement['unavailable'] = json.loads(requirement['unavailable'])
-    else
+    else:
         form.opening_time.data = requirements[0]['opening_time']
         form.closing_time.data = requirements[0]['closing_time']
         form.min_workers.data = requirements[0]['min_workers']
