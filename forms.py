@@ -18,6 +18,17 @@ class AddToRosterForm(FlaskForm):
         ('thu', 'Thursday'), ('fri', 'Friday'), ('sat', 'Saturday'), ('sun', 'Sunday')])
     time = StringField(validators=[InputRequired()])
     submit = SubmitField("Add to Roster")
+    
+class RosterRequirementsForm(FlaskForm):
+    day = SelectField(validators=[InputRequired()], choices=[
+        ('mon', 'Monday'), ('tue', 'Tuesday'), ('wed', 'Wednesday'),
+        ('thu', 'Thursday'), ('fri', 'Friday'), ('sat', 'Saturday'), ('sun', 'Sunday')])
+    opening_time = IntegerField( validators=[ NumberRange(0,24)])
+    closing_time = IntegerField( validators=[ NumberRange(0,24)])
+    min_workers = IntegerField( validators=[ NumberRange(0,24)])
+    
+    unavailable = StringField()
+    submit = SubmitField("Add to Roster")
 
 
 class RegistrationForm(FlaskForm):

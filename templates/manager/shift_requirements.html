@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <title>Shift Requirements</title>
+{% endblock %}
+
+{% block main_content %}
+    <h1>Shift Requirements</h1>
+    <p><a href="{{ url_for('roster_timetable') }}">Roster</a></p>
+    <table>
+        <tr>
+            <th scope="col">Day</th>
+            <th scope="col">Opening hours</th>
+            <th scope="col">Minimum workers</th>
+            <th scope="col">Unavailable</th>
+        </tr>
+        {% for day in requirements %}
+        <tr>
+            <th scope="row">
+                {{ week[day['day']] }}
+            </th>
+            <td>{{ day['opening_time'] }} - {{ day['closing_time'] }}</td>
+            <td>{{ day['min_workers'] }}</td>
+
+            <td>
+                {% for person in staff %}
+                    {% for id in day['unavailable'] %}
+                        {% if person['staff_id'] == id %}
+                            {{ person['first_name'] }}
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            </td>
+            
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Edit Requirements</h2>
+    <form action="" method="post" novalidate> 
+        {{ form.hidden_tag() }}
+
+        {{ form.day.label }}
+        {{ form.day() }}
+        {% for error in form.day.errors %}
+            {{ error }}
+        {% endfor %}
+        <br>
+        {{ form.opening_time.label }}
+        {{ form.opening_time() }}
+        {% for error in form.opening_time.errors %}
+            {{ error }}
+        {% endfor %}
+        <br>
+        {{ form.closing_time.label }}
+        {{ form.closing_time() }}
+        {% for error in form.closing_time.errors %}
+            {{ error }}
+        {% endfor %}
+        <br>
+        {{ form.min_workers.label }}
+        {{ form.min_workers() }}
+        {% for error in form.min_workers.errors %}
+            {{ error }}
+        {% endfor %}
+        <br>
+        {{ form.unavailable.label }}
+        {{ form.unavailable() }}
+        {% for error in form.unavailable.errors %}
+            {{ error }}
+        {% endfor %}
+        <br>
+        {{ form.submit(class="submit") }}
+    </form>
+
+
+{% endblock %}

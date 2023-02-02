@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, g, request, make_response, flash
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm
+from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequirementsForm
 from functools import wraps
 from flask_mysqldb import MySQL 
 from generate_roster import Roster
@@ -32,7 +32,7 @@ app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
 app.config['MYSQL_USER'] = 'root' # someone's deets
-app.config['MYSQL_PASSWORD'] = '' # someone's deets
+app.config['MYSQL_PASSWORD'] = 'PaZARIX9' # someone's deets
 app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_DB'] = 'sys' # someone's deets
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
@@ -242,6 +242,53 @@ def break_timetable():
     staff_breaks = [{'name':'Ben', 'time':'9:00'},{'name':'John', 'time':'13:00'},{'name':'Tim', 'time':'8:00'}]
     return render_template("manager/break_timetable.html", staff_breaks=staff_breaks)
 
+@app.route("/manage_shift_requirements", methods=["GET","POST"])
+def manage_shift_requirements():#json.loads(json.dumps([1,2,3,4]))
+    form = RosterRequirementsForm()
+    week = {'mon':'Monday','tue':'Tuesday','wed':'Wednesday','thu':'Thursday','fri':'Friday','sat':'Saturday','sun':'Sunday'}
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM shift_requirements;")
+    requirements = cur.fetchall()
+    for requirement in requirements:
+        requirement['unavailable'] = json.loads(requirement['unavailable'])
+    print(requirements)
+    cur.execute("SELECT staff_id, first_name FROM staff;")
+    staff = cur.fetchall()
+    
+    if form.validate_on_submit():
+        day = form.day.data
+        opening_time = form.opening_time.data
+        closing_time = form.closing_time.data
+        min_workers = form.min_workers.data
+        
+        if form.unavailable.data is None or form.unavailable.data == '':
+            for requirement in requirements:
+                if requirement['day'] == day:
+                    unavailable = requirement['unavailable']
+        else:
+            unavailable = form.unavailable.data
+            try:
+                unavailable = unavailable.split(" ")
+                for i in range(len(unavailable)):
+                    unavailable[i] = int(unavailable[i])
+                unavailable = json.dumps(unavailable)
+            except TypeError:
+                form.unavailable.errors.append("Values should be space separated ID's")
+                unavailable = '[]'
+        cur.execute("""UPDATE shift_requirements SET opening_time = %s, closing_time = %s, min_workers = %s, unavailable = %s
+                        WHERE day = %s;""", ( opening_time, closing_time, min_workers, unavailable, day))
+        mysql.connection.commit()
+        cur.execute("SELECT * FROM shift_requirements;")
+        requirements = cur.fetchall()
+        for requirement in requirements:
+            requirement['unavailable'] = json.loads(requirement['unavailable'])
+    else
+        form.opening_time.data = requirements[0]['opening_time']
+        form.closing_time.data = requirements[0]['closing_time']
+        form.min_workers.data = requirements[0]['min_workers']
+    
+    return render_template("manager/shift_requirements.html", requirements=requirements, staff=staff, week=week, form=form)
+
 @app.route("/generate_roster", methods=["GET","POST"])
 def generate_roster():
     cur = mysql.connection.cursor()
@@ -253,17 +300,18 @@ def generate_roster():
     for id in data:
         employees.append(id['staff_id'])
     roster = Roster()
-    print(requirements)
     result = roster.generate(requirements, employees)
     cur.execute("UPDATE roster SET mon = '', tue = '', wed = '', thu = '', fri = '', sat = '', sun = '';")
     mysql.connection.commit()
     for day in result:
         for shift in result[day]:
-            for person in result[day][shift]:##
+            for person in result[day][shift]:
                 command = 'UPDATE roster SET '+ day +' = %s WHERE staff_id = %s;'
                 cur.execute(command,( shift, person))
                 mysql.connection.commit()
     return redirect(url_for('roster_timetable'))
+
+
 
 
 @app.route("/roster_timetable", methods=["GET","POST"])
@@ -312,6 +360,7 @@ def add_to_roster_timetable():
     cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
     roster = cur.fetchall() 
     return render_template("manager/add_to_roster_timetable.html", roster=roster, form=form)
+
 def staff_only(view):
     @wraps(view)
     def wrapped_view(**kwargs):
