@@ -1,31 +1,68 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
 
-{% block main_content %}
-    <h1>Customer Login</h1>
-    <div class="flash">
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                    <p> {{ message }}</p>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-    </div>    
-    <form action="" method="post" novalidate> 
-        {{ form.hidden_tag() }}
-        {{ form.email.label }}
-        {{ form.email(class="text") }}
-        {% for error in form.email.errors %}
-            {{ error }}
-        {% endfor %}
-        <br>
-        {{ form.password.label }}
-        {{ form.password(class="text") }}
-        {% for error in form.password.errors %}
-            {{ error }}
-        {% endfor %}
-        <br>
-        {{ form.submit(class="submit") }}
-    </form>
-{% endblock %}
+{% block content %}
+
+    <div class="auth-wrapper">
+        <div class="auth-content">
+            <div class="auth-bg">
+                <span class="r"></span>
+                <span class="r s"></span>
+                <span class="r s"></span>
+                <span class="r"></span>
+            </div>
+            <div class="card">
+                <div class="card-body text-center">
+
+                    <h3 class="mb-4">Customer Login</h3>
+
+                    <br>
+                    <br>
+
+                    <form action="" method="post" novalidate> 
+                        {{ form.hidden_tag() }}
+                        
+                        <span class="mb-0 text-muted">
+                            <span class="text-danger">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </span>
+                        </span>
+
+                        <div class="input-group mb-3">
+                            {{ form.email(placeholder="Email", class="form-control") }}
+                            
+                        </div>
+                        
+                        <span class="mb-0 text-muted">
+                            <span class="text-danger">
+                                {% for error in form.password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </span>
+                        </span>
+                        <div class="input-group mb-3">
+                            {{ form.password(placeholder="Password", class="form-control") }}
+                        </div>
+                    
+                        {{ form.submit(class="btn btn-primary shadow-2 mb-4") }}
+
+                    </form>
+
+                    <p class="mb-0 text-muted">Don’t have an account? <a href="{{ url_for('registration') }}" >Sign Up Now</a></p>
+                    
+                    <div>
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <p> {{ message }}</p>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

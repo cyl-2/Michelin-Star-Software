@@ -1,6 +1,6 @@
 from wtforms import SubmitField, StringField, SelectField, PasswordField, TextAreaField, IntegerField, DateField, DecimalField, RadioField, validators
 from flask_wtf import FlaskForm
-from wtforms.validators import InputRequired, EqualTo, NumberRange
+from wtforms.validators import InputRequired, EqualTo, NumberRange, Email
 from wtforms.widgets import TextArea
 
 class TableForm(FlaskForm):
@@ -32,7 +32,7 @@ class RosterRequirementsForm(FlaskForm):
 
 
 class RegistrationForm(FlaskForm):
-    email = StringField("Email Address", [validators.Length(min=6, max=100)])
+    email = StringField("Email Address", [InputRequired(), validators.Length(min=6, max=100), Email(message="Please enter a valid email address!")])
     password = PasswordField("Password:", validators=[InputRequired()])
     confirm = PasswordField("Confirm Password:", validators=[InputRequired(), EqualTo("password")])
     first_name = StringField("First name", validators=[InputRequired()])
@@ -58,14 +58,22 @@ class ReplyForm(FlaskForm):
     submit = SubmitField("Send message")
 
 class EmployeeForm(FlaskForm):
-    first_name = StringField("First name: ", default="", validators=[InputRequired()])
-    last_name = StringField("Last name: ", default="", validators=[InputRequired()])
-    email = StringField("Email Address", [validators.Length(min=6, max=100)])
-    role = StringField("Role: ", default="", validators=[InputRequired()])
+    first_name = StringField("First name ", validators=[InputRequired()])
+    last_name = StringField("Last name", validators=[InputRequired()])
+    email = StringField("Email Address",[validators.Length(min=6, max=100)])
+    role = StringField("Role: ", validators=[InputRequired()])
     access_level = SelectField("Choose an option", 
                                         choices = [("managerial", "Managerial"),
                                                     ("ordinary staff", "Ordinary staff")], validators=[InputRequired()])
     submit = SubmitField("Create")
+
+class ProfileForm(FlaskForm):
+    email = StringField("Email Address", validators=[InputRequired()])
+    first_name = StringField("First name ", validators=[InputRequired()])
+    last_name = StringField("Last name", validators=[InputRequired()])
+    address = StringField("Address")
+    bio = TextAreaField("About Info", widget=TextArea())
+    submit = SubmitField("Update")
 
 class NewPasswordForm(FlaskForm):
     new_password = PasswordField("New Password", validators=[InputRequired()])
@@ -82,3 +90,11 @@ class ResetPasswordForm(FlaskForm):
 class CodeForm(FlaskForm):
     code = StringField('Enter the 5 digit code here', validators=[InputRequired("Wrong code")])
     submit = SubmitField("Submit")
+
+class RosterRequestForm(FlaskForm):
+    message = TextAreaField("Message", widget=TextArea(), validators=[InputRequired("Enter a message")])
+    submit = SubmitField("Submit")
+
+class RejectRosterRequestForm(FlaskForm):
+    response = TextAreaField("Reason for rejection", widget=TextArea(), validators=[InputRequired()])
+    submit = SubmitField("Confirm")
