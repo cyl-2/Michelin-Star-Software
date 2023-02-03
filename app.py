@@ -30,7 +30,7 @@ app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
 app.config['MYSQL_USER'] = 'root' # someone's deets
-app.config['MYSQL_PASSWORD'] = '' # someone's deets
+app.config['MYSQL_PASSWORD'] = 'Cherry0417!' # someone's deets
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_DB'] = 'world' # someone's deets
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
