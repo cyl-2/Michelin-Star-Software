@@ -10,10 +10,12 @@ from flask_mail import Mail, Message
 from datetime import datetime
 import random, string, time
 from random import sample
+import credentials
 
 app = Flask(__name__)
 
 app.config["SECRET_KEY"] = "MY_SECRET_KEY"
+app.config['DEBUG'] = False
 
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
@@ -23,16 +25,16 @@ Session(app)
 mail= Mail(app)
 app.config['MAIL_SERVER']='smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = 'no.reply.please.and.thank.you@gmail.com'
-app.config['MAIL_PASSWORD'] = 'plseiqkwvpwfxwwr'
+app.config['MAIL_USERNAME'] = credentials.flask_email
+app.config['MAIL_PASSWORD'] = credentials.flask_email_password
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
-app.config['MYSQL_USER'] = 'root' # someone's deets
-app.config['MYSQL_PASSWORD'] = '' # someone's deets
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_DB'] = 'world' # someone's deets
+app.config['MYSQL_USER'] = credentials.user
+app.config['MYSQL_PASSWORD'] = credentials.password
+app.config['MYSQL_HOST'] = credentials.host
+app.config['MYSQL_DB'] = credentials.db
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
@@ -302,7 +304,7 @@ def forgot_password():
                 mysql.connection.commit()
             cur.close()
 
-            msg = Message(f"Hello, {user['first_name']}", sender='no.reply.please.and.thank.you@gmail.com', recipients=[user["email"]])
+            msg = Message(f"Hello, {user['first_name']}", sender=credentials.flask_email, recipients=[user["email"]])
             msg.body = f"""
             Hello,
             To reset your password, enter this code: 
@@ -677,7 +679,7 @@ def contact_us():
         mysql.connection.commit()
         cur.close()
 
-        msg = Message(subject, sender='no.reply.please.and.thank.you@gmail.com', recipients=['no.reply.please.and.thank.you@gmail.com'])   
+        msg = Message(subject, sender=credentials.flask_email, recipients=[credentials.flask_email])   
         msg.body = f"""
         From: {name} <{email}>
         {message}
@@ -866,7 +868,7 @@ def add_new_employee():
 
         # Notify employee's email about their new account
         message = "Please sign into your account with your email and password:" + password
-        msg = Message("Welcome on board! We're happy you joined us.", sender='no.reply.please.and.thank.you@gmail.com', recipients=[email])   
+        msg = Message("Welcome on board! We're happy you joined us.", sender=credentials.flask_email, recipients=[email])   
         msg.body = f"""{message}"""
         mail.send(msg)
         
@@ -923,7 +925,7 @@ def reply_email(id):
         subject = form.subject.data
         message = form.message.data
 
-        msg = Message("Replying to your query: "+subject, sender='no.reply.please.and.thank.you@gmail.com', recipients=[email])   
+        msg = Message("Replying to your query: "+subject, sender=credentials.flask_email, recipients=[email])   
         msg.body = f"""{message}"""
         mail.send(msg)
         flash("Message sent successfully.")
