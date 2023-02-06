@@ -1,10 +1,10 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
 {% block title %}
     <title>Choose Table</title>
 {% endblock %}
 
-{% block main_content %}
+{% block content %}
 <h1>Choose Table</h1>
 <section>
     {% for table_index in table_positions %}
@@ -21,4 +21,4 @@
 <p><a href="{{ url_for('move_tables') }}" >Move Tables</a></p>
 <p><a href="{{ url_for('add_table') }}" >Add Table</a></p>
 <p><a href="{{ url_for('remove_table_menu') }}" >Remove Table</a></p>
-{% endblock %} 
+{% endblock content %} 

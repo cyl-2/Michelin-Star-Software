@@ -1,10 +1,10 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
 {% block title %}
     <title>Roster Timetable</title>
 {% endblock %}
 
-{% block main_content %}
+{% block content %}
     <h1>Roster Timetable</h1>
     <p><a href="{{ url_for('roster_timetable') }}">View Roster</a></p>
     <p><a href="{{ url_for('delete_from_roster') }}">Delete From Roster</a></p>
@@ -62,4 +62,4 @@
         {{ form.submit(class="submit") }}
     </form>
 
-{% endblock %}
+{% endblock content %}

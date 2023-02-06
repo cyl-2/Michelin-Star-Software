@@ -1,10 +1,10 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
 {% block title %}
     <title>Menu</title>
 {% endblock %}
 
-{% block main_content %}
+{% block content %}
 <h1>Menu</h1>
 <section>
     <p><a href="{{ url_for('choose_table') }}">Take Order</a></p>
@@ -17,4 +17,4 @@
     -->
     
 </section>
-{% endblock %}
+{% endblock content %}
