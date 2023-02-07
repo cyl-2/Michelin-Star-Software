@@ -1,10 +1,10 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
-{% block title %}
-    <title>Move Table</title>
-{% endblock %}
+{% block title %} Move Table {% endblock %} 
 
-{% block main_content %}
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
 <script type ='text/javascript'> 
     let hOffset, vOffset = 0; 
@@ -53,11 +53,22 @@
         readyToSave(); 
     } 
 </script> 
-<h1>Move Table</h1>
-<section>
-    {% for table_index in table_positions %}
-    <img id='table{{ table_index }}' src="{{ url_for('static', filename='table.png' ) }}" style="position:absolute;  left: {{ table_positions[ table_index ][0] }}; top: {{ table_positions[ table_index ][1] }}; border: 1px solid black; width: 50px;"/>
-    {% endfor %}
+<div class="pcoded-wrapper">
+    <div class="pcoded-content">
+        <div class="pcoded-inner-content">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Move Tables</h5>
+                    </div>
+                    {% for table_index in table_positions %}
+                        <img id='table{{ table_index }}' src="{{ url_for('static', filename='table.png' ) }}" style="position:absolute;  left: {{ table_positions[ table_index ][0] }}; top: {{ table_positions[ table_index ][1] }}; border: 1px solid black; width: 90px;"/>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 </section>
 <p><a href="{{ url_for('move_tables') }}" >Reset</a></p>
@@ -90,4 +101,4 @@
         );
     }
 </script>
-{% endblock %} 
+{% endblock content %} 

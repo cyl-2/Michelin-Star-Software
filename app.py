@@ -240,7 +240,7 @@ def break_timetable():
     return render_template("manager/break_timetable.html", staff_breaks=staff_breaks)
 
 @app.route("/manage_shift_requirements", methods=["GET","POST"])
-def manage_shift_requirements():#json.loads(json.dumps([1,2,3,4]))
+def manage_shift_requirements():
     form = RosterRequirementsForm()
     week = {'mon':'Monday','tue':'Tuesday','wed':'Wednesday','thu':'Thursday','fri':'Friday','sat':'Saturday','sun':'Sunday'}
     cur = mysql.connection.cursor()
@@ -248,7 +248,6 @@ def manage_shift_requirements():#json.loads(json.dumps([1,2,3,4]))
     requirements = cur.fetchall()
     for requirement in requirements:
         requirement['unavailable'] = json.loads(requirement['unavailable'])
-    print(requirements)
     cur.execute("SELECT staff_id, first_name FROM staff;")
     staff = cur.fetchall()
     

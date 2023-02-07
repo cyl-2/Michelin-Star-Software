@@ -1,24 +1,39 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
-{% block title %}
-    <title>Choose Table</title>
-{% endblock %}
+{% block title %} Choose Table {% endblock %} 
 
-{% block main_content %}
-<h1>Choose Table</h1>
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<!--
+<p><a href="{{ url_for('move_tables') }}" >Move Tables</a></p>
+<p><a href="{{ url_for('add_table') }}" >Add Table</a></p>
+<p><a href="{{ url_for('remove_table_menu') }}" >Remove Table</a></p>
+-->
+<div class="pcoded-wrapper">
+    <div class="pcoded-content">
+        <div class="pcoded-inner-content">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Choose Table</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <section>
     {% for table_index in table_positions %}
-        <div style="position:absolute;  left: {{ table_positions[table_index][0] }}; top: {{ table_positions[table_index][1] }}; border: 1px solid black;">
+        <div style="position:absolute;  left: {{ table_positions[table_index][0] }}; top: {{ table_positions[table_index][1] }}; width: 90px;">
             <a href="{{ url_for('take_order', table=table_index) }}">
                 <section>
-                    <img src="{{ url_for('static', filename='table.png' ) }}"/>
-                    <p>Table {{ table_index }}</p>
+                    <img src="{{ url_for('static', filename='table.png' ) }}" style=" width: 90px;"/>
+                    <p class="btn btn-square btn-info">Table {{ table_index }}</p>
                 </section>
             </a>
         </div>
     {% endfor %}
 </section>
-<p><a href="{{ url_for('move_tables') }}" >Move Tables</a></p>
-<p><a href="{{ url_for('add_table') }}" >Add Table</a></p>
-<p><a href="{{ url_for('remove_table_menu') }}" >Remove Table</a></p>
-{% endblock %} 
+
+{% endblock content %} 
