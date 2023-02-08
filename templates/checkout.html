@@ -1,0 +1,51 @@
+{%extends 'base.html'%}
+{%block main_content%}
+
+{% if cart %}
+<p> Please note you cannot increase the number of books you wish to beyond the present stock available in our warehouse</p>
+    <table>
+        <tr>
+            <th>Dish</th>
+            <th>Quantity</th>
+            <th>Price per dish</th>
+        </tr>
+        {% for dish_id in cart %}
+            <tr>
+                <td>{{ names[dish_id]}}</td>
+                <td>{{ cart[dish_id] }}</td>
+                <td>{{dish['cost']}}</td>
+                <!-- We do be a gobshite i can't believe it took me like 4 hours to figure out book_id = book_id wtf is wrong with me-->
+                
+
+            </tr>
+        {% endfor %}
+{%endif%}
+
+<p>Full Price: {{full}}</p>
+
+<form action='' method='POST' novalidate>
+    {{form.hidden_tag()}}
+    {{form.cardNum.label}}
+    {{form.cardNum()}}
+    {% for error in form.cardNum.errors%}
+        {{error}}
+    {%endfor%}
+    <br>
+    {{form.cardHolder.label()}}
+    {{form.cardHolder()}}
+    {% for error in form.cardHolder.errors%}
+        {{error}}
+    {%endfor%}
+    <br>
+    {{form.cvv.label()}}
+    {{form.cvv()}}
+    {% for error in form.cvv.errors%}
+        {{error}}
+    {%endfor%}
+    <br>
+    {{form.submit()}}
+
+</form>
+
+
+{%endblock%}
