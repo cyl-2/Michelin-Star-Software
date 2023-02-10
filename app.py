@@ -7,7 +7,7 @@ from flask_mysqldb import MySQL
 from generate_roster import Roster
 import json
 from flask_mail import Mail, Message
-from datetime import datetime
+import datetime
 import random, string, time
 from random import sample
 from werkzeug.utils import secure_filename
@@ -932,7 +932,7 @@ def menu():
     side = cur.fetchall()
     cur.close()#
     print(g.user)
-    return render_template('dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side)
+    return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side)
 
 
 
@@ -981,7 +981,7 @@ def dish(dish_id):
         mysql.connection.commit()
         session['CurrentDish'] = None
         return redirect(url_for('add_to_cart', dish_id=dish['dish_id']))
-    return render_template('dish.html', dish=dish,result=result,form=form,quant=session[str(dish_id)])
+    return render_template('customer/dish.html', dish=dish,result=result,form=form,quant=session[str(dish_id)])
 
 #so by default all amounts of ingredients should be 1 - should have the option to increase by 1 and decrease by 1
 #added that so that should work
@@ -1095,7 +1095,7 @@ def cart():
         quantity = session['cart'][dish_id]
         full+= (int(cost) *int(quantity))
         #cur.close()
-    return render_template('cart.html', cart=session['cart'], names=names, dish=dish, full=full)
+    return render_template('customer/cart.html', cart=session['cart'], names=names, dish=dish, full=full)
 
 @app.route('/add_default_meal/<int:dish_id>')
 @login_required
@@ -1206,7 +1206,7 @@ def checkout():
         session['cart'].clear()
         cur.close()
         return render_template('cart.html')
-    return render_template('checkout.html', cart=session['cart'],form=form,full=full,names=names,dish=dish)
+    return render_template('customer/checkout.html', cart=session['cart'],form=form,full=full,names=names,dish=dish)
 
     #need table number to be inputed here 
 
@@ -1256,7 +1256,75 @@ def user_pic():
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('customer_profile'))
-    return render_template('profile_pic.html', form=form)
+    return render_template('customer/profile_pic.html', form=form)
+
+
+#gonna implement this pretending 
+@app.route('/breaks', methods=['GET','POST'])
+def breakTimes():
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT * FROM staff')
+    staff = cur.fetchall()
+    cur.execute("SELECT * FROM roster")
+    roster = cur.fetchall()
+    now = datetime.datetime.now()
+    day = (now.strftime("%a")).lower()
+    breaksAssigned = {}
+    workingToday = {}
+    for working in roster:
+        if working[day] != '':
+            shift = working[day]
+            workingToday[working['staff_id']] =shift
+    print('hello')
+    print(workingToday)
+    numWorkers = len(workingToday)
+    for employee in workingToday:
+        shift = workingToday[employee]
+        print(shift)
+        hoursWorking= int(shift[0]+shift[1]) - int(shift[6]+shift[7])
+        if hoursWorking <0:
+            hoursWorking = hoursWorking*-1
+            workingToday[employee] = [shift,hoursWorking]
+        if hoursWorking >4 and hoursWorking >= 8:
+            breaks = 2
+            #want to do my little test here
+            #2 breaks needed
+        elif hoursWorking >4:
+            breaks=1
+            #1 break needed
+        else: 
+            breaks =0
+        start = int(shift[0]+shift[1])
+        endShift = int(shift[6] + shift[7])
+        for i in range(0,breaks):
+            print(i)
+            proposedBreak = 0
+            #start =None
+            for j in range(4,1,-1):
+                print()
+                print('start',start)
+                proposedBreak = start + j
+                if proposedBreak in breaksAssigned: 
+                    proposedBreak = 0
+                elif proposedBreak  >= endShift or (proposedBreak) == endShift -2:
+                    proposedBreak =0
+                else:
+                    breaksAssigned[proposedBreak] =1
+                    if i == 0:
+                        start = start +j
+                        endBreak = start +0.45
+                        workingToday[employee].append(start)
+                    elif i ==1:
+                        start = start + j
+                        endBreak =start+0.45
+                        workingToday[employee].append(start)
+                    break
+            #if breaksAssigned[proposedBreak] <=
+            #end = start +.45
+            #print(start)
+            #no break
+        print("shiftLength",hoursWorking) 
+    return ("breaks.html")
 
 
 
