@@ -1,6 +1,6 @@
-{% extends 'base.html' %}
-{% block content %}
+{% extends "layouts/base.html" %}
 
+{% block content %}
 <table>
     <tr>
         <th>Dish</th>
@@ -11,41 +11,41 @@
         <th>Status</th>
         <th>Actions</th>
     </tr>
-    {%for line in orderlist%}
-    {%if line.status!="sent out"%}
+    {% for line in orderlist %}
+    {% if line.status!="sent out" %}
     <tr>
         <td>
-            {{line.name}}
+            {{ line.name }}
         </td>
         <td>
-            {{line.time}}
+            {{ line.time }}
         </td>
         <td>
-            {{line.cook_time}}
+            {{ line.cook_time }}
         </td>
         <td>
-            {{line.tableNo}}
+            {{ line.tableNo }}
         </td>
         <td>
-            {%if line.notes%}
-            {{line.notes}}
-            {%endif%}
+            {% if line.notes %}
+            {{ line.notes }}
+            {% endif %}
         </td>
         <td>
-            {{line.status}}
+            {{ line.status }}
         </td>
         <td>
-            {%if line.status=="unmade"%}
+            {% if line.status=="unmade" %}
 
             <a href="{{ url_for('kitchenUpdate', dish_id=line.dish_id, time=line.time) }}">Set to ongoing</a>
 
             {%elif line.status=="ongoing"%}
             <a href="{{ url_for('kitchenSentOut', dish_id=line.dish_id, time=line.time) }}">Send Out</a>
-            {%endif%}
+            {% endif %}
         </td>
     </tr>
-    {%endif%}
-    {%endfor%}
+    {% endif %}
+    {% endfor %}
 </table>
 
-{%endblock%}
+{% endblock content %}
