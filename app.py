@@ -247,35 +247,6 @@ def staff_login():
                 return response'''
     return render_template("staff/staff_login.html", form=form, title="Login")
 
-
-
-# Contact form so that customers can send enquiries
-@app.route("/contact_us", methods=["GET", "POST"])
-def contact_us():
-    cur = mysql.connection.cursor()
-    form = ContactForm()
-    if form.validate_on_submit() == False:
-      flash('All fields are required.')
-    else:
-        name = form.name.data
-        email = form.email.data.lower().strip()
-        subject = form.subject.data
-        message = form.message.data
-
-        cur.execute("""INSERT INTO user_queries (name, email, subject, message)
-                        VALUES (%s,%s,%s,%s);""", (name, email, subject, message))
-        mysql.connection.commit()
-        cur.close()
-
-        msg = Message(subject, sender='no.reply.please.and.thank.you@gmail.com', recipients=['no.reply.please.and.thank.you@gmail.com'])   
-        msg.body = f"""
-        From: {name} <{email}>
-        {message}
-        """
-        mail.send(msg)
-        flash("Message sent. We will reply to you in 2-3 business days.")
-    return render_template("customer/enquiry_form.html",form=form, title="Contact Us")
-
 # Change password
 @app.route("/change_password/<table>", methods=["GET", "POST"])
 #@login_required
