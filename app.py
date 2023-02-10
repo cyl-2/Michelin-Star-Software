@@ -346,6 +346,63 @@ def confirm_code(email, table):
 ##############################################################################################################################################
 ##############################################################################################################################################
 '''
+            ALL FEATURES BELOW ARE RELATED TO THE CUSTOMER ACCOUNT FEATURE
+'''
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
+
+@app.route('/customer_profile')
+@login_required
+def customer_profile():
+    username = session['username']
+    cur = mysql.connection.cursor()
+    message = ''
+    transactionHistory=''
+    image = None
+    cur.execute(" SELECT * FROM customer WHERE email=%s",(username,))
+    check= cur.fetchone()['profile_pic']
+    print(check)
+    if check is None:
+        error = 'No profile picture yet'
+        print('why')
+    else:  
+        image=check
+        print(image)
+    cur.execute("SELECT * FROM transactions WHERE username=%s;",(username,))
+    check2 = cur.fetchall()
+    if check2 is not None:
+        message = "You've made no transactions yet"
+    else:
+        cur.execute(" SELECT * FROM dishes;")
+        dish = cur.fetchall()
+        cur.execute(" SELECT * FROM transactions WHERE username=%s ",(username,))
+        transactionHistory = cur.fetchall()
+    cur.close()
+    #return render_template("customer/profile.html", title="My Profile")
+    return render_template('customer/customer_profile.html',image=image, transactionHistory=transactionHistory)
+
+
+@app.route('/user_pic', methods=['GET','POST'])
+@login_required
+def user_pic():
+    username = session['username']
+    cur = mysql.connection.cursor()
+    form = UserPic()
+    if form.validate_on_submit():
+        profile_pic = form.profile_pic.data
+        filename = secure_filename(profile_pic.filename)
+        profile_pic.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        cur.execute(' UPDATE customer SET profile_pic=%s WHERE email=%s; ' ,(filename,username))
+        mysql.connection.commit()
+        cur.close()
+        return redirect(url_for('customer_profile'))
+    return render_template('customer/profile_pic.html', form=form)
+
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
+'''
             ALL FEATURES BELOW ARE RELATED TO THE KITCHEN STAFF
 '''
 ##############################################################################################################################################
@@ -945,6 +1002,69 @@ def view_inventory():
     cur.close()
     return render_template("manager/inventory.html", inventory=inventory, title="Inventory List")
 
+# Add a new dish to the menu
+#manager only
+#should add instead of a text box for dishtype like a drop down with only a couple of options
+#NEED TO ADD ABILITY TO LIST INGREDIENTS NECESSARY FOR EACH DISH.
+@app.route('/addDish', methods=['GET','POST'])
+def addDish():
+    cur = mysql.connection.cursor()
+    form = AddDishForm()
+    if form.validate_on_submit():
+        name = form.name.data
+        cur.execute('SELECT * from dish WHERE name=%s',(name,))
+        result = cur.fetchone()
+        if result is not None:
+            form.name.errors.append("This dish is already in the db")
+        else:
+            cost = form.cost.data
+            cookTime = form.cookTime.data
+            dishType = (form.dishType.data).lower()
+            dishDescription = form.dishDescription.data
+            dishPic = form.dishPic.data
+            ingredients = form.ingredients.data
+            allergins= form.allergins.data
+            filename = secure_filename(dishPic.filename)
+            #print(filename)
+            dishPic.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
+            cur.execute("INSERT INTO dish (name, cost, cook_time, dishType, description,dishPic,allergies) VALUES(%s,%s,%s,%s,%s,%s,%s);", (name,cost,cookTime,dishType,dishDescription,filename,allergins))
+            mysql.connection.commit()
+            print(ingredients)
+            if ingredients is not None:
+                ingredients=ingredients.split(',')
+                for ingredient in ingredients:
+                    print(ingredient)
+                    cur.execute("SELECT * FROM ingredient WHERE name=%s",(ingredient,))
+                    ingredient_id=cur.fetchone()
+                    if ingredient_id is not None:
+                        print('hellor', ingredient_id)
+                        ingredient_id=ingredient_id['ingredient_id']
+                        cur.execute('SELECT * FROM dish WHERE name=%s AND cost=%s AND cook_time=%s',(name, cost, cookTime))
+                        dish_id=cur.fetchone()['dish_id']
+                        cur.execute("INSERT INTO dish_ingredient(ingredient_id,dish_id) VALUES (%s,%s)",(ingredient_id,dish_id))
+                        mysql.connection.commit()
+                    else:
+                        cur.execute('SELECT * FROM dish WHERE name=%s AND cost=%s AND cook_time=%s',(name, cost, cookTime))
+                        dish_id=cur.fetchone()['dish_id']
+                        cur.execute("INSERT INTO ingredient(name,quantity) VALUES (%s,%s)",(ingredient,0))
+                        mysql.connection.commit()
+                        cur.execute("SELECT * FROM ingredient WHERE name=%s",(ingredient,))
+                        ingredient_id=cur.fetchone()['ingredient_id']
+                        cur.execute("INSERT INTO dish_ingredient(ingredient_id,dish_id) VALUES (%s,%s)",(ingredient_id,dish_id))
+                        mysql.connection.commit()
+            #cur.close()
+            return redirect(url_for('menu'))
+    return render_template('manager/addDish.html', form=form)
+
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
+'''
+            ALL FEATURES BELOW ARE RELATED TO MENU, CART AND CHECKOUT FEATURES
+'''
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
 
 #initally i'm gonna just get all dishes to display but i do want to be able to separate it into like starter, main course etc
 @app.route('/menu',methods=['GET'])
@@ -966,8 +1086,6 @@ def menu():
     cur.close()#
     print(g.user)
     return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side)
-
-
 
 
 @app.route('/dish/<int:dish_id>', methods=['GET','POST'])
@@ -1047,62 +1165,7 @@ def dec_quantity_ingredient(ingredient_id):
         session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] -1
     return redirect(url_for('dish',dish_id=dish_id))
 
-
-#manager only
-#should add instead of a text box for dishtype like a drop down with only a couple of options
-#NEED TO ADD ABILITY TO LIST INGREDIENTS NECESSARY FOR EACH DISH.
-@app.route('/addDish', methods=['GET','POST'])
-def addDish():
-    cur = mysql.connection.cursor()
-    form = AddDishForm()
-    if form.validate_on_submit():
-        name = form.name.data
-        cur.execute('SELECT * from dish WHERE name=%s',(name,))
-        result = cur.fetchone()
-        if result is not None:
-            form.name.errors.append("This dish is already in the db")
-        else:
-            cost = form.cost.data
-            cookTime = form.cookTime.data
-            dishType = (form.dishType.data).lower()
-            dishDescription = form.dishDescription.data
-            dishPic = form.dishPic.data
-            ingredients = form.ingredients.data
-            allergins= form.allergins.data
-            filename = secure_filename(dishPic.filename)
-            #print(filename)
-            dishPic.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
-            cur.execute("INSERT INTO dish (name, cost, cook_time, dishType, description,dishPic,allergies) VALUES(%s,%s,%s,%s,%s,%s,%s);", (name,cost,cookTime,dishType,dishDescription,filename,allergins))
-            mysql.connection.commit()
-            print(ingredients)
-            if ingredients is not None:
-                ingredients=ingredients.split(',')
-                for ingredient in ingredients:
-                    print(ingredient)
-                    cur.execute("SELECT * FROM ingredient WHERE name=%s",(ingredient,))
-                    ingredient_id=cur.fetchone()
-                    if ingredient_id is not None:
-                        print('hellor', ingredient_id)
-                        ingredient_id=ingredient_id['ingredient_id']
-                        cur.execute('SELECT * FROM dish WHERE name=%s AND cost=%s AND cook_time=%s',(name, cost, cookTime))
-                        dish_id=cur.fetchone()['dish_id']
-                        cur.execute("INSERT INTO dish_ingredient(ingredient_id,dish_id) VALUES (%s,%s)",(ingredient_id,dish_id))
-                        mysql.connection.commit()
-                    else:
-                        cur.execute('SELECT * FROM dish WHERE name=%s AND cost=%s AND cook_time=%s',(name, cost, cookTime))
-                        dish_id=cur.fetchone()['dish_id']
-                        cur.execute("INSERT INTO ingredient(name,quantity) VALUES (%s,%s)",(ingredient,0))
-                        mysql.connection.commit()
-                        cur.execute("SELECT * FROM ingredient WHERE name=%s",(ingredient,))
-                        ingredient_id=cur.fetchone()['ingredient_id']
-                        cur.execute("INSERT INTO dish_ingredient(ingredient_id,dish_id) VALUES (%s,%s)",(ingredient_id,dish_id))
-                        mysql.connection.commit()
-            #cur.close()
-            return redirect(url_for('menu'))
-    return render_template('manager/addDish.html', form=form)
-
 #this was not working yesterday so I don't get why its working today
-
 @app.route('/cart')
 @login_required
 def cart():
@@ -1144,7 +1207,6 @@ def add_default_meal(dish_id):
     mysql.connection.commit()
 
     return redirect(url_for('cart'))
-
 
 #There's an issue here 
 @app.route('/add_to_cart/<int:dish_id>')
@@ -1188,7 +1250,6 @@ def dec_quantity(dish_id):
     if session['cart'][dish_id] >1:
         session['cart'][dish_id] = session['cart'][dish_id] -1
     return redirect(url_for('cart'))
-
 
 #question does this need to be specific to user?? or is it already
 @app.route('/checkout', methods=['GET','POST'])
@@ -1244,52 +1305,6 @@ def checkout():
     #need table number to be inputed here 
 
 
-@app.route('/customer_profile')
-@login_required
-def customer_profile():
-    username = session['username']
-    cur = mysql.connection.cursor()
-    message = ''
-    transactionHistory=''
-    image = None
-    cur.execute(" SELECT * FROM customer WHERE email=%s",(username,))
-    check= cur.fetchone()['profile_pic']
-    print(check)
-    if check is None:
-        error = 'No profile picture yet'
-        print('why')
-    else:  
-        image=check
-        print(image)
-    cur.execute("SELECT * FROM transactions WHERE username=%s;",(username,))
-    check2 = cur.fetchall()
-    if check2 is not None:
-        message = "You've made no transactions yet"
-    else:
-        cur.execute(" SELECT * FROM dishes;")
-        dish = cur.fetchall()
-        cur.execute(" SELECT * FROM transactions WHERE username=%s ",(username,))
-        transactionHistory = cur.fetchall()
-    cur.close()
-    #return render_template("customer/profile.html", title="My Profile")
-    return render_template('customer/customer_profile.html',image=image, transactionHistory=transactionHistory)
-
-
-@app.route('/user_pic', methods=['GET','POST'])
-@login_required
-def user_pic():
-    username = session['username']
-    cur = mysql.connection.cursor()
-    form = UserPic()
-    if form.validate_on_submit():
-        profile_pic = form.profile_pic.data
-        filename = secure_filename(profile_pic.filename)
-        profile_pic.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        cur.execute(' UPDATE customer SET profile_pic=%s WHERE email=%s; ' ,(filename,username))
-        mysql.connection.commit()
-        cur.close()
-        return redirect(url_for('customer_profile'))
-    return render_template('customer/profile_pic.html', form=form)
 
 
 #gonna implement this pretending 
