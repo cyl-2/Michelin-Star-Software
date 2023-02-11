@@ -85,7 +85,6 @@
             co_ords.push(table.style.left);
             co_ords.push(table.style.top);
         {% endfor %}
-
         document.getElementById("save_changes").innerHTML = '<a href="{{ url_for('save_tables') }}">Save Changes</a>';
     }
 

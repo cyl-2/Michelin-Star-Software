@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, g, request, make_response, flash, Markup
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm
+from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm, submitModifications
 from functools import wraps
 from flask_mysqldb import MySQL 
 from generate_roster import Roster
@@ -74,7 +74,7 @@ def take_order(table):
         
     cur.execute(
         """
-            SELECT dish.name, orders.status, order_id, dish.dishType
+            SELECT dish.name, orders.status, order_id, dish.dishType, orders.info
             FROM orders JOIN dish 
             ON orders.dish_id = dish.dish_id
             WHERE orders.table_id = %s 
@@ -83,22 +83,90 @@ def take_order(table):
         """,(table,'complete', 'cancelled')
     )
     ordered = cur.fetchall()
-    
-    if request.cookies.get("ordering"+str(table)):
-        ordering = json.loads(request.cookies.get("ordering"+str(table)))
+    if 'ordering' not in session:
+        session['ordering'] = {}
+    if table in session['ordering']:
+        ordering = session['ordering'][table]
         return render_template("staff/take_order.html", table=table, ordering=ordering, meals=meals, ordered=ordered)
-    
     return render_template("staff/take_order.html", table=table, meals=meals, ordered=ordered)
+
+@app.route('/<int:table>/waiter_customize_dish/<int:dish_id>', methods=['GET','POST'])
+def waiter_customize_dish(table, dish_id):
+    if str(dish_id) not in session:
+        session[str(dish_id)]={}
+    session['CurrentDish'] = dish_id
+    form = submitModifications()
+    cur=mysql.connection.cursor()
+    cur.execute('SELECT * FROM dish WHERE dish_id=%s',(dish_id,))
+    dish=cur.fetchone()
+    cur.execute("SELECT * FROM dish_ingredient JOIN ingredient ON dish_ingredient.ingredient_id = ingredient.ingredient_id  WHERE dish_ingredient.dish_id=%s",(dish_id,))
+    result=cur.fetchall()
+    for value in result:
+        ingredient_id=value['ingredient_id']
+        if ingredient_id not in session[str(dish_id)]:
+            session[str(dish_id)][ingredient_id] =1
+            
+    if form.validate_on_submit():
+        cur.execute('SELECT * FROM dish_ingredient WHERE dish_id=%s',(dish_id,))
+        ingredients=cur.fetchall()
+        if 'mods' not in session:
+            session['mods'] = {}
+        if table not in session['mods']:
+            session['mods'][table] = {}
+        cur.execute('SELECT ingredient_id FROM dish_ingredient WHERE dish_id = %s',(dish_id,))
+        ingredient_ids = cur.fetchall()
+        
+        min = 100
+        for id in ingredient_ids:
+            cur.execute('SELECT MIN(quantity) FROM ingredient WHERE ingredient_id = %s',(id['ingredient_id'],))
+            value = cur.fetchone()
+            if value['MIN(quantity)'] < min:
+                min = value['MIN(quantity)']
+        if min > 0:
+            for ingredient in ingredients:
+                ingredient_id = ingredient['ingredient_id']
+                if ingredient_id not in session[str(dish_id)]:
+                    session[str(dish_id)][ingredient_id] =1
+                    
+            
+            session['mods'][table][dish['name']] = {}
+            for value in result:
+                session['mods'][table][dish['name']][value['name']] = session[str(dish_id)][value['ingredient_id']]
+            for ingredient in ingredients:
+                session[str(dish_id)][ingredient['ingredient_id']] = 1
+            session['CurrentDish'] = None
+            return redirect(url_for('add_order', table=table, meal=dish['name']))
+    return render_template('staff/customize_dish.html', table=table, dish=dish,result=result,form=form,quant=session[str(dish_id)])
+
+@app.route('/<int:table>/waiter_inc_quantity_ingredient/<int:ingredient_id>')
+#@login_required
+def waiter_inc_quantity_ingredient(table, ingredient_id):
+    dish_id = session['CurrentDish'] # put this as input
+    if ingredient_id not in session[str(dish_id)]:
+        session[str(dish_id)][ingredient_id] = 1
+    session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] +1
+    return redirect(url_for('waiter_customize_dish', table=table, dish_id=dish_id))
+
+@app.route('/<int:table>/waiter_dec_quantity_ingredient/<int:ingredient_id>')
+#@login_required
+def waiter_dec_quantity_ingredient(table, ingredient_id):
+    dish_id = session['CurrentDish']
+    if ingredient_id not in session[str(dish_id)]:
+        session[str(dish_id)][ingredient_id] = 1
+    if session[str(dish_id)][ingredient_id] !=0:
+        session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] -1
+    return redirect(url_for('waiter_customize_dish',table=table, dish_id=dish_id))
+
 
 @app.route("/<int:table>/add_order/<meal>", methods=["GET","POST"])
 def add_order(table, meal):
-    ordering = []
-    if request.cookies.get("ordering"+str(table)):
-        ordering = json.loads(request.cookies.get("ordering"+str(table)))
+    if 'mods' not in session:
+        session['mods'] = {}
+    if 'ordering' not in session:
+        session['ordering'] = {}
+    if table not in session['ordering']:
+        session['ordering'][table] = {}
     cur = mysql.connection.cursor()
-       
-    # If not enough ingredients to make the meal, not added to order
-
 
     cur.execute('SELECT dish_id FROM dish WHERE name = %s',(meal,))
     dish_ids = cur.fetchall()
@@ -114,24 +182,27 @@ def add_order(table, meal):
         if value['MIN(quantity)'] < min:
             min = value['MIN(quantity)']
     if min > 0:
-        ordering.append(str(meal))
-    else:
-        response = make_response(redirect(url_for('take_order', table=table)))
-    response = make_response(redirect(url_for('take_order', table=table)))
-    response.set_cookie('ordering'+str(table), json.dumps(ordering), max_age=(60*60*24))
-    return response
+        mods = {}
+        if table in session['mods']:
+            if session['mods'][table] != {}:
+                for key in session['mods'][table]:
+                    mods = session['mods'][table][key]
+            
+        if str(meal) in session['ordering'][table]:
+            session['ordering'][table][str(meal)].append(mods)
+        else:
+            session['ordering'][table][str(meal)] = [mods]
+            
+        session['mods'][table] = {}
+    return redirect(url_for('take_order', table=table))
 
-@app.route("/<int:table>/remove_meal/<meal>", methods=["GET","POST"])
-def remove_meal(table, meal):
-    ordering = json.loads(request.cookies.get("ordering"+str(table)))
-    for i in range(len(ordering)):
-        if meal == ordering[i]:
-            index = i
-    ordering.pop(index)
-    
-    response = make_response(redirect(url_for("take_order", table=table)))
-    response.set_cookie('ordering'+str(table), json.dumps(ordering), max_age=(60*60*24))
-    return response
+# do after maybe index
+@app.route("/<int:table>/remove_meal/<meal>/<int:index>", methods=["GET","POST"])
+def remove_meal(table, meal, index):
+    session['ordering'][table][meal].pop(index)
+    if len(session['ordering'][table][meal]) == 0:
+        session['ordering'][table].pop(meal)
+    return redirect(url_for("take_order", table=table))
 
 @app.route("/<int:table>/cancel_meal/<int:meal_id>", methods=["GET","POST"])
 def cancel_meal(table, meal_id):
@@ -145,28 +216,31 @@ def cancel_meal(table, meal_id):
 
 @app.route("/<int:table>/cancel_order", methods=["GET","POST"])
 def cancel_order(table):
-    
-    response = make_response(redirect(url_for("take_order", table=table)))
-    response.set_cookie('ordering'+str(table), '', expires=0)
-    return response
+    session['mods'][table] = {}
+    session['ordering'][table] = {}
+    return redirect(url_for("take_order", table=table))
 
 
 @app.route("/<int:table>/complete_order", methods=["GET","POST"])
 def complete_order(table):  
     cur = mysql.connection.cursor()
         
-    if request.cookies.get("ordering"+str(table)):
-        ordering = json.loads(request.cookies.get("ordering"+str(table)))
-        
+    if table in session['ordering']:
+        ordering = session['ordering'][table]
+        print(ordering)
         for meal in ordering:
             cur.execute('SELECT dish_id, cook_time FROM dish WHERE name = %s',(meal,))
             data = cur.fetchone()
-            cur.execute("INSERT INTO orders (time, dish_id, table_id, status) VALUES (%s, %s, %s., 'waiting');",(data['cook_time'], data['dish_id'], table))
-            mysql.connection.commit()
+            for times in ordering[meal]:
+                info = ""
+                for ingredients in times:
+                    if times[ingredients] != 1:
+                        info += ingredients+"-"+str(times[ingredients])+", "
+                cur.execute("INSERT INTO orders (time, dish_id, table_id, status, info) VALUES (%s, %s, %s, 'waiting', %s);",(data['cook_time'], data['dish_id'], table, info))
+                mysql.connection.commit()
     
-    response = make_response(redirect(url_for('take_order', table=table)))
-    response.set_cookie('ordering'+str(table), json.dumps([]), max_age=(60*60*24))
-    return response
+    session['ordering'][table] = {}
+    return redirect(url_for('take_order', table=table))
 
 @app.route("/move_tables", methods=["GET","POST"])
 def move_tables():
@@ -306,9 +380,6 @@ def generate_roster():
                 cur.execute(command,( shift, person))
                 mysql.connection.commit()
     return redirect(url_for('roster_timetable'))
-
-
-
 
 @app.route("/roster_timetable", methods=["GET","POST"])
 def roster_timetable():
@@ -836,7 +907,6 @@ def manager():
 @app.route("/roster_approve/<int:id>")
 def roster_approve(id):
     cur = mysql.connection.cursor()
-    print("the id is", id)
     status = "Approved"
     cur.execute("""UPDATE roster_requests SET status=%s, last_updated=CURRENT_TIMESTAMP WHERE request_id= %s;""", (status, id))
     mysql.connection.commit()
@@ -874,9 +944,7 @@ def view_all_employees():
 def add_new_employee():
     cur = mysql.connection.cursor()
     form = EmployeeForm()
-    print("after the form")
     if form.validate_on_submit():
-        print("valid")
         role = form.role.data
         email = form.email.data
         access_level = form.access_level.data
