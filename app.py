@@ -1,23 +1,27 @@
 from flask import Flask, render_template, redirect, url_for, session, g, request, make_response, flash, Markup
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, ProfileForm, RejectRosterRequestForm
+from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, ProfileForm, RejectRosterRequestForm, AddDishForm, UserPic, cardDetails,submitModifications
 from functools import wraps
 from flask_mysqldb import MySQL 
 from generate_roster import Roster
 import json
 from flask_mail import Mail, Message
-from datetime import datetime
+import datetime
 import random, string, time
 from random import sample
+from werkzeug.utils import secure_filename
+import os
 import credentials
 
 app = Flask(__name__)
 
 app.config["SECRET_KEY"] = "MY_SECRET_KEY"
+UPLOAD_FOLDER = "picture"
 app.config['DEBUG'] = False
 
 app.config["SESSION_PERMANENT"] = False
+app.config['UPLOAD_FOLDER']= UPLOAD_FOLDER
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
@@ -337,6 +341,63 @@ def confirm_code(email, table):
             session["username"] = email
             return redirect(url_for("change_password", table=table))
     return render_template("password_management/confirm_code.html", form=form, title= "Confirm code")
+
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
+'''
+            ALL FEATURES BELOW ARE RELATED TO THE CUSTOMER ACCOUNT FEATURE
+'''
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
+
+@app.route('/customer_profile')
+@login_required
+def customer_profile():
+    username = session['username']
+    cur = mysql.connection.cursor()
+    message = ''
+    transactionHistory=''
+    image = None
+    cur.execute(" SELECT * FROM customer WHERE email=%s",(username,))
+    check= cur.fetchone()['profile_pic']
+    print(check)
+    if check is None:
+        error = 'No profile picture yet'
+        print('why')
+    else:  
+        image=check
+        print(image)
+    cur.execute("SELECT * FROM transactions WHERE username=%s;",(username,))
+    check2 = cur.fetchall()
+    if check2 is not None:
+        message = "You've made no transactions yet"
+    else:
+        cur.execute(" SELECT * FROM dishes;")
+        dish = cur.fetchall()
+        cur.execute(" SELECT * FROM transactions WHERE username=%s ",(username,))
+        transactionHistory = cur.fetchall()
+    cur.close()
+    #return render_template("customer/profile.html", title="My Profile")
+    return render_template('customer/customer_profile.html',image=image, transactionHistory=transactionHistory)
+
+
+@app.route('/user_pic', methods=['GET','POST'])
+@login_required
+def user_pic():
+    username = session['username']
+    cur = mysql.connection.cursor()
+    form = UserPic()
+    if form.validate_on_submit():
+        profile_pic = form.profile_pic.data
+        filename = secure_filename(profile_pic.filename)
+        profile_pic.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        cur.execute(' UPDATE customer SET profile_pic=%s WHERE email=%s; ' ,(filename,username))
+        mysql.connection.commit()
+        cur.close()
+        return redirect(url_for('customer_profile'))
+    return render_template('customer/profile_pic.html', form=form)
 
 ##############################################################################################################################################
 ##############################################################################################################################################
@@ -941,5 +1002,381 @@ def view_inventory():
     cur.close()
     return render_template("manager/inventory.html", inventory=inventory, title="Inventory List")
 
+# Add a new dish to the menu
+#manager only
+#should add instead of a text box for dishtype like a drop down with only a couple of options
+#NEED TO ADD ABILITY TO LIST INGREDIENTS NECESSARY FOR EACH DISH.
+@app.route('/addDish', methods=['GET','POST'])
+def addDish():
+    cur = mysql.connection.cursor()
+    form = AddDishForm()
+    if form.validate_on_submit():
+        name = form.name.data
+        cur.execute('SELECT * from dish WHERE name=%s',(name,))
+        result = cur.fetchone()
+        if result is not None:
+            form.name.errors.append("This dish is already in the db")
+        else:
+            cost = form.cost.data
+            cookTime = form.cookTime.data
+            dishType = (form.dishType.data).lower()
+            dishDescription = form.dishDescription.data
+            dishPic = form.dishPic.data
+            ingredients = form.ingredients.data
+            allergins= form.allergins.data
+            filename = secure_filename(dishPic.filename)
+            #print(filename)
+            dishPic.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
+            cur.execute("INSERT INTO dish (name, cost, cook_time, dishType, description,dishPic,allergies) VALUES(%s,%s,%s,%s,%s,%s,%s);", (name,cost,cookTime,dishType,dishDescription,filename,allergins))
+            mysql.connection.commit()
+            print(ingredients)
+            if ingredients is not None:
+                ingredients=ingredients.split(',')
+                for ingredient in ingredients:
+                    print(ingredient)
+                    cur.execute("SELECT * FROM ingredient WHERE name=%s",(ingredient,))
+                    ingredient_id=cur.fetchone()
+                    if ingredient_id is not None:
+                        print('hellor', ingredient_id)
+                        ingredient_id=ingredient_id['ingredient_id']
+                        cur.execute('SELECT * FROM dish WHERE name=%s AND cost=%s AND cook_time=%s',(name, cost, cookTime))
+                        dish_id=cur.fetchone()['dish_id']
+                        cur.execute("INSERT INTO dish_ingredient(ingredient_id,dish_id) VALUES (%s,%s)",(ingredient_id,dish_id))
+                        mysql.connection.commit()
+                    else:
+                        cur.execute('SELECT * FROM dish WHERE name=%s AND cost=%s AND cook_time=%s',(name, cost, cookTime))
+                        dish_id=cur.fetchone()['dish_id']
+                        cur.execute("INSERT INTO ingredient(name,quantity) VALUES (%s,%s)",(ingredient,0))
+                        mysql.connection.commit()
+                        cur.execute("SELECT * FROM ingredient WHERE name=%s",(ingredient,))
+                        ingredient_id=cur.fetchone()['ingredient_id']
+                        cur.execute("INSERT INTO dish_ingredient(ingredient_id,dish_id) VALUES (%s,%s)",(ingredient_id,dish_id))
+                        mysql.connection.commit()
+            #cur.close()
+            return redirect(url_for('menu'))
+    return render_template('manager/addDish.html', form=form)
+
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
+'''
+            ALL FEATURES BELOW ARE RELATED TO MENU, CART AND CHECKOUT FEATURES
+'''
+##############################################################################################################################################
+##############################################################################################################################################
+##############################################################################################################################################
+
+#initally i'm gonna just get all dishes to display but i do want to be able to separate it into like starter, main course etc
+@app.route('/menu',methods=['GET'])
+def menu():
+    cur=mysql.connection.cursor()
+    cur.execute('''SELECT * FROM dish ORDERBY; ''')
+    dishes =cur.fetchall()
+    #want to order this so that we display by dishtype
+    cur.execute(" SELECT * FROM dish WHERE dishType='starter' ")
+    starters =cur.fetchall()
+    cur.execute(" SELECT * FROM dish WHERE dishType='main' ")
+    mainCourse = cur.fetchall()
+    cur.execute(" SELECT * FROM dish WHERE dishType='dessert' ")
+    dessert= cur.fetchall()
+    cur.execute(" SELECT * FROM dish WHERE dishType='drink'")
+    drink= cur.fetchall()
+    cur.execute(" SELECT * FROM dish WHERE dishType='side'")
+    side = cur.fetchall()
+    cur.close()#
+    print(g.user)
+    return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side)
+
+
+@app.route('/dish/<int:dish_id>', methods=['GET','POST'])
+def dish(dish_id):
+    if str(dish_id) not in session:
+        session[str(dish_id)]={}
+        print(session[str(dish_id)])
+    session['CurrentDish'] = dish_id
+    print(session[str(dish_id)])
+    form = submitModifications()
+    cur=mysql.connection.cursor()
+    cur.execute('SELECT * FROM dish WHERE dish_id=%s',(dish_id,))
+    dish=cur.fetchone()
+    dish_id=dish['dish_id']
+    cur.execute("SELECT * FROM dish_ingredient JOIN ingredient ON dish_ingredient.ingredient_id = ingredient.ingredient_id  WHERE dish_ingredient.dish_id=%s",(dish_id,))
+    result=cur.fetchall()
+    print(result)
+    for value in result:
+        ingredient_id=value['ingredient_id']
+        print('INGREDIENTID ', ingredient_id)
+        if ingredient_id not in session[str(dish_id)]:
+            session[str(dish_id)][ingredient_id] =1
+            print('todo')
+            print(session[str(dish_id)][ingredient_id])
+    if form.validate_on_submit():
+        changes = ''
+        cur.execute('SELECT * FROM dish_ingredient WHERE dish_id=%s',(dish_id,))
+        ingredients=cur.fetchall()
+        for ingredient in ingredients:
+            print(ingredient)
+            ingredient_id = ingredient['ingredient_id']
+            cur.execute("SELECT * FROM ingredient WHERE ingredient_id=%s",(ingredient_id,))
+            ing_name=cur.fetchone()['name']
+            #ingredient_name = ingredient['name']
+            if ingredient_id not in session[str(dish_id)]:
+                session[str(dish_id)][ingredient_id] =1
+                print(session[dish_id])
+            else:
+                quantity=session[str(dish_id)][ingredient_id]
+                changes+= str(ing_name) + str(quantity)
+                print('changes1:',changes)
+                session[str(dish_id)][ingredient_id] =1
+        cur.execute("INSERT INTO modifications(dish_id,changes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
+        mysql.connection.commit()
+        session['CurrentDish'] = None
+        return redirect(url_for('add_to_cart', dish_id=dish['dish_id']))
+    return render_template('customer/dish.html', dish=dish,result=result,form=form,quant=session[str(dish_id)])
+
+#so by default all amounts of ingredients should be 1 - should have the option to increase by 1 and decrease by 1
+#added that so that should work
+# I'M PRETTY SURE THIS WORKS BESIDES THE REDIRECT  
+@app.route('/inc_quantity_ingredient/<int:ingredient_id>')
+@login_required
+def inc_quantity_ingredient(ingredient_id):
+    cur = mysql.connection.cursor() 
+    dish_id = session['CurrentDish']
+    cur.execute("SELECT * FROM dish_ingredient WHERE ingredient_id=%s",(ingredient_id,))
+    result=cur.fetchone()
+    #dish_id = result['dish_id']
+    if ingredient_id not in session[str(dish_id)]:
+        session[str(dish_id)][ingredient_id] = 1
+    session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] +1
+    print(session[str(dish_id)][ingredient_id])
+    return redirect(url_for('dish',dish_id=dish_id))
+
+@app.route('/dec_quantity_ingredient/<int:ingredient_id>')
+@login_required
+def dec_quantity_ingredient(ingredient_id):
+    cur = mysql.connection.cursor()
+    dish_id = session['CurrentDish']
+    cur.execute("SELECT * FROM dish_ingredient WHERE ingredient_id=%s",(ingredient_id,))
+    result=cur.fetchone()
+    #dish_id = result['dish_id']
+    if ingredient_id not in session[str(dish_id)]:
+        session[str(dish_id)][ingredient_id] = 1
+    if session[str(dish_id)][ingredient_id] !=0:
+        session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] -1
+    return redirect(url_for('dish',dish_id=dish_id))
+
+#this was not working yesterday so I don't get why its working today
+@app.route('/cart')
+@login_required
+def cart():
+    #session['cart'].clear()
+    cur = mysql.connection.cursor()
+    dish=''
+    full = 0
+    if 'cart' not in session:
+        session['cart'] = {}
+        print('create session')
+    names = {}
+    print(session['cart'])
+    for dish_id in session['cart']:
+        print('heeloor',dish_id)
+        cur.execute('SELECT * FROM dish WHERE dish_id=%s LIMIT 1;',(dish_id,))
+        name = cur.fetchone()['name']
+        print(name)
+        names[dish_id] = name
+        cur.execute(' SELECT * FROM dish WHERE dish_id=%s; ',(dish_id,))
+        dish = cur.fetchone()
+        cur.execute(' SELECT * FROM dish WHERE dish_id=%s',(dish_id,))
+        cost = cur.fetchone()['cost']
+        quantity = session['cart'][dish_id]
+        full+= (int(cost) *int(quantity))
+        #cur.close()
+    return render_template('customer/cart.html', cart=session['cart'], names=names, dish=dish, full=full)
+
+@app.route('/add_default_meal/<int:dish_id>')
+@login_required
+def add_default_meal(dish_id):
+    cur = mysql.connection.cursor()
+    if 'cart' not in session:
+        session['cart'] = {}
+    if dish_id not in session['cart']:
+        session['cart'][dish_id] = 0
+    session['cart'][dish_id]=session['cart'][dish_id]+1
+    changes=""
+    cur.execute("INSERT INTO modifications(dish_id,changes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
+    mysql.connection.commit()
+
+    return redirect(url_for('cart'))
+
+#There's an issue here 
+@app.route('/add_to_cart/<int:dish_id>')
+@login_required
+def add_to_cart(dish_id):
+    #session['cart'].clear()
+    cur = mysql.connection.cursor()
+    if 'cart' not in session:
+        session['cart'] = {} 
+    if dish_id not in session['cart']:
+        session['cart'][dish_id] = 0
+    session['cart'][dish_id]= session['cart'][dish_id] + 1
+    return redirect( url_for('cart') ) 
+
+@app.route('/remove/<int:dish_id>')
+@login_required
+def remove(dish_id):
+    if dish_id not in session['cart']:
+        session['cart'][dish_id] = 0
+    for dishId in session['cart'].copy():
+        if dish_id == int(dishId):
+            session['cart'].pop(dishId)
+    return redirect(url_for('cart'))
+
+@app.route('/inc_quantity/<int:dish_id>')
+@login_required
+def inc_quantity(dish_id):
+    cur = mysql.connection.cursor()
+    #stock_left = db.execute(''' SELECT * FROM inventory WHERE book_id=?; ''',(book_id,)).fetchone()['stock_left']
+    if dish_id not in session['cart']:
+        session['cart'][dish_id]=0
+    #if session['cart'][book_id] < stock_left:
+    session['cart'][dish_id] = session['cart'][dish_id] +1
+    return redirect(url_for('cart'))
+
+@app.route('/dec_quantity/<int:dish_id>')
+@login_required
+def dec_quantity(dish_id):
+    if dish_id not in session['cart']:
+        session['cart'][dish_id]=0
+    if session['cart'][dish_id] >1:
+        session['cart'][dish_id] = session['cart'][dish_id] -1
+    return redirect(url_for('cart'))
+
+#question does this need to be specific to user?? or is it already
+@app.route('/checkout', methods=['GET','POST'])
+def checkout():
+    full =0
+    form = cardDetails()
+    names = {}
+    username = g.user
+    cur = mysql.connection.cursor()
+    for dish_id in session['cart']:
+        cur.execute('SELECT * FROM dish WHERE dish_id=%s;',(dish_id,))
+        name = cur.fetchone()['name']
+        names[dish_id] = name
+        cur.execute("SELECT * FROM dish WHERE dish_id=%s",(dish_id,))
+        cost = cur.fetchone()['cost']
+        cur.execute(' SELECT * FROM dish WHERE dish_id=%s;',(dish_id,))
+        dish = cur.fetchone()
+        quantity = session['cart'][dish_id]
+        full += (cost *quantity)
+        cur.execute('SELECT * FROM dish_ingredient WHERE dish_id=%s',(dish_id,))
+        ingredients=cur.fetchall()
+        changes=''
+        print('session',session['cart'])
+    if form.validate_on_submit():
+        cardNum=form.cardNum.data
+        cardHolder = form.cardHolder.data
+        cvv = form.cvv.data
+        date = datetime.now().strftime(' %d-%m-%y')
+        now = datetime.now()
+        for dish_id in session['cart']:
+            cur.execute('SELECT * FROM modifications WHERE dish_id=%s AND user=%s',(dish_id,g.user))
+            result = cur.fetchall()
+            print('Result:',result)
+            for values in result:
+                print('myval',values)
+                cur.execute('SELECT * FROM dish WHERE dish_id=%s',(dish_id,))
+                currentDish=cur.fetchone()
+                print('cd',currentDish)
+                cost=currentDish['cost']
+                changes=values['changes']
+                cur.execute('INSERT INTO transactions(username, dish_id,cost,quantity,date) VALUES(%s,%s,%s,%s,%s) ',(username, dish_id,cost,1,date))
+                mysql.connection.commit()
+                cur.execute("INSERT INTO orders(time,dish_id,changes) VALUES(%s,%s,%s)",(now,dish_id,changes))
+                mysql.connection.commit()
+            #cur.execute('DELETE FROM modifications WHERE user=%s',(g.user,))
+        cur.execute('DELETE FROM modifications WHERE user=%s',(g.user,))
+        mysql.connection.commit()    
+        session['cart'].clear()
+        cur.close()
+        return render_template('cart.html')
+    return render_template('customer/checkout.html', cart=session['cart'],form=form,full=full,names=names,dish=dish)
+
+    #need table number to be inputed here 
+
+
+
+
+#gonna implement this pretending 
+@app.route('/breaks', methods=['GET','POST'])
+def breakTimes():
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT * FROM staff')
+    staff = cur.fetchall()
+    cur.execute("SELECT * FROM roster")
+    roster = cur.fetchall()
+    now = datetime.datetime.now()
+    day = (now.strftime("%a")).lower()
+    breaksAssigned = {}
+    workingToday = {}
+    for working in roster:
+        if working[day] != '':
+            shift = working[day]
+            workingToday[working['staff_id']] =shift
+    print('hello')
+    print(workingToday)
+    numWorkers = len(workingToday)
+    for employee in workingToday:
+        shift = workingToday[employee]
+        print(shift)
+        hoursWorking= int(shift[0]+shift[1]) - int(shift[6]+shift[7])
+        if hoursWorking <0:
+            hoursWorking = hoursWorking*-1
+            workingToday[employee] = [shift,hoursWorking]
+        if hoursWorking >4 and hoursWorking >= 8:
+            breaks = 2
+            #want to do my little test here
+            #2 breaks needed
+        elif hoursWorking >4:
+            breaks=1
+            #1 break needed
+        else: 
+            breaks =0
+        start = int(shift[0]+shift[1])
+        endShift = int(shift[6] + shift[7])
+        for i in range(0,breaks):
+            print(i)
+            proposedBreak = 0
+            #start =None
+            for j in range(4,1,-1):
+                print()
+                print('start',start)
+                proposedBreak = start + j
+                if proposedBreak in breaksAssigned: 
+                    proposedBreak = 0
+                elif proposedBreak  >= endShift or (proposedBreak) == endShift -2:
+                    proposedBreak =0
+                else:
+                    breaksAssigned[proposedBreak] =1
+                    if i == 0:
+                        start = start +j
+                        endBreak = start +0.45
+                        workingToday[employee].append(start)
+                    elif i ==1:
+                        start = start + j
+                        endBreak =start+0.45
+                        workingToday[employee].append(start)
+                    break
+            #if breaksAssigned[proposedBreak] <=
+            #end = start +.45
+            #print(start)
+            #no break
+        print("shiftLength",hoursWorking) 
+    return ("breaks.html")
+
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
+

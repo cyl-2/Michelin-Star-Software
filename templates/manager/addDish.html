@@ -1,0 +1,57 @@
+{%extends 'base.html'%}
+{% block main_content %}
+    <form action='' method="POST" enctype="multipart/form-data" novalidate>
+        {{form.hidden_tag()}}
+        {{form.name.label}}
+        {{form.name()}}
+        {% for error in form.name.errors %}
+            {{error}}
+        {%endfor%}
+        <br>
+        {{form.cost.label}}
+        {{form.cost()}}
+        {% for error in form.cost.errors %}
+            {{error}}
+        {%endfor%}
+        <br>
+        {{form.cookTime.label}}
+        {{form.cookTime()}}
+        {% for error in form.cookTime.errors %}
+            {{error}}
+        {%endfor%}
+        <br>
+        {{form.dishType.label}}
+        {{form.dishType()}}
+        {% for error in form.dishType.errors %}
+            {{error}}
+        {%endfor%}
+        <br>
+        {{form.dishPic.label}}
+        {{form.dishPic()}}
+        {%for error in form.dishPic.errors%}
+            {{error}}
+        {%endfor%}
+        <br>
+        {{form.dishDescription.label}}
+        {{form.dishDescription()}}
+        {%for error in form.dishDescription.errors%}
+            {{error}}
+        {%endfor%}
+        <br>
+        {{form.ingredients.label}}
+        {{form.ingredients()}}
+        {%for error in form.ingredients.errors%}
+            {{error}}
+        {%endfor%}
+        <br>
+        {{form.allergins.label}}
+        {{form.allergins()}}
+        {%for error in form.allergins.errors%}
+            {{error}}
+        {%endfor%}
+        <BR>
+        {{form.submit()}}
+
+    </form>
+    
+{%endblock%}

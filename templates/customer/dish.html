@@ -1,0 +1,45 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+{% if dish is not none%}
+    <p>Test?</p>
+    <p>{{dish['name']}}</p>
+    <p>{{ dish['cost']}}</p>
+    <p>{{dish['cook_time']}}</p>
+    <img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'>
+
+    {% if dish['description'] is not none%}
+        <p>{{dish['description']}}</p>
+    {%endif%}
+
+    {% if dish['allergies'] is not none%}
+        <p>{{dish['allergies']}}</p>
+    {%endif%}
+
+  
+    <table>
+        <tr>
+            <th>Ingredient</th>
+            <th>Increase quantitiy</th>
+            <th>quantitiy</th>
+            <th>Decrease Quantity</th>
+        </tr>  
+        {%for ingredient in result%}
+        <tr>
+            <td>{{ingredient['name']}}</td>
+            <td><a href="{{url_for('inc_quantity_ingredient',ingredient_id=ingredient['ingredient_id'],dish_id=dish['dish_id']) }}">+</a></td>
+            <td>{{quant[ingredient['ingredient_id']]}}</td>
+            <td><a href="{{url_for('dec_quantity_ingredient',ingredient_id=ingredient['ingredient_id']) }}">-</a></td>
+        </tr>
+
+    {% endfor %}
+    </table>
+
+    <form action='' method="POST" enctype="multipart/form-data" novalidate>
+    {{form.hidden_tag()}}
+    {{form.submit()}}
+    </form>
+        
+
+
+{%endif%}
+{% endblock%}

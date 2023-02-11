@@ -115,7 +115,7 @@ CREATE TABLE dish
     cost INTEGER NOT NULL,
     cook_time Integer NOT NULL,
     dishType TEXT NOT NULL,
-    allergies TEXT
+    allergies TEXT DEFAULT NULL
 );
 
 INSERT INTO dish

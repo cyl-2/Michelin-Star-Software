@@ -1,7 +1,8 @@
-from wtforms import SubmitField, StringField, SelectField, PasswordField, TextAreaField, IntegerField, DateField, DecimalField, RadioField, validators
+from wtforms import SubmitField, StringField, SelectField, PasswordField, TextAreaField, IntegerField, DateField, DecimalField, RadioField, validators, FileField, SelectMultipleField
 from flask_wtf import FlaskForm
 from wtforms.validators import InputRequired, EqualTo, NumberRange, Email
 from wtforms.widgets import TextArea
+from flask_wtf.file import FileField, FileAllowed, FileRequired
 
 class TableForm(FlaskForm):
     table_number = IntegerField( validators=[InputRequired(), NumberRange(1,100)])
@@ -87,3 +88,29 @@ class RosterRequestForm(FlaskForm):
 class RejectRosterRequestForm(FlaskForm):
     response = TextAreaField("Reason for rejection", widget=TextArea(), validators=[InputRequired()])
     submit = SubmitField("Confirm")
+
+class AddDishForm(FlaskForm):
+    name = StringField('Dish Name: ', validators=[InputRequired()])
+    cost = IntegerField('Dish Price', validators=[InputRequired()])
+    cookTime= IntegerField('Cook Time', validators=[InputRequired()])
+    dishType = StringField('Dish type:',validators=[InputRequired()])
+    dishDescription = TextAreaField('Dish Description: ')
+    #allergins= TextAreaField('Add any allergins that are applicable: ')
+    allergins=SelectMultipleField('Allergins:', choices=[('gluten','Gluten'),('dairy','Dairy'),('nut','Nut'),('soya','soya'),('egg','Egg')],validators=[InputRequired()])
+    dishPic = FileField('Upload a picture of dish:',validators=[FileRequired(),FileAllowed(['jpg','png'],'Images Only!')])
+    ingredients= TextAreaField('Add ingredients necessary for this dish',default="In the format ingredient1,ingredient2, pls separte with a comma!")
+    submit = SubmitField('Submit')
+
+class UserPic(FlaskForm):
+    profile_pic = FileField('Upload a cover', validators=[FileRequired(),FileAllowed(['jpg','png'],'Images Only!')])
+    submit = SubmitField('Enter')
+
+    
+class cardDetails(FlaskForm):
+    cardNum = IntegerField('Enter card number:', validators=[InputRequired()])
+    cardHolder = StringField('Enter card holders name:', validators=[InputRequired()])
+    cvv = IntegerField('Cvv', validators= [InputRequired()])
+    submit = SubmitField('Enter')
+
+class submitModifications(FlaskForm):
+    submit = SubmitField('Enter')
