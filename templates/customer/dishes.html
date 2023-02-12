@@ -1,0 +1,199 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+{% if dishes is not none%}
+
+    
+        <!-- [ Hover-table ] start -->
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Hover Table</h5>
+                    <span class="d-block m-t-5">use class <code>table-hover</code> inside table element</span>
+                </div>
+                <div class="card-block table-border-style">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Dish Name</th>
+                                    <th>Cost</th>
+                                    <th>Dish info</th>
+                                    <th>Add to cart</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for dish in starter%}
+                                <tr>
+                                    <th scope="row">1</th>
+                                    <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
+                                    <td>{{dish['name']}}</td>
+                                    <td>{{dish['cost']}}</td>
+                                    <td><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Go to dish</a></td>
+                                    <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
+                                </tr>
+                            {% endfor%}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [ Hover-table ] end -->
+
+
+    <h2>Starter</h2>
+    {% if starter is not none%}
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Cost</th>
+            <th>add to cart</th>
+        </tr>
+        {% for dish in starter%}
+            <tr>
+                <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
+                <td>{{dish['name']}}</td>
+                <td>{{dish['cost']}}</td>
+                <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
+            </tr>
+        {% endfor%}
+
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Hover Table</h5>
+                    <span class="d-block m-t-5">use class <code>table-hover</code> inside table element</span>
+                </div>
+                <div class="card-block table-border-style">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Username</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">1</th>
+                                    <td>Mark</td>
+                                    <td>Otto</td>
+                                    <td>@mdo</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">2</th>
+                                    <td>Jacob</td>
+                                    <td>Thornton</td>
+                                    <td>@fat</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">3</th>
+                                    <td>Larry</td>
+                                    <td>the Bird</td>
+                                    <td>@twitter</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [ Hover-table ] end -->
+
+
+
+
+    
+
+    
+    </table>
+    {%endif%}
+    <h2>Main Courses</h2>
+    {% if mainCourse is not none%}
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Cost</th>
+            <th>add to cart</th>
+        </tr>
+        {% for dish in mainCourse%}
+            <tr>
+                <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
+                <td>{{dish['name']}}</td>
+                <td>{{dish['cost']}}</td>
+                <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
+            </tr>
+        {% endfor%}
+
+    
+    </table>
+    {%endif%}
+    <h2>Dessert</h2>
+    {% if dessert is not none%}
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Cost</th>
+            <th>add to cart</th>
+        </tr>
+        {% for dish in dessert%}
+            <tr>
+                <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
+                <td>{{dish['name']}}</td>
+                <td>{{dish['cost']}}</td>
+                <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
+            </tr>
+        {% endfor%}
+
+    
+    </table>
+    {%endif%}
+    <h2>Sides</h2>
+    {% if side is not none%}
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Cost</th>
+            <th>add to cart</th>
+        </tr>
+        {% for dish in side%}
+            <tr>
+                <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
+                <td>{{dish['name']}}</td>
+                <td>{{dish['cost']}}</td>
+                <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
+            </tr>
+        {% endfor%}
+
+    
+    </table>
+    {%endif%}
+    <h2>Drinks</h2>
+    {% if drink is not none%}
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Cost</th>
+            <th>add to cart</th>
+        </tr>
+        {% for dish in drink%}
+            <tr>
+                <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
+                <td>{{dish['name']}}</td>
+                <td>{{dish['cost']}}</td>
+                <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
+            </tr>
+        {% endfor%}
+
+    
+    </table>
+    {%endif%}
+
+    {%endif%}
+
+
+
+{%endblock%}

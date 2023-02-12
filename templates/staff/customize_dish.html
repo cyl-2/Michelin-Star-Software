@@ -12,7 +12,7 @@
                 <div class="col-xl-12">
                     <div class="card">
                         <div class="card-header">
-                            <h5>Customize {{ dish['name'] }}</h5>
+                            <h5>Customize {{ dish[1] }}</h5>
                         </div>
                         <div class="card-body">
                             <div class="card-block table-border-style">
@@ -26,10 +26,10 @@
                                         </tr>
                                         {%for ingredient in result%}
                                             <tr>
-                                                <td>{{ingredient['name']}}</td>
-                                                <td><a href="{{url_for('waiter_inc_quantity_ingredient',table=table, ingredient_id=ingredient['ingredient_id']) }}">+</a></td>
-                                                <td>{{quant[ingredient['ingredient_id']]}}</td>
-                                                <td><a href="{{url_for('waiter_dec_quantity_ingredient', table=table, ingredient_id=ingredient['ingredient_id']) }}">-</a></td>
+                                                <td>{{ingredient[3]}}</td>
+                                                <td><a href="{{url_for('waiter_inc_quantity_ingredient',table=table, ingredient_id=ingredient[0]) }}">+</a></td>
+                                                <td>{{quant[ingredient[0]]}}</td>
+                                                <td><a href="{{url_for('waiter_dec_quantity_ingredient', table=table, ingredient_id=ingredient[0]) }}">-</a></td>
                                             </tr>
                                         {% endfor %}
                                     </table>

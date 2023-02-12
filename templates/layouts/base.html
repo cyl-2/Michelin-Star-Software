@@ -60,7 +60,13 @@
     {% block content %}{% endblock content %}
 
     {% include 'includes/scripts.html' %}
+    <!-- Taken out because of bug
+        {% include 'includes/sidebar.html' %}
+        class="collapse navbar-collapse" might fix bug
+    
 
+    {% include 'includes/navigation.html' %}
+-->
     <!-- Specific Page JS goes HERE  -->
     {% block javascripts %}{% endblock javascripts %}
 </body>

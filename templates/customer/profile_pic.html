@@ -1,0 +1,16 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+    <form action='' method='POST' enctype="multipart/form-data" novalidate>
+        {{form.hidden_tag()}}
+        <br>
+        {{form.profile_pic.label}}
+        {{form.profile_pic()}}
+        {%for error in form.profile_pic.errors%}
+            {{error}}
+        {%endfor%}
+        <br>
+        {{form.submit()}}
+
+    </form>
+
+{%endblock%}
