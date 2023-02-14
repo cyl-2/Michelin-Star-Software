@@ -249,7 +249,23 @@ CREATE TABLE sales_analytics
     yearly_sales DECIMAL
 );
 
+DROP TABLE IF EXISTS reviews;
 
+CREATE TABLE reviews
+(
+    username TEXT,
+    comment TEXT,
+    rating INTEGER,
+    dish_id INTEGER
+);
+
+INSERT INTO reviews
+  ( username, comment, rating, dish_id)
+VALUES
+  ("benc190514@gmail.com", "good", 5, 1), 
+  ("benc190514@gmail.com", "bad", 2, 2), 
+  ("benc190514@gmail.com", "okay", 4, 3),
+  ("benc190514il.com", "AMAZING", 10, 5);
 
 
 ############

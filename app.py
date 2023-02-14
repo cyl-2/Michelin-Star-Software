@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, g, request, make_response, flash, Markup
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm, submitModifications, AddDishForm, UserPic, cardDetails
+from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm, submitModifications, AddDishForm, UserPic, cardDetails, Review
 from functools import wraps
 from flask_mysqldb import MySQL 
 from generate_roster import Roster
@@ -43,7 +43,7 @@ app.config['MYSQL_DB'] = 'sys' # someone's deets
 #app.config['MYSQL_PASSWORD'] = credentials.password
 #app.config['MYSQL_HOST'] = credentials.host
 #app.config['MYSQL_DB'] = credentials.db
-#app.config['MYSQL_CURSORCLASS']= 'DictCursor'
+app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
 
@@ -92,7 +92,6 @@ def take_order(table):
         """,(table,'complete', 'cancelled')
     )
     ordered = cur.fetchall()
-    print(ordered)
     if 'ordering' not in session:
         session['ordering'] = {}
     if table in session['ordering']:
@@ -112,7 +111,7 @@ def waiter_customize_dish(table, dish_id):
     cur.execute("SELECT * FROM dish_ingredient JOIN ingredient ON dish_ingredient.ingredient_id = ingredient.ingredient_id  WHERE dish_ingredient.dish_id=%s",(dish_id,))
     result=cur.fetchall()
     for value in result:
-        ingredient_id=value[0]
+        ingredient_id=value['ingredient_id']
         if ingredient_id not in session[str(dish_id)]:
             session[str(dish_id)][ingredient_id] =1
             
@@ -128,24 +127,24 @@ def waiter_customize_dish(table, dish_id):
         
         min = 100
         for id in ingredient_ids:
-            cur.execute('SELECT MIN(quantity) FROM ingredient WHERE ingredient_id = %s',(id[0],))
+            cur.execute('SELECT MIN(quantity) FROM ingredient WHERE ingredient_id = %s',(id['ingredient_id'],))
             value = cur.fetchone()
-            if value[0] < min:
-                min = value[0]
+            if value['MIN(quantity)'] < min:
+                min = value['MIN(quantity)']
         if min > 0:
             for ingredient in ingredients:
-                ingredient_id = ingredient[0]
+                ingredient_id = ingredient['ingredient_id']
                 if ingredient_id not in session[str(dish_id)]:
                     session[str(dish_id)][ingredient_id] =1
                     
             
-            session['mods'][table][dish[1]] = {}
+            session['mods'][table][dish['name']] = {}
             for value in result:
-                session['mods'][table][dish[1]][value[3]] = session[str(dish_id)][value[0]]
+                session['mods'][table][dish['name']][value['name']] = session[str(dish_id)][value['ingredient_id']]
             for ingredient in ingredients:
-                session[str(dish_id)][ingredient[0]] = 1
+                session[str(dish_id)][ingredient['ingredient_id']] = 1
             session['CurrentDish'] = None
-            return redirect(url_for('add_order', table=table, meal=dish[1]))
+            return redirect(url_for('add_order', table=table, meal=dish['name']))
     return render_template('staff/customize_dish.html', table=table, dish=dish,result=result,form=form,quant=session[str(dish_id)])
 
 @app.route('/<int:table>/waiter_inc_quantity_ingredient/<int:ingredient_id>')
@@ -187,7 +186,7 @@ def add_order(table, meal):
     
     min = 100
     for id in ingredient_ids:
-        cur.execute('SELECT MIN(quantity) FROM ingredient WHERE ingredient_id = %s',(id[0],))
+        cur.execute('SELECT MIN(quantity) FROM ingredient WHERE ingredient_id = %s',(id['ingredient_id'],))
         value = cur.fetchone()
         if value['MIN(quantity)'] < min:
             min = value['MIN(quantity)']
@@ -1199,9 +1198,37 @@ def menu():
     drink= cur.fetchall()
     cur.execute(" SELECT * FROM dish WHERE dishType='side'")
     side = cur.fetchall()
+    cur.execute(" SELECT * FROM transactions WHERE username = %s",(g.user,))
+    transactions = cur.fetchall()
     cur.close()#
     print(g.user)
-    return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side)
+    return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side, transactions=transactions)
+
+@app.route('/review_dish/<int:dish_id>',methods=['GET', 'POST'])
+@login_required
+def review_dish(dish_id):
+    cur=mysql.connection.cursor()
+    cur.execute('''SELECT * FROM dish WHERE dish_id = %s''',(dish_id,))
+    dish =cur.fetchone()
+    
+    form = Review()
+    if form.validate_on_submit():
+        rating = form.rating.data
+        comment = form.comment.data
+        print()
+        print(rating)
+        print(comment)
+        if comment == '' or comment == None:
+            cur.execute("""INSERT INTO reviews ( username, comment, rating, dish_id) VALUES
+                (%s,%s,%s,%s)""",(g.user,'', rating, dish_id))
+        else:
+            cur.execute("""INSERT INTO reviews ( username, comment, rating, dish_id) VALUES
+                (%s,%s,%s,%s)""",(g.user, comment, rating, dish_id))
+        mysql.connection.commit()
+        
+        cur.close()
+        return redirect(url_for('menu'))
+    return render_template('customer/review_dish.html', dish=dish, form=form)
 
 
 @app.route('/dish/<int:dish_id>', methods=['GET','POST'])

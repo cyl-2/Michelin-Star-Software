@@ -1,4 +1,4 @@
-from wtforms import SubmitField, StringField, SelectField, PasswordField, TextAreaField, IntegerField, DateField, DecimalField, RadioField, validators, FileField, SelectMultipleField
+from wtforms import SubmitField, StringField, SelectField, PasswordField, TextAreaField, IntegerField, DateField, DecimalRangeField, RadioField, validators, FileField, SelectMultipleField
 from flask_wtf import FlaskForm
 from wtforms.validators import InputRequired, EqualTo, NumberRange, Email
 from wtforms.widgets import TextArea
@@ -124,4 +124,9 @@ class cardDetails(FlaskForm):
     submit = SubmitField('Enter')
 
 class submitModifications(FlaskForm):
+    submit = SubmitField('Enter')
+    
+class Review(FlaskForm):
+    rating = DecimalRangeField('Rating', default=5)
+    comment = StringField('Additional Comments: ')
     submit = SubmitField('Enter')
