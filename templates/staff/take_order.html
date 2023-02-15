@@ -1,69 +1,157 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}
-    <title>Order</title>
-{% endblock %}
+{% block title %} Order {% endblock %} 
+
+{% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
-<h1>Order</h1>
+
 <section>
-    <p><a href="{{ url_for('choose_table') }}">Change Table</a></p>
-    
-    {% if ordering %}
-        <p><a href="{{ url_for('cancel_order',table=table) }}">Cancel Order</a></p>
-        <h2>Ordering</h2>
+    <!--<p><a href="{{ url_for('choose_table') }}">Change Table</a></p>-->
+    {% if ordering|length > 0 %}
+        <div class="pcoded-wrapper">
+            <div class="pcoded-content">
+                <div class="pcoded-inner-content">
+                    <div class="col-xl-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Ordering</h5>
+                            </div>
+                            
+                            <div class="card-body">
+                                <p><a href="{{ url_for('cancel_order',table=table) }}" class="btn btn-danger">Cancel Order</a></p>
+                                <ul>
+                                    {% for meal in ordering %}
+                                        {% for i in range(ordering[meal]|length) %}
+                                            <li>
+                                                {{ meal }} - 
+                                                <a href="{{ url_for('remove_meal', table=table, meal=meal, index=i) }}">Remove</a>
+                                                {% if ordering[meal][i]|length > 0%}
+                                                    (
+                                                    {% for ingredient in ordering[meal][i] %}
+                                                            {% if ordering[meal][i][ingredient] != 1 %}
+                                                                {{ ingredient }}-{{ordering[meal][i][ingredient]}},
+                                                            {% endif %}
+                                                    {% endfor %}
+                                                    )
+                                                {% endif %}
+                                            </li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                                <p><a href="{{ url_for('complete_order', table=table) }}" class="btn btn-success" >Complete Order</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         
-        <ul>
-            {% for meal in ordering %}
-                <li>{{ meal }} - <a href="{{ url_for('remove_meal', table=table, meal=meal) }}">Remove</a></li>
-            {% endfor %}
-        </ul>
-        <a href="{{ url_for('complete_order', table=table) }}" >Complete Order</a>
     {% endif %}
 </section>
 <section>
-    <h2>Menu</h2>
-    <h3>Starters</h3>
-    <ul>
-        {% for meal in meals %}
-            {% if meal['dishType'] == 'starter' %}
-                <li>
-                    <a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">{{ meal['name'] }} - €{{ meal['cost'] }}:00</a>
-                </li>
-            {% endif %}
-        {% endfor %} 
-    </ul>
-    <h3>Mains</h3>
-    <ul>
-        {% for meal in meals %}
-            {% if meal['dishType'] == 'main' %}
-                <li>
-                    <a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">{{ meal['name'] }} - €{{ meal['cost'] }}:00</a>
-                </li>
-            {% endif %}
-        {% endfor %} 
-    </ul>
-    <h3>Dessert</h3>
-    <ul>
-        {% for meal in meals %}
-            {% if meal['dishType'] == 'dessert' %}
-                <li>
-                    <a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">{{ meal['name'] }} - €{{ meal['cost'] }}:00</a>
-                </li>
-            {% endif %}
-        {% endfor %} 
-    </ul>
+    <div class="pcoded-wrapper">
+        <div class="pcoded-content">
+            <div class="pcoded-inner-content">
+                <div class="col-xl-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Menu</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>Starters</h6>
+                            <div class="card-block table-border-style">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        {% for meal in meals %}
+                                            {% if meal['dishType'] == 'starter' %}
+                                                <tr>
+                                                    <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">{{ meal['name'] }}</a></td>
+                                                    <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">€{{ meal['cost'] }}:00</a></td>
+                                                    <td><a href="{{ url_for('waiter_customize_dish', table=table, dish_id=meal['dish_id']) }}">Customize Ingredients</a></td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <h6>Mains</h6>
+                            <div class="card-block table-border-style">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        {% for meal in meals %}
+                                            {% if meal['dishType'] == 'main' %}
+                                                <tr>
+                                                    <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">{{ meal['name'] }}</a></td>
+                                                    <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">€{{ meal['cost'] }}:00</a></td>
+                                                    <td><a href="{{ url_for('waiter_customize_dish', table=table, dish_id=meal['dish_id']) }}">Customize Ingredients</a></td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </table>
+                                </div>
+                            </div>
+                             
+                            <h6>Dessert</h6>
+                            <div class="card-block table-border-style">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        {% for meal in meals %}
+                                            {% if meal['dishType'] == 'dessert' %}
+                                                <tr>
+                                                    <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">{{ meal['name'] }}</a></td>
+                                                    <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">€{{ meal['cost'] }}:00</a></td>
+                                                    <td><a href="{{ url_for('waiter_customize_dish', table=table, dish_id=meal['dish_id']) }}">Customize Ingredients</a></td>
+                                                    
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 <section>
-    
     {% if ordered|length > 0 %}
-        <h2>Ordered</h2>
-        
-        <ul>
-            {% for meal in ordered %}
-                <li>{{ meal['name'] }} - <a href="{{ url_for('cancel_meal', table=table, meal_id=meal['order_id']) }}">Cancel</a> - {{ meal['status'] }}</li>
-            {% endfor %}
-        </ul>
+        <div class="pcoded-wrapper">
+            <div class="pcoded-content">
+                <div class="pcoded-inner-content">
+                    <div class="col-xl-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Ordered <a href="{{ url_for('take_payment', table=table) }}" class="btn btn-outline-success">Take Payment</a></h5>
+                            </div>
+                            <div class="card-block table-border-style">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Status</th>
+                                            <th>Requests</th>
+                                            <th></th>
+                                        </tr>
+                                        {% for meal in ordered %}
+                                            <tr>
+                                                <td>{{ meal['name'] }}</td>
+                                                <td>{{ meal['status'] }}</td>
+                                                <td>{{ meal['info'] }}</td>
+                                                <td><a href="{{ url_for('cancel_meal', table=table, meal_id=meal['order_id']) }}" class="btn btn-outline-danger">Cancel</a></td>
+                                            </tr>
+                                        {% endfor %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     {% endif %}
 </section>
 {% endblock content %} 

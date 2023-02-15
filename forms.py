@@ -1,4 +1,4 @@
-from wtforms import SubmitField, StringField, SelectField, PasswordField, TextAreaField, IntegerField, DateField, DecimalField, RadioField, validators, FileField, SelectMultipleField
+from wtforms import SubmitField, StringField, SelectField, PasswordField, TextAreaField, IntegerField, DateField, DecimalRangeField, RadioField, validators, FileField, SelectMultipleField
 from flask_wtf import FlaskForm
 from wtforms.validators import InputRequired, EqualTo, NumberRange, Email
 from wtforms.widgets import TextArea
@@ -19,6 +19,17 @@ class AddToRosterForm(FlaskForm):
         ('thu', 'Thursday'), ('fri', 'Friday'), ('sat', 'Saturday'), ('sun', 'Sunday')])
     time = StringField(validators=[InputRequired()])
     submit = SubmitField("Add to Roster")
+    
+class RosterRequirementsForm(FlaskForm):
+    day = SelectField(validators=[InputRequired()], choices=[
+        ('mon', 'Monday'), ('tue', 'Tuesday'), ('wed', 'Wednesday'),
+        ('thu', 'Thursday'), ('fri', 'Friday'), ('sat', 'Saturday'), ('sun', 'Sunday')])
+    opening_time = IntegerField( validators=[ NumberRange(0,24)])
+    closing_time = IntegerField( validators=[ NumberRange(0,24)])
+    min_workers = IntegerField( validators=[ NumberRange(0,24)])
+    
+    unavailable = StringField()
+    submit = SubmitField("Change Requirements")
 
 
 class RegistrationForm(FlaskForm):
@@ -113,4 +124,9 @@ class cardDetails(FlaskForm):
     submit = SubmitField('Enter')
 
 class submitModifications(FlaskForm):
+    submit = SubmitField('Enter')
+    
+class Review(FlaskForm):
+    rating = DecimalRangeField('Rating', default=5)
+    comment = StringField('Additional Comments: ')
     submit = SubmitField('Enter')

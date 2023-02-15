@@ -1,7 +1,26 @@
 {% extends "layouts/base.html" %}
 {% block content %}
 {% if dishes is not none%}
-
+<div class="dropdown drp-user">
+    <a href="javascript:" class="dropdown-toggle" data-toggle="dropdown">
+        <i class="icon feather"></i>Leave a Review
+    </a>
+    <div class="dropdown-menu dropdown-menu-right profile-notification">
+        <ul class="pro-body">
+            {% for transaction in transactions %}
+                <li>
+                    <a href="{{ url_for('review_dish', dish_id=transaction['dish_id']) }}" class="dropdown-item">
+                        {% for dish in dishes %}
+                            {% if dish['dish_id'] == transaction['dish_id'] %}
+                                {{ dish['name'] }}
+                            {% endif %}
+                        {% endfor %}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
     
         <!-- [ Hover-table ] start -->
         <div class="col-xl-12">
@@ -193,7 +212,5 @@
     {%endif%}
 
     {%endif%}
-
-
 
 {%endblock%}

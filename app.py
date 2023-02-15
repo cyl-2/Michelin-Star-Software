@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, g, request, make_response, flash, Markup
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, ProfileForm, RejectRosterRequestForm, AddDishForm, UserPic, cardDetails,submitModifications
+from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm, submitModifications, AddDishForm, UserPic, cardDetails, Review
 from functools import wraps
 from flask_mysqldb import MySQL 
 from generate_roster import Roster
@@ -12,7 +12,7 @@ import random, string, time
 from random import sample
 from werkzeug.utils import secure_filename
 import os
-import credentials
+#import credentials
 
 app = Flask(__name__)
 
@@ -29,16 +29,20 @@ Session(app)
 mail= Mail(app)
 app.config['MAIL_SERVER']='smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = credentials.flask_email
-app.config['MAIL_PASSWORD'] = credentials.flask_email_password
+#app.config['MAIL_USERNAME'] = credentials.flask_email
+#app.config['MAIL_PASSWORD'] = credentials.flask_email_password
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
-app.config['MYSQL_USER'] = credentials.user
-app.config['MYSQL_PASSWORD'] = credentials.password
-app.config['MYSQL_HOST'] = credentials.host
-app.config['MYSQL_DB'] = credentials.db
+app.config['MYSQL_USER'] = 'root' # someone's deets
+app.config['MYSQL_PASSWORD'] = 'PaZARIX9' # someone's deets
+app.config['MYSQL_HOST'] = '127.0.0.1'
+app.config['MYSQL_DB'] = 'sys' # someone's deets
+#app.config['MYSQL_USER'] = credentials.user
+#app.config['MYSQL_PASSWORD'] = credentials.password
+#app.config['MYSQL_HOST'] = credentials.host
+#app.config['MYSQL_DB'] = credentials.db
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
@@ -308,7 +312,7 @@ def forgot_password():
                 mysql.connection.commit()
             cur.close()
 
-            msg = Message(f"Hello, {user['first_name']}", sender=credentials.flask_email, recipients=[user["email"]])
+            # only commented because of credentials    msg = Message(f"Hello, {user['first_name']}", sender=credentials.flask_email, recipients=[user["email"]])
             msg.body = f"""
             Hello,
             To reset your password, enter this code: 
@@ -493,7 +497,7 @@ def edit_staff_profile():
         profile = cur.fetchone()
         cur.close()
     return render_template("staff/edit_staff_profile.html", form=form, title="My Profile", profile=profile)
-    
+
 @app.route("/waiter_menu", methods=["GET","POST"])
 def waiter_menu():     
     return render_template("staff/waiter_menu.html")
@@ -501,10 +505,10 @@ def waiter_menu():
 @app.route("/choose_table", methods=["GET","POST"])
 def choose_table():
     cur = mysql.connection.cursor()
+        
     cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
     data = cur.fetchall()
     cur.close()
-
     table_positions = {}
     for i in range(len(data)):
         table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
@@ -518,7 +522,7 @@ def take_order(table):
         
     cur.execute(
         """
-            SELECT dish.name, orders.status, order_id, dish.dishType
+            SELECT dish.name, orders.status, order_id, dish.dishType, orders.info
             FROM orders JOIN dish 
             ON orders.dish_id = dish.dish_id
             WHERE orders.table_id = %s 
@@ -527,22 +531,90 @@ def take_order(table):
         """,(table,'complete', 'cancelled')
     )
     ordered = cur.fetchall()
-    cur.close()
-
-    if request.cookies.get("ordering"+str(table)):
-        ordering = json.loads(request.cookies.get("ordering"+str(table)))
+    if 'ordering' not in session:
+        session['ordering'] = {}
+    if table in session['ordering']:
+        ordering = session['ordering'][table]
         return render_template("staff/take_order.html", table=table, ordering=ordering, meals=meals, ordered=ordered)
-    
     return render_template("staff/take_order.html", table=table, meals=meals, ordered=ordered)
+
+@app.route('/<int:table>/waiter_customize_dish/<int:dish_id>', methods=['GET','POST'])
+def waiter_customize_dish(table, dish_id):
+    if str(dish_id) not in session:
+        session[str(dish_id)]={}
+    session['CurrentDish'] = dish_id
+    form = submitModifications()
+    cur=mysql.connection.cursor()
+    cur.execute('SELECT * FROM dish WHERE dish_id=%s',(dish_id,))
+    dish=cur.fetchone()
+    cur.execute("SELECT * FROM dish_ingredient JOIN ingredient ON dish_ingredient.ingredient_id = ingredient.ingredient_id  WHERE dish_ingredient.dish_id=%s",(dish_id,))
+    result=cur.fetchall()
+    for value in result:
+        ingredient_id=value['ingredient_id']
+        if ingredient_id not in session[str(dish_id)]:
+            session[str(dish_id)][ingredient_id] =1
+            
+    if form.validate_on_submit():
+        cur.execute('SELECT * FROM dish_ingredient WHERE dish_id=%s',(dish_id,))
+        ingredients=cur.fetchall()
+        if 'mods' not in session:
+            session['mods'] = {}
+        if table not in session['mods']:
+            session['mods'][table] = {}
+        cur.execute('SELECT ingredient_id FROM dish_ingredient WHERE dish_id = %s',(dish_id,))
+        ingredient_ids = cur.fetchall()
+        
+        min = 100
+        for id in ingredient_ids:
+            cur.execute('SELECT MIN(quantity) FROM ingredient WHERE ingredient_id = %s',(id['ingredient_id'],))
+            value = cur.fetchone()
+            if value['MIN(quantity)'] < min:
+                min = value['MIN(quantity)']
+        if min > 0:
+            for ingredient in ingredients:
+                ingredient_id = ingredient['ingredient_id']
+                if ingredient_id not in session[str(dish_id)]:
+                    session[str(dish_id)][ingredient_id] =1
+                    
+            
+            session['mods'][table][dish['name']] = {}
+            for value in result:
+                session['mods'][table][dish['name']][value['name']] = session[str(dish_id)][value['ingredient_id']]
+            for ingredient in ingredients:
+                session[str(dish_id)][ingredient['ingredient_id']] = 1
+            session['CurrentDish'] = None
+            return redirect(url_for('add_order', table=table, meal=dish['name']))
+    return render_template('staff/customize_dish.html', table=table, dish=dish,result=result,form=form,quant=session[str(dish_id)])
+
+@app.route('/<int:table>/waiter_inc_quantity_ingredient/<int:ingredient_id>')
+#@login_required
+def waiter_inc_quantity_ingredient(table, ingredient_id):
+    dish_id = session['CurrentDish'] # put this as input
+    if ingredient_id not in session[str(dish_id)]:
+        session[str(dish_id)][ingredient_id] = 1
+    session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] +1
+    return redirect(url_for('waiter_customize_dish', table=table, dish_id=dish_id))
+
+@app.route('/<int:table>/waiter_dec_quantity_ingredient/<int:ingredient_id>')
+#@login_required
+def waiter_dec_quantity_ingredient(table, ingredient_id):
+    dish_id = session['CurrentDish']
+    if ingredient_id not in session[str(dish_id)]:
+        session[str(dish_id)][ingredient_id] = 1
+    if session[str(dish_id)][ingredient_id] !=0:
+        session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] -1
+    return redirect(url_for('waiter_customize_dish',table=table, dish_id=dish_id))
+
 
 @app.route("/<int:table>/add_order/<meal>", methods=["GET","POST"])
 def add_order(table, meal):
-    ordering = []
-    if request.cookies.get("ordering"+str(table)):
-        ordering = json.loads(request.cookies.get("ordering"+str(table)))
+    if 'mods' not in session:
+        session['mods'] = {}
+    if 'ordering' not in session:
+        session['ordering'] = {}
+    if table not in session['ordering']:
+        session['ordering'][table] = {}
     cur = mysql.connection.cursor()
-       
-    # If not enough ingredients to make the meal, not added to order
 
     cur.execute('SELECT dish_id FROM dish WHERE name = %s',(meal,))
     dish_ids = cur.fetchall()
@@ -558,66 +630,85 @@ def add_order(table, meal):
         if value['MIN(quantity)'] < min:
             min = value['MIN(quantity)']
     if min > 0:
-        ordering.append(str(meal))
-    else:
-        response = make_response(redirect(url_for('take_order', table=table)))
-    response = make_response(redirect(url_for('take_order', table=table)))
-    response.set_cookie('ordering'+str(table), json.dumps(ordering), max_age=(60*60*24))
-    cur.close()
-    return response
+        mods = {}
+        if table in session['mods']:
+            if session['mods'][table] != {}:
+                for key in session['mods'][table]:
+                    mods = session['mods'][table][key]
+            
+        if str(meal) in session['ordering'][table]:
+            session['ordering'][table][str(meal)].append(mods)
+        else:
+            session['ordering'][table][str(meal)] = [mods]
+            
+        session['mods'][table] = {}
+    return redirect(url_for('take_order', table=table))
 
-@app.route("/<int:table>/remove_meal/<meal>", methods=["GET","POST"])
-def remove_meal(table, meal):
-    ordering = json.loads(request.cookies.get("ordering"+str(table)))
-    for i in range(len(ordering)):
-        if meal == ordering[i]:
-            index = i
-    ordering.pop(index)
-    
-    response = make_response(redirect(url_for("take_order", table=table)))
-    response.set_cookie('ordering'+str(table), json.dumps(ordering), max_age=(60*60*24))
-    return response
+# do after maybe index
+@app.route("/<int:table>/remove_meal/<meal>/<int:index>", methods=["GET","POST"])
+def remove_meal(table, meal, index):
+    session['ordering'][table][meal].pop(index)
+    if len(session['ordering'][table][meal]) == 0:
+        session['ordering'][table].pop(meal)
+    return redirect(url_for("take_order", table=table))
 
 @app.route("/<int:table>/cancel_meal/<int:meal_id>", methods=["GET","POST"])
 def cancel_meal(table, meal_id):
     
     cur = mysql.connection.cursor()
+     
     cur.execute("DELETE FROM orders WHERE order_id = %s AND table_id = %s;",(meal_id, table ))
     mysql.connection.commit()
     cur.close()
-    
     return redirect(url_for("take_order", table=table))
 
 @app.route("/<int:table>/cancel_order", methods=["GET","POST"])
 def cancel_order(table):
-    response = make_response(redirect(url_for("take_order", table=table)))
-    response.set_cookie('ordering'+str(table), '', expires=0)
-    return response
+    session['mods'][table] = {}
+    session['ordering'][table] = {}
+    return redirect(url_for("take_order", table=table))
+
 
 @app.route("/<int:table>/complete_order", methods=["GET","POST"])
 def complete_order(table):  
     cur = mysql.connection.cursor()
         
-    if request.cookies.get("ordering"+str(table)):
-        ordering = json.loads(request.cookies.get("ordering"+str(table)))
-        
+    if table in session['ordering']:
+        ordering = session['ordering'][table]
         for meal in ordering:
             cur.execute('SELECT dish_id, cook_time FROM dish WHERE name = %s',(meal,))
             data = cur.fetchone()
-            cur.execute("INSERT INTO orders (time, dish_id, table_id, status) VALUES (%s, %s, %s., 'waiting');",(data['cook_time'], data['dish_id'], table))
-            mysql.connection.commit()
-    cur.close()
-    response = make_response(redirect(url_for('take_order', table=table)))
-    response.set_cookie('ordering'+str(table), json.dumps([]), max_age=(60*60*24))
-    return response
+            for times in ordering[meal]:
+                info = ""
+                for ingredients in times:
+                    if times[ingredients] != 1:
+                        info += ingredients+"-"+str(times[ingredients])+", "
+                cur.execute("INSERT INTO orders (time, dish_id, table_id, status, info) VALUES (%s, %s, %s, 'waiting', %s);",(data['cook_time'], data['dish_id'], table, info))
+                mysql.connection.commit()
+    
+    session['ordering'][table] = {}
+    return redirect(url_for('take_order', table=table))
+
+@app.route("/<int:table>/take_payment", methods=["GET","POST"])
+def take_payment(table):  
+    cur = mysql.connection.cursor()
+    cur.execute(
+        """
+            UPDATE orders SET status = 'complete'
+            WHERE table_id = %s 
+            AND status != %s
+        """,(table, 'cancelled')
+    )
+    mysql.connection.commit()
+    return redirect(url_for('take_order', table=table))
 
 @app.route("/move_tables", methods=["GET","POST"])
 def move_tables():
     cur = mysql.connection.cursor()
+        
     cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
     data = cur.fetchall()
     cur.close()
-
     table_positions = {}
     for i in range(len(data)):
         table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
@@ -645,6 +736,7 @@ def add_table():
         y = str(form.y.data) + 'px'
 
         cur = mysql.connection.cursor()
+            
         cur.execute('SELECT * FROM tables WHERE table_id = %s',(table_number,))
         data = cur.fetchall()
         if len(data) > 0:
@@ -664,7 +756,6 @@ def remove_table_menu():
     cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
     data = cur.fetchall()
     cur.close()
-
     table_positions = {}
     for i in range(len(data)):
         table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
@@ -673,6 +764,7 @@ def remove_table_menu():
 @app.route("/<int:table>/remove_table", methods=["GET", "POST"])
 def remove_table(table):
     cur = mysql.connection.cursor()
+        
     cur.execute("DELETE FROM tables WHERE table_id = %s;",(table,))
     mysql.connection.commit()
     cur.close()
@@ -682,6 +774,52 @@ def remove_table(table):
 def break_timetable():
     staff_breaks = [{'name':'Ben', 'time':'9:00'},{'name':'John', 'time':'13:00'},{'name':'Tim', 'time':'8:00'}]
     return render_template("manager/break_timetable.html", staff_breaks=staff_breaks)
+
+@app.route("/manage_shift_requirements", methods=["GET","POST"])
+def manage_shift_requirements():
+    form = RosterRequirementsForm()
+    week = {'mon':'Monday','tue':'Tuesday','wed':'Wednesday','thu':'Thursday','fri':'Friday','sat':'Saturday','sun':'Sunday'}
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM shift_requirements;")
+    requirements = cur.fetchall()
+    for requirement in requirements:
+        requirement['unavailable'] = json.loads(requirement['unavailable'])
+    cur.execute("SELECT staff_id, first_name FROM staff;")
+    staff = cur.fetchall()
+    
+    if form.validate_on_submit():
+        day = form.day.data
+        opening_time = form.opening_time.data
+        closing_time = form.closing_time.data
+        min_workers = form.min_workers.data
+        
+        if form.unavailable.data is None or form.unavailable.data == '':
+            for requirement in requirements:
+                if requirement['day'] == day:
+                    unavailable = requirement['unavailable']
+        else:
+            unavailable = form.unavailable.data
+            try:
+                unavailable = unavailable.split(" ")
+                for i in range(len(unavailable)):
+                    unavailable[i] = int(unavailable[i])
+                unavailable = json.dumps(unavailable)
+            except TypeError:
+                form.unavailable.errors.append("Values should be space separated ID's")
+                unavailable = '[]'
+        cur.execute("""UPDATE shift_requirements SET opening_time = %s, closing_time = %s, min_workers = %s, unavailable = %s
+                        WHERE day = %s;""", ( opening_time, closing_time, min_workers, unavailable, day))
+        mysql.connection.commit()
+        cur.execute("SELECT * FROM shift_requirements;")
+        requirements = cur.fetchall()
+        for requirement in requirements:
+            requirement['unavailable'] = json.loads(requirement['unavailable'])
+    else:
+        form.opening_time.data = requirements[0]['opening_time']
+        form.closing_time.data = requirements[0]['closing_time']
+        form.min_workers.data = requirements[0]['min_workers']
+    
+    return render_template("manager/shift_requirements.html", requirements=requirements, staff=staff, week=week, form=form)
 
 @app.route("/roster_request", methods=["GET", "POST"])
 #@staff_only
@@ -713,14 +851,6 @@ def roster_request():
 ##############################################################################################################################################
 ##############################################################################################################################################
 
-# Customer profile
-@app.route("/customer_profile")
-@login_required
-def customer_profile():
-    #cur = mysql.connection.cursor()
-    #cur.execute("SELECT * FROM customer WHERE email = %s", (g.user,))
-    #user = cur.fetchone()
-    return render_template("customer/profile.html", title="My Profile")#, user=user)
 
 # Contact form so that customers can send enquiries
 @app.route("/contact_us", methods=["GET", "POST"])
@@ -740,12 +870,12 @@ def contact_us():
         mysql.connection.commit()
         cur.close()
 
-        msg = Message(subject, sender=credentials.flask_email, recipients=[credentials.flask_email])   
-        msg.body = f"""
-        From: {name} <{email}>
-        {message}
-        """
-        mail.send(msg)
+        # only commented because of credentials    msg = Message(subject, sender=credentials.flask_email, recipients=[credentials.flask_email])   
+        # msg.body = f"""
+        # From: {name} <{email}>
+        # {message}
+        # """
+        # mail.send(msg)
         flash("Message sent. We will reply to you in 2-3 business days.")
     return render_template("customer/enquiry_form.html",form=form, title="Contact Us")
 
@@ -814,7 +944,6 @@ def manager():
 @app.route("/roster_approve/<int:id>")
 def roster_approve(id):
     cur = mysql.connection.cursor()
-    print("the id is", id)
     status = "Approved"
     cur.execute("""UPDATE roster_requests SET status=%s, last_updated=CURRENT_TIMESTAMP WHERE request_id= %s;""", (status, id))
     mysql.connection.commit()
@@ -1083,9 +1212,37 @@ def menu():
     drink= cur.fetchall()
     cur.execute(" SELECT * FROM dish WHERE dishType='side'")
     side = cur.fetchall()
+    cur.execute(" SELECT * FROM transactions WHERE username = %s",(g.user,))
+    transactions = cur.fetchall()
     cur.close()#
     print(g.user)
-    return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side)
+    return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side, transactions=transactions)
+
+@app.route('/review_dish/<int:dish_id>',methods=['GET', 'POST'])
+@login_required
+def review_dish(dish_id):
+    cur=mysql.connection.cursor()
+    cur.execute('''SELECT * FROM dish WHERE dish_id = %s''',(dish_id,))
+    dish =cur.fetchone()
+    
+    form = Review()
+    if form.validate_on_submit():
+        rating = form.rating.data
+        comment = form.comment.data
+        print()
+        print(rating)
+        print(comment)
+        if comment == '' or comment == None:
+            cur.execute("""INSERT INTO reviews ( username, comment, rating, dish_id) VALUES
+                (%s,%s,%s,%s)""",(g.user,'', rating, dish_id))
+        else:
+            cur.execute("""INSERT INTO reviews ( username, comment, rating, dish_id) VALUES
+                (%s,%s,%s,%s)""",(g.user, comment, rating, dish_id))
+        mysql.connection.commit()
+        
+        cur.close()
+        return redirect(url_for('menu'))
+    return render_template('customer/review_dish.html', dish=dish, form=form)
 
 
 @app.route('/dish/<int:dish_id>', methods=['GET','POST'])

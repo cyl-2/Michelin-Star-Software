@@ -1,36 +1,62 @@
 {% extends "layouts/base.html" %}
 
+{% block title %} Add Table {% endblock %} 
+
+{% block stylesheets %}{% endblock stylesheets %}
+
 {% block content %}
-    <h1> Add Table </h1> 
+    <div class="pcoded-wrapper">
+        <div class="pcoded-content">
+            <div class="pcoded-inner-content">
+                <div class="col-xl-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Add Shift to Roster</h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="" method="post" novalidate> 
+                                {{ form.hidden_tag() }}
 
-    <form action="" method="post" novalidate> 
-        {{ form.hidden_tag() }}
+                                <div class="form-group">
+                                    {{ form.table_number.label }}
+                                    {{ form.table_number(class="form-control") }}
+                                    {% for error in form.table_number.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
 
-        {{ form.table_number.label }}
-        {{ form.table_number() }}
-        {% for error in form.table_number.errors %}
-            {{ error }}
-        {% endfor %}
-        <br>
-        {{ form.seats.label }}
-        {{ form.seats() }}
-        {% for error in form.seats.errors %}
-            {{ error }}
-        {% endfor %}
-        <br>
-        {{ form.x.label }}
-        {{ form.x() }}
-        {% for error in form.x.errors %}
-            {{ error }}
-        {% endfor %}
-        <br>
-        {{ form.y.label }}
-        {{ form.y() }}
-        {% for error in form.y.errors %}
-            {{ error }}
-        {% endfor %}
-        <br>
-        {{ form.submit(class="submit") }}
-    </form>
+                                <div class="form-group">
+                                    {{ form.seats.label }}
+                                    {{ form.seats(class="form-control") }}
+                                    {% for error in form.seats.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                <div>
 
-{% endblock content %}
+                                <div class="form-group">
+                                    {{ form.x.label }}
+                                    {{ form.x(class="form-control") }}
+                                    {% for error in form.x.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+
+                                <div class="form-group">
+                                    {{ form.y.label }}
+                                    {{ form.y(class="form-control") }}
+                                    {% for error in form.y.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+
+                                {{ form.submit(class="submit btn btn-primary") }}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %} 
+
