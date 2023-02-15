@@ -508,6 +508,7 @@ def choose_table():
         
     cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
     data = cur.fetchall()
+    cur.close()
     table_positions = {}
     for i in range(len(data)):
         table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
@@ -740,13 +741,13 @@ def add_table():
         data = cur.fetchall()
         if len(data) > 0:
             form.table_number.errors.append("Table Number already in use")
+            cur.close()
             return render_template("manager/add_table.html", form=form)
         else:
             cur.execute("INSERT INTO tables VALUES (%s, %s, %s, %s);",(table_number, seats, x, y))
             mysql.connection.commit()
             cur.close()
             return redirect(url_for('choose_table'))
-
     return render_template("manager/add_table.html", form=form)
 
 @app.route("/remove_table_menu", methods=["GET","POST"])
