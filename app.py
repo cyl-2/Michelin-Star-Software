@@ -60,315 +60,6 @@ def login_required(view):
         return view(**kwargs)
     return wrapped_view
 
-@app.route("/waiter_menu", methods=["GET","POST"])
-def waiter_menu():     
-    return render_template("staff/waiter_menu.html")
-
-@app.route("/choose_table", methods=["GET","POST"])
-def choose_table():
-    cur = mysql.connection.cursor()
-        
-    cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
-    data = cur.fetchall()
-    table_positions = {}
-    for i in range(len(data)):
-        table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
-    return render_template("staff/choose_table.html", table_positions=table_positions)
-
-@app.route("/<int:table>/take_order", methods=["GET","POST"])
-def take_order(table):  
-    cur = mysql.connection.cursor()
-    cur.execute('SELECT * FROM dish')
-    meals = cur.fetchall()
-        
-    cur.execute(
-        """
-            SELECT dish.name, orders.status, order_id, dish.dishType, orders.info
-            FROM orders JOIN dish 
-            ON orders.dish_id = dish.dish_id
-            WHERE orders.table_id = %s 
-            AND orders.status != %s
-            AND orders.status != %s
-        """,(table,'complete', 'cancelled')
-    )
-    ordered = cur.fetchall()
-    if 'ordering' not in session:
-        session['ordering'] = {}
-    if table in session['ordering']:
-        ordering = session['ordering'][table]
-        return render_template("staff/take_order.html", table=table, ordering=ordering, meals=meals, ordered=ordered)
-    return render_template("staff/take_order.html", table=table, meals=meals, ordered=ordered)
-
-@app.route('/<int:table>/waiter_customize_dish/<int:dish_id>', methods=['GET','POST'])
-def waiter_customize_dish(table, dish_id):
-    if str(dish_id) not in session:
-        session[str(dish_id)]={}
-    session['CurrentDish'] = dish_id
-    form = submitModifications()
-    cur=mysql.connection.cursor()
-    cur.execute('SELECT * FROM dish WHERE dish_id=%s',(dish_id,))
-    dish=cur.fetchone()
-    cur.execute("SELECT * FROM dish_ingredient JOIN ingredient ON dish_ingredient.ingredient_id = ingredient.ingredient_id  WHERE dish_ingredient.dish_id=%s",(dish_id,))
-    result=cur.fetchall()
-    for value in result:
-        ingredient_id=value['ingredient_id']
-        if ingredient_id not in session[str(dish_id)]:
-            session[str(dish_id)][ingredient_id] =1
-            
-    if form.validate_on_submit():
-        cur.execute('SELECT * FROM dish_ingredient WHERE dish_id=%s',(dish_id,))
-        ingredients=cur.fetchall()
-        if 'mods' not in session:
-            session['mods'] = {}
-        if table not in session['mods']:
-            session['mods'][table] = {}
-        cur.execute('SELECT ingredient_id FROM dish_ingredient WHERE dish_id = %s',(dish_id,))
-        ingredient_ids = cur.fetchall()
-        
-        min = 100
-        for id in ingredient_ids:
-            cur.execute('SELECT MIN(quantity) FROM ingredient WHERE ingredient_id = %s',(id['ingredient_id'],))
-            value = cur.fetchone()
-            if value['MIN(quantity)'] < min:
-                min = value['MIN(quantity)']
-        if min > 0:
-            for ingredient in ingredients:
-                ingredient_id = ingredient['ingredient_id']
-                if ingredient_id not in session[str(dish_id)]:
-                    session[str(dish_id)][ingredient_id] =1
-                    
-            
-            session['mods'][table][dish['name']] = {}
-            for value in result:
-                session['mods'][table][dish['name']][value['name']] = session[str(dish_id)][value['ingredient_id']]
-            for ingredient in ingredients:
-                session[str(dish_id)][ingredient['ingredient_id']] = 1
-            session['CurrentDish'] = None
-            return redirect(url_for('add_order', table=table, meal=dish['name']))
-    return render_template('staff/customize_dish.html', table=table, dish=dish,result=result,form=form,quant=session[str(dish_id)])
-
-@app.route('/<int:table>/waiter_inc_quantity_ingredient/<int:ingredient_id>')
-#@login_required
-def waiter_inc_quantity_ingredient(table, ingredient_id):
-    dish_id = session['CurrentDish'] # put this as input
-    if ingredient_id not in session[str(dish_id)]:
-        session[str(dish_id)][ingredient_id] = 1
-    session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] +1
-    return redirect(url_for('waiter_customize_dish', table=table, dish_id=dish_id))
-
-@app.route('/<int:table>/waiter_dec_quantity_ingredient/<int:ingredient_id>')
-#@login_required
-def waiter_dec_quantity_ingredient(table, ingredient_id):
-    dish_id = session['CurrentDish']
-    if ingredient_id not in session[str(dish_id)]:
-        session[str(dish_id)][ingredient_id] = 1
-    if session[str(dish_id)][ingredient_id] !=0:
-        session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] -1
-    return redirect(url_for('waiter_customize_dish',table=table, dish_id=dish_id))
-
-
-@app.route("/<int:table>/add_order/<meal>", methods=["GET","POST"])
-def add_order(table, meal):
-    if 'mods' not in session:
-        session['mods'] = {}
-    if 'ordering' not in session:
-        session['ordering'] = {}
-    if table not in session['ordering']:
-        session['ordering'][table] = {}
-    cur = mysql.connection.cursor()
-
-    cur.execute('SELECT dish_id FROM dish WHERE name = %s',(meal,))
-    dish_ids = cur.fetchall()
-    
-    for id in dish_ids:
-        cur.execute('SELECT ingredient_id FROM dish_ingredient WHERE dish_id = %s',(id['dish_id'],))
-        ingredient_ids = cur.fetchall()
-    
-    min = 100
-    for id in ingredient_ids:
-        cur.execute('SELECT MIN(quantity) FROM ingredient WHERE ingredient_id = %s',(id['ingredient_id'],))
-        value = cur.fetchone()
-        if value['MIN(quantity)'] < min:
-            min = value['MIN(quantity)']
-    if min > 0:
-        mods = {}
-        if table in session['mods']:
-            if session['mods'][table] != {}:
-                for key in session['mods'][table]:
-                    mods = session['mods'][table][key]
-            
-        if str(meal) in session['ordering'][table]:
-            session['ordering'][table][str(meal)].append(mods)
-        else:
-            session['ordering'][table][str(meal)] = [mods]
-            
-        session['mods'][table] = {}
-    return redirect(url_for('take_order', table=table))
-
-# do after maybe index
-@app.route("/<int:table>/remove_meal/<meal>/<int:index>", methods=["GET","POST"])
-def remove_meal(table, meal, index):
-    session['ordering'][table][meal].pop(index)
-    if len(session['ordering'][table][meal]) == 0:
-        session['ordering'][table].pop(meal)
-    return redirect(url_for("take_order", table=table))
-
-@app.route("/<int:table>/cancel_meal/<int:meal_id>", methods=["GET","POST"])
-def cancel_meal(table, meal_id):
-    
-    cur = mysql.connection.cursor()
-     
-    cur.execute("DELETE FROM orders WHERE order_id = %s AND table_id = %s;",(meal_id, table ))
-    mysql.connection.commit()
-    cur.close()
-    return redirect(url_for("take_order", table=table))
-
-@app.route("/<int:table>/cancel_order", methods=["GET","POST"])
-def cancel_order(table):
-    session['mods'][table] = {}
-    session['ordering'][table] = {}
-    return redirect(url_for("take_order", table=table))
-
-
-@app.route("/<int:table>/complete_order", methods=["GET","POST"])
-def complete_order(table):  
-    cur = mysql.connection.cursor()
-        
-    if table in session['ordering']:
-        ordering = session['ordering'][table]
-        for meal in ordering:
-            cur.execute('SELECT dish_id, cook_time FROM dish WHERE name = %s',(meal,))
-            data = cur.fetchone()
-            for times in ordering[meal]:
-                info = ""
-                for ingredients in times:
-                    if times[ingredients] != 1:
-                        info += ingredients+"-"+str(times[ingredients])+", "
-                cur.execute("INSERT INTO orders (time, dish_id, table_id, status, info) VALUES (%s, %s, %s, 'waiting', %s);",(data['cook_time'], data['dish_id'], table, info))
-                mysql.connection.commit()
-    
-    session['ordering'][table] = {}
-    return redirect(url_for('take_order', table=table))
-
-@app.route("/move_tables", methods=["GET","POST"])
-def move_tables():
-    cur = mysql.connection.cursor()
-        
-    cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
-    data = cur.fetchall()
-    cur.close()
-    table_positions = {}
-    for i in range(len(data)):
-        table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
-    
-    return render_template("staff/move_tables.html", table_positions=table_positions)
-
-@app.route('/save_tables', methods=['GET','POST'])
-def save_tables():
-    co_ords = request.get_json()
-    if co_ords is not None:
-        cur = mysql.connection.cursor()
-        for i in range(int(len(co_ords)/2)):
-            cur.execute("UPDATE tables SET x = '"+co_ords[i*2]+"', y = '"+co_ords[(i*2)+1]+"' WHERE table_id ="+str(i+1)+"; ")
-            mysql.connection.commit()
-        cur.close()
-    return redirect(url_for('choose_table'))
-    
-@app.route("/add_table", methods=["GET", "POST"])
-def add_table():
-    form = TableForm()
-    if form.validate_on_submit():
-        table_number = form.table_number.data
-        seats = form.seats.data
-        x = str(form.x.data) + 'px'
-        y = str(form.y.data) + 'px'
-
-        cur = mysql.connection.cursor()
-            
-        cur.execute('SELECT * FROM tables WHERE table_id = %s',(table_number,))
-        data = cur.fetchall()
-        if len(data) > 0:
-            form.table_number.errors.append("Table Number already in use")
-            return render_template("manager/add_table.html", form=form)
-        else:
-            cur.execute("INSERT INTO tables VALUES (%s, %s, %s, %s);",(table_number, seats, x, y))
-            mysql.connection.commit()
-            cur.close()
-            return redirect(url_for('choose_table'))
-
-    return render_template("manager/add_table.html", form=form)
-
-@app.route("/remove_table_menu", methods=["GET","POST"])
-def remove_table_menu():
-    cur = mysql.connection.cursor()
-    cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
-    data = cur.fetchall()
-    cur.close()
-    table_positions = {}
-    for i in range(len(data)):
-        table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
-    return render_template("manager/remove_table.html", table_positions=table_positions)
-
-@app.route("/<int:table>/remove_table", methods=["GET", "POST"])
-def remove_table(table):
-    cur = mysql.connection.cursor()
-        
-    cur.execute("DELETE FROM tables WHERE table_id = %s;",(table,))
-    mysql.connection.commit()
-    cur.close()
-    return redirect(url_for('remove_table_menu'))
-            
-@app.route("/break_timetable", methods=["GET","POST"])
-def break_timetable():
-    staff_breaks = [{'name':'Ben', 'time':'9:00'},{'name':'John', 'time':'13:00'},{'name':'Tim', 'time':'8:00'}]
-    return render_template("manager/break_timetable.html", staff_breaks=staff_breaks)
-
-@app.route("/manage_shift_requirements", methods=["GET","POST"])
-def manage_shift_requirements():
-    form = RosterRequirementsForm()
-    week = {'mon':'Monday','tue':'Tuesday','wed':'Wednesday','thu':'Thursday','fri':'Friday','sat':'Saturday','sun':'Sunday'}
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM shift_requirements;")
-    requirements = cur.fetchall()
-    for requirement in requirements:
-        requirement['unavailable'] = json.loads(requirement['unavailable'])
-    cur.execute("SELECT staff_id, first_name FROM staff;")
-    staff = cur.fetchall()
-    
-    if form.validate_on_submit():
-        day = form.day.data
-        opening_time = form.opening_time.data
-        closing_time = form.closing_time.data
-        min_workers = form.min_workers.data
-        
-        if form.unavailable.data is None or form.unavailable.data == '':
-            for requirement in requirements:
-                if requirement['day'] == day:
-                    unavailable = requirement['unavailable']
-        else:
-            unavailable = form.unavailable.data
-            try:
-                unavailable = unavailable.split(" ")
-                for i in range(len(unavailable)):
-                    unavailable[i] = int(unavailable[i])
-                unavailable = json.dumps(unavailable)
-            except TypeError:
-                form.unavailable.errors.append("Values should be space separated ID's")
-                unavailable = '[]'
-        cur.execute("""UPDATE shift_requirements SET opening_time = %s, closing_time = %s, min_workers = %s, unavailable = %s
-                        WHERE day = %s;""", ( opening_time, closing_time, min_workers, unavailable, day))
-        mysql.connection.commit()
-        cur.execute("SELECT * FROM shift_requirements;")
-        requirements = cur.fetchall()
-        for requirement in requirements:
-            requirement['unavailable'] = json.loads(requirement['unavailable'])
-    else:
-        form.opening_time.data = requirements[0]['opening_time']
-        form.closing_time.data = requirements[0]['closing_time']
-        form.min_workers.data = requirements[0]['min_workers']
-    
-    return render_template("manager/shift_requirements.html", requirements=requirements, staff=staff, week=week, form=form)
-
 def staff_only(view):
     @wraps(view)
     def wrapped_view(**kwargs):
@@ -806,6 +497,328 @@ def edit_staff_profile():
         profile = cur.fetchone()
         cur.close()
     return render_template("staff/edit_staff_profile.html", form=form, title="My Profile", profile=profile)
+
+@app.route("/waiter_menu", methods=["GET","POST"])
+def waiter_menu():     
+    return render_template("staff/waiter_menu.html")
+
+@app.route("/choose_table", methods=["GET","POST"])
+def choose_table():
+    cur = mysql.connection.cursor()
+        
+    cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
+    data = cur.fetchall()
+    table_positions = {}
+    for i in range(len(data)):
+        table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
+    return render_template("staff/choose_table.html", table_positions=table_positions)
+
+@app.route("/<int:table>/take_order", methods=["GET","POST"])
+def take_order(table):  
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT * FROM dish')
+    meals = cur.fetchall()
+        
+    cur.execute(
+        """
+            SELECT dish.name, orders.status, order_id, dish.dishType, orders.info
+            FROM orders JOIN dish 
+            ON orders.dish_id = dish.dish_id
+            WHERE orders.table_id = %s 
+            AND orders.status != %s
+            AND orders.status != %s
+        """,(table,'complete', 'cancelled')
+    )
+    ordered = cur.fetchall()
+    if 'ordering' not in session:
+        session['ordering'] = {}
+    if table in session['ordering']:
+        ordering = session['ordering'][table]
+        return render_template("staff/take_order.html", table=table, ordering=ordering, meals=meals, ordered=ordered)
+    return render_template("staff/take_order.html", table=table, meals=meals, ordered=ordered)
+
+@app.route('/<int:table>/waiter_customize_dish/<int:dish_id>', methods=['GET','POST'])
+def waiter_customize_dish(table, dish_id):
+    if str(dish_id) not in session:
+        session[str(dish_id)]={}
+    session['CurrentDish'] = dish_id
+    form = submitModifications()
+    cur=mysql.connection.cursor()
+    cur.execute('SELECT * FROM dish WHERE dish_id=%s',(dish_id,))
+    dish=cur.fetchone()
+    cur.execute("SELECT * FROM dish_ingredient JOIN ingredient ON dish_ingredient.ingredient_id = ingredient.ingredient_id  WHERE dish_ingredient.dish_id=%s",(dish_id,))
+    result=cur.fetchall()
+    for value in result:
+        ingredient_id=value['ingredient_id']
+        if ingredient_id not in session[str(dish_id)]:
+            session[str(dish_id)][ingredient_id] =1
+            
+    if form.validate_on_submit():
+        cur.execute('SELECT * FROM dish_ingredient WHERE dish_id=%s',(dish_id,))
+        ingredients=cur.fetchall()
+        if 'mods' not in session:
+            session['mods'] = {}
+        if table not in session['mods']:
+            session['mods'][table] = {}
+        cur.execute('SELECT ingredient_id FROM dish_ingredient WHERE dish_id = %s',(dish_id,))
+        ingredient_ids = cur.fetchall()
+        
+        min = 100
+        for id in ingredient_ids:
+            cur.execute('SELECT MIN(quantity) FROM ingredient WHERE ingredient_id = %s',(id['ingredient_id'],))
+            value = cur.fetchone()
+            if value['MIN(quantity)'] < min:
+                min = value['MIN(quantity)']
+        if min > 0:
+            for ingredient in ingredients:
+                ingredient_id = ingredient['ingredient_id']
+                if ingredient_id not in session[str(dish_id)]:
+                    session[str(dish_id)][ingredient_id] =1
+                    
+            
+            session['mods'][table][dish['name']] = {}
+            for value in result:
+                session['mods'][table][dish['name']][value['name']] = session[str(dish_id)][value['ingredient_id']]
+            for ingredient in ingredients:
+                session[str(dish_id)][ingredient['ingredient_id']] = 1
+            session['CurrentDish'] = None
+            return redirect(url_for('add_order', table=table, meal=dish['name']))
+    return render_template('staff/customize_dish.html', table=table, dish=dish,result=result,form=form,quant=session[str(dish_id)])
+
+@app.route('/<int:table>/waiter_inc_quantity_ingredient/<int:ingredient_id>')
+#@login_required
+def waiter_inc_quantity_ingredient(table, ingredient_id):
+    dish_id = session['CurrentDish'] # put this as input
+    if ingredient_id not in session[str(dish_id)]:
+        session[str(dish_id)][ingredient_id] = 1
+    session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] +1
+    return redirect(url_for('waiter_customize_dish', table=table, dish_id=dish_id))
+
+@app.route('/<int:table>/waiter_dec_quantity_ingredient/<int:ingredient_id>')
+#@login_required
+def waiter_dec_quantity_ingredient(table, ingredient_id):
+    dish_id = session['CurrentDish']
+    if ingredient_id not in session[str(dish_id)]:
+        session[str(dish_id)][ingredient_id] = 1
+    if session[str(dish_id)][ingredient_id] !=0:
+        session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] -1
+    return redirect(url_for('waiter_customize_dish',table=table, dish_id=dish_id))
+
+
+@app.route("/<int:table>/add_order/<meal>", methods=["GET","POST"])
+def add_order(table, meal):
+    if 'mods' not in session:
+        session['mods'] = {}
+    if 'ordering' not in session:
+        session['ordering'] = {}
+    if table not in session['ordering']:
+        session['ordering'][table] = {}
+    cur = mysql.connection.cursor()
+
+    cur.execute('SELECT dish_id FROM dish WHERE name = %s',(meal,))
+    dish_ids = cur.fetchall()
+    
+    for id in dish_ids:
+        cur.execute('SELECT ingredient_id FROM dish_ingredient WHERE dish_id = %s',(id['dish_id'],))
+        ingredient_ids = cur.fetchall()
+    
+    min = 100
+    for id in ingredient_ids:
+        cur.execute('SELECT MIN(quantity) FROM ingredient WHERE ingredient_id = %s',(id['ingredient_id'],))
+        value = cur.fetchone()
+        if value['MIN(quantity)'] < min:
+            min = value['MIN(quantity)']
+    if min > 0:
+        mods = {}
+        if table in session['mods']:
+            if session['mods'][table] != {}:
+                for key in session['mods'][table]:
+                    mods = session['mods'][table][key]
+            
+        if str(meal) in session['ordering'][table]:
+            session['ordering'][table][str(meal)].append(mods)
+        else:
+            session['ordering'][table][str(meal)] = [mods]
+            
+        session['mods'][table] = {}
+    return redirect(url_for('take_order', table=table))
+
+# do after maybe index
+@app.route("/<int:table>/remove_meal/<meal>/<int:index>", methods=["GET","POST"])
+def remove_meal(table, meal, index):
+    session['ordering'][table][meal].pop(index)
+    if len(session['ordering'][table][meal]) == 0:
+        session['ordering'][table].pop(meal)
+    return redirect(url_for("take_order", table=table))
+
+@app.route("/<int:table>/cancel_meal/<int:meal_id>", methods=["GET","POST"])
+def cancel_meal(table, meal_id):
+    
+    cur = mysql.connection.cursor()
+     
+    cur.execute("DELETE FROM orders WHERE order_id = %s AND table_id = %s;",(meal_id, table ))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for("take_order", table=table))
+
+@app.route("/<int:table>/cancel_order", methods=["GET","POST"])
+def cancel_order(table):
+    session['mods'][table] = {}
+    session['ordering'][table] = {}
+    return redirect(url_for("take_order", table=table))
+
+
+@app.route("/<int:table>/complete_order", methods=["GET","POST"])
+def complete_order(table):  
+    cur = mysql.connection.cursor()
+        
+    if table in session['ordering']:
+        ordering = session['ordering'][table]
+        for meal in ordering:
+            cur.execute('SELECT dish_id, cook_time FROM dish WHERE name = %s',(meal,))
+            data = cur.fetchone()
+            for times in ordering[meal]:
+                info = ""
+                for ingredients in times:
+                    if times[ingredients] != 1:
+                        info += ingredients+"-"+str(times[ingredients])+", "
+                cur.execute("INSERT INTO orders (time, dish_id, table_id, status, info) VALUES (%s, %s, %s, 'waiting', %s);",(data['cook_time'], data['dish_id'], table, info))
+                mysql.connection.commit()
+    
+    session['ordering'][table] = {}
+    return redirect(url_for('take_order', table=table))
+
+@app.route("/<int:table>/take_payment", methods=["GET","POST"])
+def take_payment(table):  
+    cur = mysql.connection.cursor()
+    cur.execute(
+        """
+            UPDATE orders SET status = 'complete'
+            WHERE table_id = %s 
+            AND status != %s
+        """,(table, 'cancelled')
+    )
+    mysql.connection.commit()
+    return redirect(url_for('take_order', table=table))
+
+@app.route("/move_tables", methods=["GET","POST"])
+def move_tables():
+    cur = mysql.connection.cursor()
+        
+    cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
+    data = cur.fetchall()
+    cur.close()
+    table_positions = {}
+    for i in range(len(data)):
+        table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
+    
+    return render_template("staff/move_tables.html", table_positions=table_positions)
+
+@app.route('/save_tables', methods=['GET','POST'])
+def save_tables():
+    co_ords = request.get_json()
+    if co_ords is not None:
+        cur = mysql.connection.cursor()
+        for i in range(int(len(co_ords)/2)):
+            cur.execute("UPDATE tables SET x = '"+co_ords[i*2]+"', y = '"+co_ords[(i*2)+1]+"' WHERE table_id ="+str(i+1)+"; ")
+            mysql.connection.commit()
+        cur.close()
+    return redirect(url_for('choose_table'))
+    
+@app.route("/add_table", methods=["GET", "POST"])
+def add_table():
+    form = TableForm()
+    if form.validate_on_submit():
+        table_number = form.table_number.data
+        seats = form.seats.data
+        x = str(form.x.data) + 'px'
+        y = str(form.y.data) + 'px'
+
+        cur = mysql.connection.cursor()
+            
+        cur.execute('SELECT * FROM tables WHERE table_id = %s',(table_number,))
+        data = cur.fetchall()
+        if len(data) > 0:
+            form.table_number.errors.append("Table Number already in use")
+            return render_template("manager/add_table.html", form=form)
+        else:
+            cur.execute("INSERT INTO tables VALUES (%s, %s, %s, %s);",(table_number, seats, x, y))
+            mysql.connection.commit()
+            cur.close()
+            return redirect(url_for('choose_table'))
+
+    return render_template("manager/add_table.html", form=form)
+
+@app.route("/remove_table_menu", methods=["GET","POST"])
+def remove_table_menu():
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
+    data = cur.fetchall()
+    cur.close()
+    table_positions = {}
+    for i in range(len(data)):
+        table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
+    return render_template("manager/remove_table.html", table_positions=table_positions)
+
+@app.route("/<int:table>/remove_table", methods=["GET", "POST"])
+def remove_table(table):
+    cur = mysql.connection.cursor()
+        
+    cur.execute("DELETE FROM tables WHERE table_id = %s;",(table,))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for('remove_table_menu'))
+            
+@app.route("/break_timetable", methods=["GET","POST"])
+def break_timetable():
+    staff_breaks = [{'name':'Ben', 'time':'9:00'},{'name':'John', 'time':'13:00'},{'name':'Tim', 'time':'8:00'}]
+    return render_template("manager/break_timetable.html", staff_breaks=staff_breaks)
+
+@app.route("/manage_shift_requirements", methods=["GET","POST"])
+def manage_shift_requirements():
+    form = RosterRequirementsForm()
+    week = {'mon':'Monday','tue':'Tuesday','wed':'Wednesday','thu':'Thursday','fri':'Friday','sat':'Saturday','sun':'Sunday'}
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM shift_requirements;")
+    requirements = cur.fetchall()
+    for requirement in requirements:
+        requirement['unavailable'] = json.loads(requirement['unavailable'])
+    cur.execute("SELECT staff_id, first_name FROM staff;")
+    staff = cur.fetchall()
+    
+    if form.validate_on_submit():
+        day = form.day.data
+        opening_time = form.opening_time.data
+        closing_time = form.closing_time.data
+        min_workers = form.min_workers.data
+        
+        if form.unavailable.data is None or form.unavailable.data == '':
+            for requirement in requirements:
+                if requirement['day'] == day:
+                    unavailable = requirement['unavailable']
+        else:
+            unavailable = form.unavailable.data
+            try:
+                unavailable = unavailable.split(" ")
+                for i in range(len(unavailable)):
+                    unavailable[i] = int(unavailable[i])
+                unavailable = json.dumps(unavailable)
+            except TypeError:
+                form.unavailable.errors.append("Values should be space separated ID's")
+                unavailable = '[]'
+        cur.execute("""UPDATE shift_requirements SET opening_time = %s, closing_time = %s, min_workers = %s, unavailable = %s
+                        WHERE day = %s;""", ( opening_time, closing_time, min_workers, unavailable, day))
+        mysql.connection.commit()
+        cur.execute("SELECT * FROM shift_requirements;")
+        requirements = cur.fetchall()
+        for requirement in requirements:
+            requirement['unavailable'] = json.loads(requirement['unavailable'])
+    else:
+        form.opening_time.data = requirements[0]['opening_time']
+        form.closing_time.data = requirements[0]['closing_time']
+        form.min_workers.data = requirements[0]['min_workers']
+    
+    return render_template("manager/shift_requirements.html", requirements=requirements, staff=staff, week=week, form=form)
 
 @app.route("/roster_request", methods=["GET", "POST"])
 #@staff_only
