@@ -33,6 +33,12 @@
                         <span class="pcoded-micon"><i class="feather icon-user"></i></span>
                             <span class="pcoded-mtext">Profile Page</span></a>
                 </li>
+
+                <li class="nav-item">
+                    <a href="{{ url_for('change_password', table='staff') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Change Password</span>
+                    </a>
+                </li>
                 
                  <!-- I want the logout linked here -->
                 <li class="nav-item">
@@ -104,7 +110,7 @@
                         </span>
                         <span class="pcoded-mtext">GUI Support</span>
                     </a>
-                </li>                
+                </li> 
             </ul>
         </div>
     </div>

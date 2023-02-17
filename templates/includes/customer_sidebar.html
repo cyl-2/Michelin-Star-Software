@@ -1,0 +1,84 @@
+<!-- add_table, addDish -->
+
+<nav class="pcoded-navbar">
+    <div class="navbar-wrapper">
+        <div class="navbar-brand header-logo">
+            <a href="/" class="b-brand">
+                <div class="b-bg">
+                    <i class="feather icon-trending-up"></i>
+                </div>
+                <span class="b-title">Michelin Star Software</span>
+            </a>
+            <a class="mobile-menu" id="mobile-collapse" href="javascript:"><span></span></a>
+        </div>
+        <div class="navbar-content scroll-div">
+            <ul class="nav pcoded-inner-navbar">
+                
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Order</label>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ url_for('menu') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-user"></i></span>
+                            <span class="pcoded-mtext">Menu</span></a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('cart') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-user"></i></span>
+                            <span class="pcoded-mtext">Cart</span></a>
+                </li>
+
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Account</label>
+                </li>
+
+                <li class="nav-item {% if 'profile' in segment %} active {% endif %}">
+                    <a href="{{ url_for('customer_profile') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-user"></i></span>
+                            <span class="pcoded-mtext">Profile Page</span></a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ url_for('change_password', table='customer') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Change Password</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('logout') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Logout</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Review Past Orders</label>
+                </li>
+
+                <li class="nav-item {% if 'profile' in segment %} active {% endif %}">
+                    <a href="{{ url_for('index') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-user"></i></span>
+                            <span class="pcoded-mtext">View Past Transactions</span></a>
+                </li>
+
+                <li class="nav-item {% if 'profile' in segment %} active {% endif %}">
+                    <a href="{{ url_for('index') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-user"></i></span>
+                            <span class="pcoded-mtext">Start a Review!</span></a>
+                </li>
+                
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Customer Support</label>
+                </li>                    
+                <li data-username="Support Page" class="nav-item ">
+                    <a target="_blank" href="{{ url_for('contact_us') }}" class="nav-link">
+                        <span class="pcoded-micon">
+                            <i class="feather icon-headphones"></i>
+                        </span>
+                        <span class="pcoded-mtext">Contact Us</span>
+                    </a>
+                </li>                
+            </ul>
+        </div>
+    </div>
+</nav>
