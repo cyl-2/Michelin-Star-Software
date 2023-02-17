@@ -1,0 +1,75 @@
+<nav class="pcoded-navbar">
+    <div class="navbar-wrapper">
+        <div class="navbar-brand header-logo">
+            <a href="/" class="b-brand">
+                <div class="b-bg">
+                    <i class="feather icon-trending-up"></i>
+                </div>
+                <span class="b-title">Michelin Star Software</span>
+            </a>
+            <a class="mobile-menu" id="mobile-collapse" href="javascript:"><span></span></a>
+        </div>
+        <div class="navbar-content scroll-div">
+            <ul class="nav pcoded-inner-navbar">
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Customer Orders</label>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ url_for('waiter_menu') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Menu</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ url_for('choose_table') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Take Order</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ url_for('move_tables') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Move Table</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Shift Management</label>
+                </li>
+
+                <li class="nav-item pcoded-hasmenu">
+                    <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span
+                            class="pcoded-mtext">Roster</span></a>
+                    <ul class="pcoded-submenu">
+                        <!-- I want the view roster and generate random functionalities (ask ben about those webpages) as dropdown options -->
+                        <li><a href="{{ url_for('roster_timetable') }}">View Roster Timetable</a></li>
+                        <li><a href="{{ url_for('break_timetable') }}">View Break Timetable</a></li>
+                        <li><a href="{{ url_for('roster_request') }}">Submit Roster Request</a></li>
+                    </ul>
+                </li>
+                
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Account & Settings</label>
+                </li>
+
+                <li class="nav-item {% if 'profile' in segment %} active {% endif %}">
+                    <a href="{{ url_for('staff_profile') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-user"></i></span>
+                            <span class="pcoded-mtext">Profile Page</span></a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('change_password', table='staff') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Change Password</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ url_for('logout') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
