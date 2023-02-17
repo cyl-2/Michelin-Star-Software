@@ -12,40 +12,41 @@ form1 = dict(email='', password='')
 form2 = dict(message='')
 
 class TestStaffFeatures(MockDB, BaseTestCase):
-    def test_staff_login_page_loads(self):
+    def test_staff_login_page_loads_successfully(self):
         response = client.get('/staff_login')
 
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Login", response.data)
+    
+    def test_staff_login_page_returns_correct_template(self):
+        response = client.get('/staff_login')
         self.assert_template_used('staff/staff_login.html')
 
-    def test_staff_login_page_has_form(self):
+    def test_staff_login_page_has_correct_form(self):
         with client.get('/staff_login'):
             form = LoginForm()
-
             self.assertIsInstance(form, LoginForm)
         
     def test_staff_login_form_returns_form_errors_if_invalid(self):
         response = client.post('/staff_login', data=form1)
-
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'This field is required', response.data)
 
-    def test_staff_choose_table_page_loads(self):
+    def test_staff_choose_table_page_loads_successfully(self):
         response = client.get('/choose_table')
 
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Choose Table", response.data)
         self.assert_template_used('staff/choose_table.html')
 
-    def test_move_tables_page_loads(self):
+    def test_move_tables_page_loads_successfully(self):
         response = client.get('/move_tables')
 
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Move Table", response.data)
         self.assert_template_used('staff/move_tables.html')
     
-    def test_roster_request_page_loads(self):
+    def test_roster_request_page_loads_successfully(self):
         response = client.get('/roster_request')
 
         self.assertEqual(response.status_code, 200)
@@ -55,7 +56,6 @@ class TestStaffFeatures(MockDB, BaseTestCase):
     def test_roster_request_form_exists(self):
         with client.get('/roster_request'):
             form = RosterRequestForm()
-
             self.assertIsInstance(form, RosterRequestForm)
         
     def test_roster_request_form_returns_errors_if_invalid(self):

@@ -14,10 +14,11 @@ class MockDB(TestCase):
         # drop table if it already exists
         try:
             cursor.execute("DROP TABLE {}".format(config.T1))
+            cursor.execute("DROP TABLE {}".format(config.T2))
             cursor.close()
             print("DB table dropped")
         except mysql.connector.Error as err:
-            print("{}{}".format(MYSQL_DB, err))
+            print("{}{}".format(config.MYSQL_DB, err))
 
         cursor = cnx.cursor(dictionary=True)
         cnx.database = config.MYSQL_DB
@@ -32,8 +33,25 @@ class MockDB(TestCase):
                     password TEXT NOT NULL,
                     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
                 );"""
+
+        query2 = """CREATE TABLE staff 
+                (
+                    staff_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                    email TEXT NOT NULL,
+                    code TEXT,
+                    access_level TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    first_name TEXT NOT NULL,
+                    last_name TEXT NOT NULL,
+                    bio TEXT,
+                    address TEXT,
+                    password TEXT NOT NULL,
+                    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+                );"""
         try:
             cursor.execute(query)
+            cnx.commit()
+            cursor.execute(query2)
             cnx.commit()
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
