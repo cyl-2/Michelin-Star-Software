@@ -1,4 +1,5 @@
-<!-- [ navigation menu ] start -->
+<!-- add_table, addDish -->
+
 <nav class="pcoded-navbar">
     <div class="navbar-wrapper">
         <div class="navbar-brand header-logo">
@@ -6,7 +7,7 @@
                 <div class="b-bg">
                     <i class="feather icon-trending-up"></i>
                 </div>
-                <span class="b-title">T11</span>
+                <span class="b-title">Michelin Star Software</span>
             </a>
             <a class="mobile-menu" id="mobile-collapse" href="javascript:"><span></span></a>
         </div>
@@ -17,9 +18,8 @@
                 </li>
 
                  <!-- I want /manager linked here -->
-                <li data-username="dashboard Default Ecommerce CRM Analytics Crypto Project" 
-                    class="nav-item {% if 'index' in segment %} active {% endif %}">
-                    <a href="/" class="nav-link "><span class="pcoded-micon"><i class="feather icon-home"></i></span><span
+                <li class="nav-item {% if 'index' in segment %} active {% endif %}">
+                    <a href="{{ url_for('manager') }}" class="nav-link "><span class="pcoded-micon"><i class="feather icon-home"></i></span><span
                             class="pcoded-mtext">Dashboard</span></a>
                 </li>
 
@@ -28,15 +28,14 @@
                 </li>
 
                  <!-- I want /staff_profile (that is actually an empty file atm) linked here -->
-                <li data-username="Profile Page" 
-                    class="nav-item {% if 'profile' in segment %} active {% endif %}">
-                    <a href="/profile.html" class="nav-link">
+                <li class="nav-item {% if 'profile' in segment %} active {% endif %}">
+                    <a href="{{ url_for('staff_profile') }}" class="nav-link">
                         <span class="pcoded-micon"><i class="feather icon-user"></i></span>
                             <span class="pcoded-mtext">Profile Page</span></a>
                 </li>
                 
                  <!-- I want the logout linked here -->
-                <li data-username="Disabled Menu" class="nav-item">
+                <li class="nav-item">
                     <a href="{{ url_for('logout') }}" class="nav-link">
                         <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Logout</span>
                     </a>
@@ -45,26 +44,30 @@
                 <li class="nav-item pcoded-menu-caption">
                     <label>Management Tools</label>
                 </li>
-
-                 <li data-username="Authentication Sign up Sign in reset password Change password Personal information profile settings map form subscribe"
-                    class="nav-item pcoded-hasmenu">
+                 <li class="nav-item pcoded-hasmenu">
                     <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span
                             class="pcoded-mtext">Roster</span></a>
                     <ul class="pcoded-submenu">
                         <!-- I want the view roster and generate random functionalities (ask ben about those webpages) as dropdown options -->
-                        <li class=""><a href="/registration.html" class="" target="_blank">View Roster</a></li>
-                        <li class=""><a href="/login.html" class="" target="_blank">Generate</a></li>
+                        <li><a href="{{ url_for('roster_timetable') }}">View Roster Timetable</a></li>
+                        <li><a href="{{ url_for('break_timetable') }}">View Break Timetable</a></li>
+                        <li><a href="{{ url_for('generate_roster') }}">Create Roster</a></li>
+                        <li><a href="{{ url_for('add_to_roster_timetable') }}">Modify Roster</a></li>
+                        <li><a href="{{ url_for('delete_from_roster') }}">Delete Roster</a></li>
+                        <li><a href="{{ url_for('manage_shift_requirements') }}">Add New Shift Requirements</a></li>
                     </ul>
                 </li>
 
-                <li data-username="Authentication Sign up Sign in reset password Change password Personal information profile settings map form subscribe"
-                    class="nav-item pcoded-hasmenu">
+
+                <li class="nav-item pcoded-hasmenu">
                     <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span
                             class="pcoded-mtext">Staff</span></a>
                     <ul class="pcoded-submenu">
                         <!-- I want view_all_employees and add_new_employee as dropdown options -->
-                        <li class=""><a href="/registration.html" class="" target="_blank">option 1</a></li>
-                        <li class=""><a href="/login.html" class="" target="_blank">option 2</a></li>
+                        <li><a href="{{ url_for('add_new_employee') }}">Register New Staff</a></li>
+                        <li><a href="{{ url_for('view_all_employees') }}">View All Staff</a></li>
+                        <li><a href="{{ url_for('add_to_roster_timetable') }}">Modify Roster</a></li>
+                        <li><a href="{{ url_for('delete_from_roster') }}">Delete Roster</a></li>
                     </ul>
                 </li>
 
@@ -74,8 +77,8 @@
                             class="pcoded-mtext">Inventory</span></a>
                     <ul class="pcoded-submenu">
                         <!-- I want view_inventory dropdown options -->
-                        <li class=""><a href="/registration.html" class="" target="_blank">option 1</a></li>
-                        <li class=""><a href="/login.html" class="" target="_blank">option 2</a></li>
+                        <li><a href="{{ url_for('view_inventory') }}">View All Inventory</a></li>
+                        
                     </ul>
                 </li>
 
@@ -86,7 +89,7 @@
                 
                  <!-- I want view_queries here -->
 
-                <li data-username="Sample Page" class="nav-item"><a href="/page-blank.html" class="nav-link"><span
+                <li class="nav-item"><a href="{{ url_for('view_query') }}" class="nav-link"><span
                         class="pcoded-micon"><i class="feather icon-sidebar"></i></span><span class="pcoded-mtext">View Customer Enquires</span></a>
                 </li>
 
@@ -99,11 +102,10 @@
                         <span class="pcoded-micon">
                             <i class="feather icon-headphones"></i>
                         </span>
-                        <span class="pcoded-mtext">Support</span>
+                        <span class="pcoded-mtext">GUI Support</span>
                     </a>
                 </li>                
             </ul>
         </div>
     </div>
 </nav>
-<!-- [ navigation menu ] end -->

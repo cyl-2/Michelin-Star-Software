@@ -7,7 +7,7 @@ from flask_mysqldb import MySQL
 from generate_roster import Roster
 import json
 from flask_mail import Mail, Message
-import datetime
+from datetime import datetime
 import random, string, time
 from random import sample
 from werkzeug.utils import secure_filename
