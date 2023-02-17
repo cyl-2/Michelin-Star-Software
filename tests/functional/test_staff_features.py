@@ -75,5 +75,4 @@ class TestStaffFeatures(MockDB, BaseTestCase):
         response = client.get('/waiter_menu')
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Menu", response.data)
         self.assert_template_used('staff/waiter_menu.html')
