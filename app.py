@@ -12,7 +12,7 @@ import random, string, time
 from random import sample
 from werkzeug.utils import secure_filename
 import os
-#import credentials
+import credentials
 
 app = Flask(__name__)
 
@@ -29,27 +29,23 @@ Session(app)
 mail= Mail(app)
 app.config['MAIL_SERVER']='smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
-#app.config['MAIL_USERNAME'] = credentials.flask_email
-#app.config['MAIL_PASSWORD'] = credentials.flask_email_password
+app.config['MAIL_USERNAME'] = credentials.flask_email
+app.config['MAIL_PASSWORD'] = credentials.flask_email_password
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
-app.config['MYSQL_USER'] = 'root' # someone's deets
-app.config['MYSQL_PASSWORD'] = 'PaZARIX9' # someone's deets
-app.config['MYSQL_HOST'] = '127.0.0.1'
-app.config['MYSQL_DB'] = 'sys' # someone's deets
-#app.config['MYSQL_USER'] = credentials.user
-#app.config['MYSQL_PASSWORD'] = credentials.password
-#app.config['MYSQL_HOST'] = credentials.host
-#app.config['MYSQL_DB'] = credentials.db
+app.config['MYSQL_USER'] = credentials.user
+app.config['MYSQL_PASSWORD'] = credentials.password
+app.config['MYSQL_HOST'] = credentials.host
+app.config['MYSQL_DB'] = credentials.db
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
 
 @app.before_request
 def logged_in():
-    g.user = session.get("username", None)
+    g.user = "cherrylin20172027@gmail.com"#session.get("username", None)
     g.access = session.get("access_level", None)
 
 def login_required(view):
@@ -925,7 +921,7 @@ def manager():
     cur.execute("SELECT * FROM sales_analytics")
     sales_analytics = cur.fetchone()
 
-    cur.execute("SELECT count(*) FROM user_queries where date(todays_date) = %s", (date,))
+    cur.execute("SELECT count(*) FROM user_queries where date(date_received) = %s", (date,))
     query_count = cur.fetchone()
 
     cur.execute("SELECT * FROM roster_requests WHERE status = 'Pending'")
