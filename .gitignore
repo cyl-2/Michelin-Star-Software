@@ -4,5 +4,4 @@ __pycache__
 flask_session
 venv
 tests/config.py
-tests/functional
 tests/unit
