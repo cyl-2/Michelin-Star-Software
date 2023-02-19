@@ -12,7 +12,7 @@ import random, string, time
 from random import sample
 from werkzeug.utils import secure_filename
 import os
-#import credentials
+import credentials
 
 app = Flask(__name__)
 
@@ -29,20 +29,16 @@ Session(app)
 mail= Mail(app)
 app.config['MAIL_SERVER']='smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
-#app.config['MAIL_USERNAME'] = credentials.flask_email
-#app.config['MAIL_PASSWORD'] = credentials.flask_email_password
+app.config['MAIL_USERNAME'] = credentials.flask_email
+app.config['MAIL_PASSWORD'] = credentials.flask_email_password
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
-app.config['MYSQL_USER'] = 'root' # someone's deets
-app.config['MYSQL_PASSWORD'] = 'PaZARIX9' # someone's deets
-app.config['MYSQL_HOST'] = '127.0.0.1'
-app.config['MYSQL_DB'] = 'sys' # someone's deets
-#app.config['MYSQL_USER'] = credentials.user
-#app.config['MYSQL_PASSWORD'] = credentials.password
-#app.config['MYSQL_HOST'] = credentials.host
-#app.config['MYSQL_DB'] = credentials.db
+app.config['MYSQL_USER'] = credentials.user
+app.config['MYSQL_PASSWORD'] = credentials.password
+app.config['MYSQL_HOST'] = credentials.host
+app.config['MYSQL_DB'] = credentials.db
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
@@ -359,28 +355,24 @@ def confirm_code(email, table):
 @app.route('/customer_profile')
 @login_required
 def customer_profile():
-    username = session['username']
     cur = mysql.connection.cursor()
     message = ''
     transactionHistory=''
     image = None
-    cur.execute(" SELECT * FROM customer WHERE email=%s",(username,))
+    cur.execute(" SELECT * FROM customer WHERE email=%s",(g.user,))
     check= cur.fetchone()['profile_pic']
-    print(check)
     if check is None:
         error = 'No profile picture yet'
-        print('why')
     else:  
         image=check
-        print(image)
-    cur.execute("SELECT * FROM transactions WHERE username=%s;",(username,))
+    cur.execute("SELECT * FROM transactions WHERE username=%s;",(g.user,))
     check2 = cur.fetchall()
     if check2 is not None:
         message = "You've made no transactions yet"
     else:
         cur.execute(" SELECT * FROM dishes;")
         dish = cur.fetchall()
-        cur.execute(" SELECT * FROM transactions WHERE username=%s ",(username,))
+        cur.execute(" SELECT * FROM transactions WHERE username=%s ",(g.user,))
         transactionHistory = cur.fetchall()
     cur.close()
     #return render_template("customer/profile.html", title="My Profile")
@@ -390,14 +382,13 @@ def customer_profile():
 @app.route('/user_pic', methods=['GET','POST'])
 @login_required
 def user_pic():
-    username = session['username']
     cur = mysql.connection.cursor()
     form = UserPic()
     if form.validate_on_submit():
         profile_pic = form.profile_pic.data
         filename = secure_filename(profile_pic.filename)
         profile_pic.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        cur.execute(' UPDATE customer SET profile_pic=%s WHERE email=%s; ' ,(filename,username))
+        cur.execute(' UPDATE customer SET profile_pic=%s WHERE email=%s; ' ,(filename, g.user))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('customer_profile'))
@@ -925,7 +916,7 @@ def manager():
     cur.execute("SELECT * FROM sales_analytics")
     sales_analytics = cur.fetchone()
 
-    cur.execute("SELECT count(*) FROM user_queries where date(todays_date) = %s", (date,))
+    cur.execute("SELECT count(*) FROM user_queries where date(date_received) = %s", (date,))
     query_count = cur.fetchone()
 
     cur.execute("SELECT * FROM roster_requests WHERE status = 'Pending'")
@@ -976,7 +967,6 @@ def generate_roster():
     for id in data:
         employees.append(id['staff_id'])
     roster = Roster()
-    print(requirements)
     result = roster.generate(requirements, employees)
     cur.execute("UPDATE roster SET mon = '', tue = '', wed = '', thu = '', fri = '', sat = '', sun = '';")
     mysql.connection.commit()
@@ -1154,19 +1144,15 @@ def addDish():
             ingredients = form.ingredients.data
             allergins= form.allergins.data
             filename = secure_filename(dishPic.filename)
-            #print(filename)
             dishPic.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
             cur.execute("INSERT INTO dish (name, cost, cook_time, dishType, description,dishPic,allergies) VALUES(%s,%s,%s,%s,%s,%s,%s);", (name,cost,cookTime,dishType,dishDescription,filename,allergins))
             mysql.connection.commit()
-            print(ingredients)
             if ingredients is not None:
                 ingredients=ingredients.split(',')
                 for ingredient in ingredients:
-                    print(ingredient)
                     cur.execute("SELECT * FROM ingredient WHERE name=%s",(ingredient,))
                     ingredient_id=cur.fetchone()
                     if ingredient_id is not None:
-                        print('hellor', ingredient_id)
                         ingredient_id=ingredient_id['ingredient_id']
                         cur.execute('SELECT * FROM dish WHERE name=%s AND cost=%s AND cook_time=%s',(name, cost, cookTime))
                         dish_id=cur.fetchone()['dish_id']
@@ -1236,9 +1222,6 @@ def review_dish(dish_id):
     if form.validate_on_submit():
         rating = form.rating.data
         comment = form.comment.data
-        print()
-        print(rating)
-        print(comment)
         if comment == '' or comment == None:
             cur.execute("""INSERT INTO reviews ( username, comment, rating, dish_id) VALUES
                 (%s,%s,%s,%s)""",(g.user,'', rating, dish_id))
@@ -1256,9 +1239,7 @@ def review_dish(dish_id):
 def dish(dish_id):
     if str(dish_id) not in session:
         session[str(dish_id)]={}
-        print(session[str(dish_id)])
     session['CurrentDish'] = dish_id
-    print(session[str(dish_id)])
     form = submitModifications()
     cur=mysql.connection.cursor()
     cur.execute('SELECT * FROM dish WHERE dish_id=%s',(dish_id,))
@@ -1271,28 +1252,22 @@ def dish(dish_id):
     
     for value in result:
         ingredient_id=value['ingredient_id']
-        print('INGREDIENTID ', ingredient_id)
         if ingredient_id not in session[str(dish_id)]:
             session[str(dish_id)][ingredient_id] =1
-            print('todo')
-            print(session[str(dish_id)][ingredient_id])
     if form.validate_on_submit():
         changes = ''
         cur.execute('SELECT * FROM dish_ingredient WHERE dish_id=%s',(dish_id,))
         ingredients=cur.fetchall()
         for ingredient in ingredients:
-            print(ingredient)
             ingredient_id = ingredient['ingredient_id']
             cur.execute("SELECT * FROM ingredient WHERE ingredient_id=%s",(ingredient_id,))
             ing_name=cur.fetchone()['name']
             #ingredient_name = ingredient['name']
             if ingredient_id not in session[str(dish_id)]:
                 session[str(dish_id)][ingredient_id] =1
-                print(session[dish_id])
             else:
                 quantity=session[str(dish_id)][ingredient_id]
                 changes+= str(ing_name) + str(quantity)
-                print('changes1:',changes)
                 session[str(dish_id)][ingredient_id] =1
         cur.execute("INSERT INTO modifications(dish_id,changes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
         mysql.connection.commit()
@@ -1314,7 +1289,6 @@ def inc_quantity_ingredient(ingredient_id):
     if ingredient_id not in session[str(dish_id)]:
         session[str(dish_id)][ingredient_id] = 1
     session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] +1
-    print(session[str(dish_id)][ingredient_id])
     return redirect(url_for('dish',dish_id=dish_id))
 
 @app.route('/dec_quantity_ingredient/<int:ingredient_id>')
@@ -1341,14 +1315,10 @@ def cart():
     full = 0
     if 'cart' not in session:
         session['cart'] = {}
-        print('create session')
     names = {}
-    print(session['cart'])
     for dish_id in session['cart']:
-        print('heeloor',dish_id)
         cur.execute('SELECT * FROM dish WHERE dish_id=%s LIMIT 1;',(dish_id,))
         name = cur.fetchone()['name']
-        print(name)
         names[dish_id] = name
         cur.execute(' SELECT * FROM dish WHERE dish_id=%s; ',(dish_id,))
         dish = cur.fetchone()
@@ -1438,7 +1408,6 @@ def checkout():##c
         cur.execute('SELECT * FROM dish_ingredient WHERE dish_id=%s',(dish_id,))
         ingredients=cur.fetchall()
         changes=''
-        print('session',session['cart'])
 
     cur.execute("SELECT * FROM transactions WHERE username=%s;",(username,))
     transactions = cur.fetchall()
@@ -1455,12 +1424,9 @@ def checkout():##c
         for dish_id in session['cart']:
             cur.execute('SELECT * FROM modifications WHERE dish_id=%s AND user=%s',(dish_id,g.user))
             result = cur.fetchall()
-            print('Result:',result)
             for values in result:
-                print('myval',values)
                 cur.execute('SELECT * FROM dish WHERE dish_id=%s',(dish_id,))
                 currentDish=cur.fetchone()
-                print('cd',currentDish)
                 cost=currentDish['cost']
                 changes=values['changes']
                 cur.execute('INSERT INTO transactions(username, dish_id,cost,quantity,date) VALUES(%s,%s,%s,%s,%s) ',(username, dish_id,cost,1,date))
@@ -1496,12 +1462,9 @@ def breakTimes():
         if working[day] != '':
             shift = working[day]
             workingToday[working['staff_id']] =shift
-    print('hello')
-    print(workingToday)
     numWorkers = len(workingToday)
     for employee in workingToday:
         shift = workingToday[employee]
-        print(shift)
         hoursWorking= int(shift[0]+shift[1]) - int(shift[6]+shift[7])
         if hoursWorking <0:
             hoursWorking = hoursWorking*-1
@@ -1518,12 +1481,9 @@ def breakTimes():
         start = int(shift[0]+shift[1])
         endShift = int(shift[6] + shift[7])
         for i in range(0,breaks):
-            print(i)
             proposedBreak = 0
             #start =None
             for j in range(4,1,-1):
-                print()
-                print('start',start)
                 proposedBreak = start + j
                 if proposedBreak in breaksAssigned: 
                     proposedBreak = 0
@@ -1540,11 +1500,6 @@ def breakTimes():
                         endBreak =start+0.45
                         workingToday[employee].append(start)
                     break
-            #if breaksAssigned[proposedBreak] <=
-            #end = start +.45
-            #print(start)
-            #no break
-        print("shiftLength",hoursWorking) 
     return ("breaks.html")
 
 
