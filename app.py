@@ -43,10 +43,26 @@ app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
 
+def get_personal_notifs():
+    cur = mysql.connection.cursor()
+    notifications = cur.execute("SELECT * FROM notifications WHERE user = %s", (g.user,))
+    notifications = cur.fetchall()
+    cur.close()
+    return notifications
+
+def get_managerial_notifs():
+    cur = mysql.connection.cursor()
+    notifications = cur.execute("SELECT * FROM notifications WHERE user = 'manager'")
+    notifications = cur.fetchall()
+    cur.close()
+    return notifications
+
 @app.before_request
 def logged_in():
     g.user = session.get("username", None)
     g.access = session.get("access_level", None)
+    g.notifications_personal = get_personal_notifs()
+    g.notifications_managerial = get_managerial_notifs()
 
 def login_required(view):
     @wraps(view)
@@ -114,6 +130,26 @@ def page_not_found(error):
 @app.route("/", methods=["GET","POST"])
 def index():
     return render_template("home.html", title = "Home")
+
+@app.route("/clear_all_notifications", methods=["POST"])
+def clear_all_notifications():
+    current_url = request.form['current_url']
+
+    cur = mysql.connection.cursor()
+    notifications = cur.execute("DELETE FROM notifications WHERE user = %s", (g.user,))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(current_url)
+
+@app.route("/clear_one_notification/<int:id>", methods=["POST"])
+def clear_one_notification(id):
+    current_url = request.form['current_url']
+
+    cur = mysql.connection.cursor()
+    notifications = cur.execute("DELETE FROM notifications WHERE notif_id = %s", (id,))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(current_url)
 
 ##############################################################################################################################################
 ##############################################################################################################################################
@@ -825,6 +861,10 @@ def roster_request():
 
         cur.execute("""INSERT INTO roster_requests (employee, message)
                             VALUES (%s,%s);""", (employee, message))
+        mysql.connection.commit()
+
+        cur.execute("""INSERT INTO notifications (title, message)
+                    VALUES ("New Roster Request","From %s");""", (employee,))
         mysql.connection.commit()
         cur.close()
 

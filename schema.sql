@@ -1,3 +1,22 @@
+DROP TABLE IF EXISTS notifications;
+
+CREATE TABLE notifications
+(
+    notif_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    user TEXT NOT NULL,
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    received TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+INSERT INTO notifications
+  ( user, title, message)
+VALUES
+  ( 'cherrylin20172027@gmail.com', 'From Sara', 'super duper duper duper long long long long long long long long long long message 1'),
+  ( 'cherrylin20172027@gmail.com', 'Inventory Management', 'message 2'),
+  ( 'cherrylin20172027@gmail.com', 'Critical','message 3'),
+  ( 'cherrylincyl@gmail.com', 'Roster Request','message 4');
+
 DROP TABLE IF EXISTS staff;
 
 CREATE TABLE staff 

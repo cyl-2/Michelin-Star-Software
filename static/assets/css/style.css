@@ -57,6 +57,7 @@ File: style.css
 /**  =====================
       Custom css start
 ==========================  **/
+
 body {
   font-family: "Open Sans", sans-serif;
   font-size: 14px;
@@ -7567,6 +7568,31 @@ table.footable-paging-center > tfoot > tr.footable-paging > td {
 /**  =====================
       Button css start
 ==========================  **/
+
+.btn-notif {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 14px;
+  color: grey;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.btn-x {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 14px;
+  color: grey;
+  cursor: pointer;
+  position: absolute;
+  right: 0;
+  margin-right:5px;
+}
+
 .btn-theme,
 a.btn-theme {
   background: linear-gradient(-135deg, #1de9b6 0%, #1dc4e9 100%);
