@@ -7,7 +7,7 @@ from flask_mysqldb import MySQL
 from generate_roster import Roster
 import json
 from flask_mail import Mail, Message
-import datetime
+from datetime import datetime
 import random, string, time
 from random import sample
 from werkzeug.utils import secure_filename
@@ -982,7 +982,7 @@ def generate_roster():
     mysql.connection.commit()
     for day in result:
         for shift in result[day]:
-            for person in result[day][shift]:##
+            for person in result[day][shift]:
                 command = 'UPDATE roster SET '+ day +' = %s WHERE staff_id = %s;'
                 cur.execute(command,( shift, person))
                 mysql.connection.commit()
@@ -1212,11 +1212,18 @@ def menu():
     drink= cur.fetchall()
     cur.execute(" SELECT * FROM dish WHERE dishType='side'")
     side = cur.fetchall()
-    cur.execute(" SELECT * FROM transactions WHERE username = %s",(g.user,))
+    cur.execute(" SELECT * FROM transactions WHERE username = %s ORDER BY date",(g.user,))
     transactions = cur.fetchall()
-    cur.close()#
-    print(g.user)
-    return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side, transactions=transactions)
+    cur.execute(" SELECT AVG(rating), dish_id FROM reviews GROUP BY dish_id;")
+    dish_ratings = cur.fetchall()
+    max_dish_id = 0
+    max_dish_rating = 0
+    for dish in dish_ratings:
+        if dish['AVG(rating)'] > max_dish_rating:
+            max_dish_id = dish['dish_id']
+            max_dish_rating = dish['AVG(rating)']
+    cur.close()
+    return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side, transactions=transactions, max_dish_id=max_dish_id)
 
 @app.route('/review_dish/<int:dish_id>',methods=['GET', 'POST'])
 @login_required
@@ -1259,7 +1266,9 @@ def dish(dish_id):
     dish_id=dish['dish_id']
     cur.execute("SELECT * FROM dish_ingredient JOIN ingredient ON dish_ingredient.ingredient_id = ingredient.ingredient_id  WHERE dish_ingredient.dish_id=%s",(dish_id,))
     result=cur.fetchall()
-    print(result)
+    cur.execute("SELECT comment, rating FROM reviews WHERE dish_id=%s",(dish_id,))
+    comments=cur.fetchall()
+    
     for value in result:
         ingredient_id=value['ingredient_id']
         print('INGREDIENTID ', ingredient_id)
@@ -1289,7 +1298,7 @@ def dish(dish_id):
         mysql.connection.commit()
         session['CurrentDish'] = None
         return redirect(url_for('add_to_cart', dish_id=dish['dish_id']))
-    return render_template('customer/dish.html', dish=dish,result=result,form=form,quant=session[str(dish_id)])
+    return render_template('customer/dish.html', dish=dish,result=result,form=form,quant=session[str(dish_id)],comments=comments)
 
 #so by default all amounts of ingredients should be 1 - should have the option to increase by 1 and decrease by 1
 #added that so that should work
@@ -1409,8 +1418,8 @@ def dec_quantity(dish_id):
     return redirect(url_for('cart'))
 
 #question does this need to be specific to user?? or is it already
-@app.route('/checkout', methods=['GET','POST'])
-def checkout():
+@app.route('/checkout', methods=['GET','POST'])##
+def checkout():##c
     full =0
     form = cardDetails()
     names = {}
@@ -1430,6 +1439,13 @@ def checkout():
         ingredients=cur.fetchall()
         changes=''
         print('session',session['cart'])
+
+    cur.execute("SELECT * FROM transactions WHERE username=%s;",(username,))
+    transactions = cur.fetchall()
+    discount=False
+    if len(transactions) % 10 == 0 and len(transactions) > 1:
+        discount=True
+
     if form.validate_on_submit():
         cardNum=form.cardNum.data
         cardHolder = form.cardHolder.data
@@ -1455,9 +1471,9 @@ def checkout():
         cur.execute('DELETE FROM modifications WHERE user=%s',(g.user,))
         mysql.connection.commit()    
         session['cart'].clear()
-        cur.close()
-        return render_template('cart.html')
-    return render_template('customer/checkout.html', cart=session['cart'],form=form,full=full,names=names,dish=dish)
+        cur.close()##
+        return redirect(url_for('cart'))
+    return render_template('customer/checkout.html', cart=session['cart'],form=form,full=full,names=names,dish=dish, discount=discount)
 
     #need table number to be inputed here 
 
@@ -1472,7 +1488,7 @@ def breakTimes():
     staff = cur.fetchall()
     cur.execute("SELECT * FROM roster")
     roster = cur.fetchall()
-    now = datetime.datetime.now()
+    now = datetime.now()
     day = (now.strftime("%a")).lower()
     breaksAssigned = {}
     workingToday = {}

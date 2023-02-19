@@ -6,22 +6,71 @@
         <i class="icon feather"></i>Leave a Review
     </a>
     <div class="dropdown-menu dropdown-menu-right profile-notification">
-        <ul class="pro-body">
-            {% for transaction in transactions %}
-                <li>
-                    <a href="{{ url_for('review_dish', dish_id=transaction['dish_id']) }}" class="dropdown-item">
-                        {% for dish in dishes %}
-                            {% if dish['dish_id'] == transaction['dish_id'] %}
-                                {{ dish['name'] }}
-                            {% endif %}
-                        {% endfor %}
-                    </a>
-                </li>
-            {% endfor %}
-        </ul>
+        {% if transactions|length > 0 %}
+            <ul class="pro-body">
+                {% for transaction in transactions %}
+                    <li>
+                        <a href="{{ url_for('review_dish', dish_id=transaction['dish_id']) }}" class="dropdown-item">
+                            {% for dish in dishes %}
+                                {% if dish['dish_id'] == transaction['dish_id'] %}
+                                    {{ dish['name'] }}
+                                {% endif %}
+                            {% endfor %}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No Meals to Review</p>
+        {% endif %}
     </div>
 </div>
-    
+
+{% if transactions|length > 0 %}
+<div class="col-xl-12">
+    <div class="card">
+        <div class="card-header">
+            <h5>Past Purchases</h5>
+        </div>
+        <div class="card-block table-border-style">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Dish Name</th>
+                            <th>Cost</th>
+                            <th>Dish info</th>
+                            <th>Add to cart</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for i in range(transactions|length) %}
+                        {% for dish in dishes%}
+
+                            {% if dish['dish_id'] == transactions[i]['dish_id'] and i < 5 %} <!-- 5 limits the number of past purchases shown -->
+                                <tr>
+                                    <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
+                                    <td>
+                                        {{dish['name']}}
+                                        {% if dish['dish_id'] == max_dish_id %}
+                                            <img src="{{ url_for('static', filename='best-rated.png' ) }}" style="width: 70px;"/>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{dish['cost']}}</td>
+                                    <td><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Go to dish</a></td>
+                                    <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
+                                </tr>
+                            {% endif %}
+                        {% endfor%}
+                    {% endfor%}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
         <!-- [ Hover-table ] start -->
         <div class="col-xl-12">
             <div class="card">
@@ -42,11 +91,16 @@
                                 </tr>
                             </thead>
                             <tbody>
-                            {% for dish in starter%}
+                            {% for dish in starters%}
                                 <tr>
-                                    <th scope="row">1</th>
+                                    
                                     <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
-                                    <td>{{dish['name']}}</td>
+                                    <td>
+                                        {{dish['name']}}
+                                        {% if dish['dish_id'] == max_dish_id %}
+                                            <img src="{{ url_for('static', filename='best-rated.png' ) }}" style="width: 70px;"/>
+                                        {% endif %}
+                                    </td>
                                     <td>{{dish['cost']}}</td>
                                     <td><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Go to dish</a></td>
                                     <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
@@ -72,7 +126,12 @@
         {% for dish in starter%}
             <tr>
                 <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
-                <td>{{dish['name']}}</td>
+                <td>
+                    {{dish['name']}}
+                    {% if dish['dish_id'] == max_dish_id %}
+                        <img src="{{ url_for('static', filename='best-rated.png' ) }}" style="width: 70px;"/>
+                    {% endif %}
+                </td>
                 <td>{{dish['cost']}}</td>
                 <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
             </tr>
@@ -141,7 +200,12 @@
         {% for dish in mainCourse%}
             <tr>
                 <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
-                <td>{{dish['name']}}</td>
+                <td>
+                    {{dish['name']}}
+                    {% if dish['dish_id'] == max_dish_id %}
+                        <img src="{{ url_for('static', filename='best-rated.png' ) }}" style="width: 70px;"/>
+                    {% endif %}
+                </td>
                 <td>{{dish['cost']}}</td>
                 <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
             </tr>
@@ -161,7 +225,12 @@
         {% for dish in dessert%}
             <tr>
                 <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
-                <td>{{dish['name']}}</td>
+                <td>
+                    {{dish['name']}}
+                    {% if dish['dish_id'] == max_dish_id %}
+                        <img src="{{ url_for('static', filename='best-rated.png' ) }}" style="width: 70px;"/>
+                    {% endif %}
+                </td>
                 <td>{{dish['cost']}}</td>
                 <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
             </tr>
@@ -181,7 +250,12 @@
         {% for dish in side%}
             <tr>
                 <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
-                <td>{{dish['name']}}</td>
+                <td>
+                    {{dish['name']}}
+                    {% if dish['dish_id'] == max_dish_id %}
+                        <img src="{{ url_for('static', filename='best-rated.png' ) }}" style="width: 70px;"/>
+                    {% endif %}
+                </td>
                 <td>{{dish['cost']}}</td>
                 <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
             </tr>
@@ -201,7 +275,12 @@
         {% for dish in drink%}
             <tr>
                 <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
-                <td>{{dish['name']}}</td>
+                <td>
+                    {{dish['name']}}
+                    {% if dish['dish_id'] == max_dish_id %}
+                        <img src="{{ url_for('static', filename='best-rated.png' ) }}" style="width: 70px;"/>
+                    {% endif %}
+                </td>
                 <td>{{dish['cost']}}</td>
                 <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
             </tr>
