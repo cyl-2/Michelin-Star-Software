@@ -60,7 +60,7 @@ def get_managerial_notifs():
 @app.before_request
 def logged_in():
     g.user = "cherrylin20172027@gmail.com" #session.get("username", None)
-    g.access = "managerial" #session.get("access_level", None) ##
+    g.access = "ordinary staff" #session.get("access_level", None) ##
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
 
@@ -443,19 +443,10 @@ def user_pic():
 @app.route('/kitchen', methods=['GET','POST'])
 def kitchen():
     cur = mysql.connection.cursor()
-    cur.execute('''SELECT d.name, o.time, d.cook_time, o.tableNo, o.notes, o.status, o.dish_id
+    cur.execute('''SELECT d.name, o.time, d.cook_time, o.table_id, o.status, o.dish_id
                     FROM orders as o 
                     JOIN dish as d 
-                    ON o.dish_id=d.dish_id
-                    ORDER BY o.notes='priority' DESC,
-                            o.time,
-                            o.time*d.cook_time DESC,
-                            o.tableNo,  
-                            d.cook_time DESC,
-                            d.category='starter',
-                            d.category='main',
-                            d.category='side',
-                            d.category='dessert';''')
+                    ON o.dish_id=d.dish_id;''')
     orderlist=cur.fetchall()
     cur.close()
     return render_template('kitchen.html',orderlist=orderlist)
