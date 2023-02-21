@@ -742,9 +742,9 @@ p.text-muted {
 
 /* ================================    md animated mode End   ===================== */
 
-
 /* ================================    rating star Start  ===================== */
-/* use reverse flexbox to take advantage of flex-direction: reverse */
+/* credits to https://medium.com/codex/create-a-star-rating-widget-with-css-in-9-steps-fe323352dba4 */
+
 .star-rating {
   display: flex;
   align-items: left;
