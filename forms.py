@@ -5,11 +5,18 @@ from wtforms.widgets import TextArea
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 
 class TableForm(FlaskForm):
-    table_number = IntegerField( validators=[InputRequired(), NumberRange(1,100)])
-    seats = IntegerField(validators=[InputRequired(), NumberRange(1,25)])
+    table_number = IntegerField("Assign Table Number", validators=[InputRequired(), NumberRange(1,100)])
+    seats = IntegerField("Number Of Seats", validators=[InputRequired(), NumberRange(1,25)])
+    '''
+    instead of submitting coordinates, can we not set the default coordinates to (0,0)
+    but then right after submitting this form, we can redirect to that page where we can
+    "move" the tables and "save"?
+
+    We wanna be user friendly yuh
+    '''
     x = IntegerField(validators=[InputRequired(), NumberRange(0,500)])
     y = IntegerField(validators=[InputRequired(), NumberRange(0,500)])
-    submit = SubmitField("Create Table")
+    submit = SubmitField("Create New Table")
     
     
 class AddToRosterForm(FlaskForm):
@@ -63,7 +70,7 @@ class EmployeeForm(FlaskForm):
     last_name = StringField("Last name", validators=[InputRequired()])
     email = StringField("Email Address",[validators.Length(min=6, max=100)])
     role = StringField("Role: ", validators=[InputRequired()])
-    access_level = SelectField("Choose an option", 
+    access_level = SelectField("Choose an option for access level", 
                                         choices = [("managerial", "Managerial"),
                                                     ("ordinary staff", "Ordinary staff")], validators=[InputRequired()])
     submit = SubmitField("Create")
