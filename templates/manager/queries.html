@@ -2,46 +2,54 @@
 
 {% block content %}
 
+<div class="pcoded-main-container">
     <div class="pcoded-wrapper">
         <div class="pcoded-content">
             <div class="pcoded-inner-content">
-                <div class="col-xl-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Enquiries</h5>
-                        </div>
-                        <div class="card-block table-border-style">
-                            <div class="table-responsive">
-                            {% if queries %}
-                            <table class="table table-hover">
-                                <tr> 
-                                    <th> Date received </th>
-                                    <th> Name </th>
-                                    <th> Email </th>
-                                    <th> Subject </th>
-                                    <th> </th>
-                                </tr>
-                        
-                                {% for query in queries %}
-                                <tr> 
-                                    <td> {{ query ["date"] }} </td>
-                                    <td> {{ query ["name"] }} </td>
-                                    <td> {{ query ["email"] }} </td>
-                                    <td> {{ query ["subject"] }} </td>
-                                    <td> <a href = "{{ url_for('reply_email', id=query['query_id']) }}"> Reply to email </a>
-                                        <br><a href="{{ url_for('delete_query', id=query['query_id']) }}"> Delete message </a></td> 
-                                </tr>
-                                {% endfor %}
-                        
-                                {% else %}
-                                <p>No messages for now </p>
-                            {% endif %}
-                            </table>
+                <div class="main-body">
+                    <div class="page-wrapper">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Enquiries</h5>
+                                    </div>
+                                    <div class="card-block table-border-style">
+                                        <div class="table-responsive">
+                                        {% if queries %}
+                                        <table class="table table-hover">
+                                            <tr> 
+                                                <th> Date received </th>
+                                                <th> Name </th>
+                                                <th> Email </th>
+                                                <th> Subject </th>
+                                                <th> </th>
+                                            </tr>
+                                    
+                                            {% for query in queries %}
+                                            <tr> 
+                                                <td> {{ query ["date"] }} </td>
+                                                <td> {{ query ["name"] }} </td>
+                                                <td> {{ query ["email"] }} </td>
+                                                <td> {{ query ["subject"] }} </td>
+                                                <td> <a href = "{{ url_for('reply_email', id=query['query_id']) }}"> Reply to email </a>
+                                                    <br><a href="{{ url_for('delete_query', id=query['query_id']) }}"> Delete message </a></td> 
+                                            </tr>
+                                            {% endfor %}
+                                    
+                                            {% else %}
+                                            <p>No messages for now </p>
+                                        {% endif %}
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
 {% endblock content %}
