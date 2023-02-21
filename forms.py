@@ -34,9 +34,8 @@ class RosterRequirementsForm(FlaskForm):
     opening_time = IntegerField( validators=[ NumberRange(0,24)])
     closing_time = IntegerField( validators=[ NumberRange(0,24)])
     min_workers = IntegerField( validators=[ NumberRange(0,24)])
-    
     unavailable = StringField()
-    submit = SubmitField("Change Requirements")
+    submit = SubmitField("Confirm Changes")
 
 
 class RegistrationForm(FlaskForm):
