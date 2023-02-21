@@ -59,8 +59,8 @@ def get_managerial_notifs():
 
 @app.before_request
 def logged_in():
-    g.user = session.get("username", None)
-    g.access = session.get("access_level", None)
+    g.user = "cherrylin20172027@gmail.com" #session.get("username", None)
+    g.access = "managerial" #session.get("access_level", None) ##
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
 
@@ -1244,7 +1244,7 @@ def menu():
     return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side, transactions=transactions)
 
 @app.route('/review_dish/<int:dish_id>',methods=['GET', 'POST'])
-@login_required
+#@login_required
 def review_dish(dish_id):
     cur=mysql.connection.cursor()
     cur.execute('''SELECT * FROM dish WHERE dish_id = %s''',(dish_id,))
@@ -1252,7 +1252,7 @@ def review_dish(dish_id):
     
     form = Review()
     if form.validate_on_submit():
-        rating = form.rating.data
+        rating = current_url = request.form['stars'] # this would give a value between 1 to 5, depending on the num of stars selected
         comment = form.comment.data
         if comment == '' or comment == None:
             cur.execute("""INSERT INTO reviews ( username, comment, rating, dish_id) VALUES

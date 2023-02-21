@@ -127,6 +127,5 @@ class submitModifications(FlaskForm):
     submit = SubmitField('Enter')
     
 class Review(FlaskForm):
-    rating = DecimalRangeField('Rating', default=5)
     comment = StringField('Additional Comments: ')
     submit = SubmitField('Enter')
