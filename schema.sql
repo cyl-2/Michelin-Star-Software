@@ -177,11 +177,12 @@ DROP TABLE IF EXISTS orders;
 
 CREATE TABLE orders
 (
-    order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     time INTEGER NOT NULL,
     dish_id INTEGER NOT NULL,
     table_id INTEGER NOT NULL,
-    status TEXT
+    status TEXT,
+    info TEXT
 );
 
 
