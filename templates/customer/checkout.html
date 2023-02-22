@@ -1,50 +1,137 @@
 {% extends "layouts/base.html" %}
 {% block content %}
-{% if cart %}
-<p> Please note you cannot increase the number of books you wish to beyond the present stock available in our warehouse</p>
-    <table>
-        <tr>
-            <th>Dish</th>
-            <th>Quantity</th>
-            <th>Price per dish</th>
-        </tr>
-        {% for dish_id in cart %}
-            <tr>
-                <td>{{ names[dish_id]}}</td>
-                <td>{{ cart[dish_id] }}</td>
-                <td>{{dish['cost']}}</td>
-                <!-- We do be a gobshite i can't believe it took me like 4 hours to figure out book_id = book_id wtf is wrong with me-->
-                
-
-            </tr>
-        {% endfor %}
-{%endif%}
-
-<p>Full Price: {{full}}</p>
-
-<form action='' method='POST' novalidate>
-    {{form.hidden_tag()}}
-    {{form.cardNum.label}}
-    {{form.cardNum()}}
-    {% for error in form.cardNum.errors%}
-        {{error}}
-    {%endfor%}
-    <br>
-    {{form.cardHolder.label()}}
-    {{form.cardHolder()}}
-    {% for error in form.cardHolder.errors%}
-        {{error}}
-    {%endfor%}
-    <br>
-    {{form.cvv.label()}}
-    {{form.cvv()}}
-    {% for error in form.cvv.errors%}
-        {{error}}
-    {%endfor%}
-    <br>
-    {{form.submit()}}
-
-</form>
 
 
-{%endblock%}
+
+
+
+    <!-- [ Main Content ] start -->
+    <div class="pcoded-main-container">
+        <div class="pcoded-wrapper">
+
+            <div class="pcoded-content">
+                <div class="pcoded-inner-content">
+
+                    <div class="page-header">
+                        <div class="page-block">
+                            <div class="row align-items-center">
+                                <div class="col-md-12">
+
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="main-body">
+                        <div class="page-wrapper">
+                            <!-- [ Main Content ] start -->
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5>Order Summary</h5>
+                                        </div>
+                                        <div class="card-block">
+                                            <div class="row"> 
+                                                
+                                                <div class="col-sm-12 mb-2">
+                                                    <div class="form-group">
+                                                                                                            <!-- [ stiped-table ] start -->
+                                                        <div class="col-xl-12">
+                                                            <div class="card">
+                                                                <div class="card-block table-border-style">
+                                                                    <div class="table-responsive">
+                                                                        <table class="table table-striped">
+                                                                            <tbody>
+                                                                                {% if cart %}
+                                                                                   
+                                                                                        <tr>
+                                                                                            <th>Dish</th>
+                                                                                            <th>Quantity</th>
+                                                                                            <th>Price per dish</th>
+                                                                                        </tr>
+                                                                                        {% for dish_id in cart %}
+                                                                                            <tr>
+                                                                                                <td>Hellor</td>
+                                                                                                <td>{{dish['dishPic']}}</td>
+                                                                                                <td>{{ names[dish_id]}}</td>
+                                                                                                <td>{{ cart[dish_id] }}</td>
+                                                                                                <td>{{dish['cost']}}</td>
+                                                                                                <!-- We do be a gobshite i can't believe it took me like 4 hours to figure out book_id = book_id wtf is wrong with me-->
+                                                                                                
+                                                                                
+                                                                                            </tr>
+                                                                                        {% endfor %}
+                                                                                {%endif%}
+                                                                            </tbody>
+                                                                        </table>
+                                                                        
+                                                                    </div>
+                                                                    
+                                                                </div>
+                                                                
+                                                            </div>
+                                                        
+                                                            <h3>Full Price: €{{full}}</h3>
+                                                        </div>
+                                                    </div>
+                                                </div>  
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="card">
+                                        <div class="card-block">
+                                            <div class="d-flex align-items-center justify-content-center flex-column">
+                                                
+                                                <form action='' method='POST' novalidate>
+                                                    {{form.hidden_tag()}}
+                                                    {{form.cardNum.label}}
+                                                    {{form.cardNum(class="form-control")}}
+                                                    {% for error in form.cardNum.errors%}
+                                                        {{error}}
+                                                    {%endfor%}
+                                                    <br>
+                                                    {{form.cardHolder.label()}}
+                                                    {{form.cardHolder(class="form-control")}}
+                                                    {% for error in form.cardHolder.errors%}
+                                                        {{error}}
+                                                    {%endfor%}
+                                                    <br>
+                                                    {{form.cvv.label()}}
+                                                    {{form.cvv(class="form-control")}}
+                                                    {% for error in form.cvv.errors%}
+                                                        {{error}}
+                                                    {%endfor%}
+                                                    <br>
+                                                    {{form.submit()}}
+                                                
+                                                </form>
+                                                
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- [ Main Content ] end -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <!-- [ Main Content ] end -->
+
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

@@ -16,7 +16,7 @@ import os
 app = Flask(__name__)
 
 app.config["SECRET_KEY"] = "MY_SECRET_KEY"
-UPLOAD_FOLDER = "picture"
+UPLOAD_FOLDER = "static/picture"
 app.config["SESSION_PERMANENT"] = False
 app.config['UPLOAD_FOLDER']= UPLOAD_FOLDER
 app.config["SESSION_TYPE"] = "filesystem"
@@ -931,8 +931,7 @@ def menu():
     cur.execute(" SELECT * FROM dish WHERE dishType='side'")
     side = cur.fetchall()
     cur.close()#
-    print(g.user)
-    return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side)
+    return render_template('customer/dishes.html', dishes=dishes, starter=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side)
 
 
 
@@ -941,47 +940,40 @@ def menu():
 def dish(dish_id):
     if str(dish_id) not in session:
         session[str(dish_id)]={}
-        print(session[str(dish_id)])
     session['CurrentDish'] = dish_id
-    print(session[str(dish_id)])
     form = submitModifications()
     cur=mysql.connection.cursor()
     cur.execute('SELECT * FROM dish WHERE dish_id=%s',(dish_id,))
     dish=cur.fetchone()
+    dishPhoto=dish['dishPic']
+    path = "/static/picture/" + str(dishPhoto)
     dish_id=dish['dish_id']
     cur.execute("SELECT * FROM dish_ingredient JOIN ingredient ON dish_ingredient.ingredient_id = ingredient.ingredient_id  WHERE dish_ingredient.dish_id=%s",(dish_id,))
     result=cur.fetchall()
-    print(result)
     for value in result:
         ingredient_id=value['ingredient_id']
-        print('INGREDIENTID ', ingredient_id)
         if ingredient_id not in session[str(dish_id)]:
             session[str(dish_id)][ingredient_id] =1
-            print('todo')
-            print(session[str(dish_id)][ingredient_id])
     if form.validate_on_submit():
         changes = ''
         cur.execute('SELECT * FROM dish_ingredient WHERE dish_id=%s',(dish_id,))
         ingredients=cur.fetchall()
         for ingredient in ingredients:
-            print(ingredient)
             ingredient_id = ingredient['ingredient_id']
             cur.execute("SELECT * FROM ingredient WHERE ingredient_id=%s",(ingredient_id,))
             ing_name=cur.fetchone()['name']
             #ingredient_name = ingredient['name']
             if ingredient_id not in session[str(dish_id)]:
                 session[str(dish_id)][ingredient_id] =1
-                print(session[dish_id])
             else:
                 quantity=session[str(dish_id)][ingredient_id]
                 changes+= str(ing_name) + str(quantity)
-                print('changes1:',changes)
                 session[str(dish_id)][ingredient_id] =1
         cur.execute("INSERT INTO modifications(dish_id,changes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
         mysql.connection.commit()
         session['CurrentDish'] = None
         return redirect(url_for('add_to_cart', dish_id=dish['dish_id']))
-    return render_template('customer/dish.html', dish=dish,result=result,form=form,quant=session[str(dish_id)])
+    return render_template('customer/dish.html', dish=dish,result=result,path=path,form=form,quant=session[str(dish_id)])
 
 #so by default all amounts of ingredients should be 1 - should have the option to increase by 1 and decrease by 1
 #added that so that should work
@@ -997,7 +989,6 @@ def inc_quantity_ingredient(ingredient_id):
     if ingredient_id not in session[str(dish_id)]:
         session[str(dish_id)][ingredient_id] = 1
     session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] +1
-    print(session[str(dish_id)][ingredient_id])
     return redirect(url_for('dish',dish_id=dish_id))
 
 @app.route('/dec_quantity_ingredient/<int:ingredient_id>')
@@ -1041,15 +1032,12 @@ def addDish():
             dishPic.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
             cur.execute("INSERT INTO dish (name, cost, cook_time, dishType, description,dishPic,allergies) VALUES(%s,%s,%s,%s,%s,%s,%s);", (name,cost,cookTime,dishType,dishDescription,filename,allergins))
             mysql.connection.commit()
-            print(ingredients)
             if ingredients is not None:
                 ingredients=ingredients.split(',')
                 for ingredient in ingredients:
-                    print(ingredient)
                     cur.execute("SELECT * FROM ingredient WHERE name=%s",(ingredient,))
                     ingredient_id=cur.fetchone()
                     if ingredient_id is not None:
-                        print('hellor', ingredient_id)
                         ingredient_id=ingredient_id['ingredient_id']
                         cur.execute('SELECT * FROM dish WHERE name=%s AND cost=%s AND cook_time=%s',(name, cost, cookTime))
                         dish_id=cur.fetchone()['dish_id']
@@ -1079,14 +1067,12 @@ def cart():
     full = 0
     if 'cart' not in session:
         session['cart'] = {}
-        print('create session')
     names = {}
-    print(session['cart'])
+    modifications={}
     for dish_id in session['cart']:
         print('heeloor',dish_id)
         cur.execute('SELECT * FROM dish WHERE dish_id=%s LIMIT 1;',(dish_id,))
         name = cur.fetchone()['name']
-        print(name)
         names[dish_id] = name
         cur.execute(' SELECT * FROM dish WHERE dish_id=%s; ',(dish_id,))
         dish = cur.fetchone()
@@ -1094,8 +1080,15 @@ def cart():
         cost = cur.fetchone()['cost']
         quantity = session['cart'][dish_id]
         full+= (int(cost) *int(quantity))
+        cur.execute("SELECT * FROM modifications WHERE dish_id=%s AND user=%s",(dish_id,g.user))
+        mods = cur.fetchall()
+        list = []
+        for vals in mods:
+            changes =vals['changes']
+            list.append(changes)
+        modifications[dish_id] = list
         #cur.close()
-    return render_template('customer/cart.html', cart=session['cart'], names=names, dish=dish, full=full)
+    return render_template('customer/cart.html', cart=session['cart'], mods=modifications,names=names, dish=dish, full=full)
 
 @app.route('/add_default_meal/<int:dish_id>')
 @login_required
@@ -1107,6 +1100,15 @@ def add_default_meal(dish_id):
         session['cart'][dish_id] = 0
     session['cart'][dish_id]=session['cart'][dish_id]+1
     changes=""
+    cur.execute("SELECT * FROM dish_ingredient JOIN ingredient ON dish_ingredient.ingredient_id = ingredient.ingredient_id  WHERE dish_ingredient.dish_id=%s",(dish_id,))
+    result=cur.fetchall()
+    print(result)
+    for value in result:
+        print("ee",value)
+        name=value['name']
+        changes+=str(name)+"1"
+
+
     cur.execute("INSERT INTO modifications(dish_id,changes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
     mysql.connection.commit()
 
@@ -1118,13 +1120,34 @@ def add_default_meal(dish_id):
 @login_required
 def add_to_cart(dish_id):
     #session['cart'].clear()
-    cur = mysql.connection.cursor()
+
     if 'cart' not in session:
         session['cart'] = {} 
     if dish_id not in session['cart']:
         session['cart'][dish_id] = 0
     session['cart'][dish_id]= session['cart'][dish_id] + 1
     return redirect( url_for('cart') ) 
+
+@app.route('/remove_specific/<string:changes>/<int:dish_id>')
+def remove_specific(changes,dish_id):
+    if changes=="":
+        if dish_id not in session['cart']:
+            session['cart'][dish_id]=0
+        if session['cart'][dish_id] >1:
+            session['cart'][dish_id] = session['cart'][dish_id] -1
+        return redirect(url_for('cart')) 
+    cur = mysql.connection.cursor()
+    cur.execute("Select * FROM modifications WHERE user=%s AND changes=%s AND dish_id=%s",(g.user,changes,dish_id))
+    modificationId = cur.fetchone()['modification_id']
+    cur.execute('DELETE FROM modifications WHERE modification_id=%s',(modificationId,))
+    mysql.connection.commit()
+    if dish_id not in session['cart']:
+        session['cart'][dish_id]=0
+    if session['cart'][dish_id] >1:
+        session['cart'][dish_id] = session['cart'][dish_id] -1
+    return redirect(url_for('cart'))
+
+
 
 @app.route('/remove/<int:dish_id>')
 @login_required
@@ -1150,10 +1173,7 @@ def inc_quantity(dish_id):
 @app.route('/dec_quantity/<int:dish_id>')
 @login_required
 def dec_quantity(dish_id):
-    if dish_id not in session['cart']:
-        session['cart'][dish_id]=0
-    if session['cart'][dish_id] >1:
-        session['cart'][dish_id] = session['cart'][dish_id] -1
+
     return redirect(url_for('cart'))
 
 
@@ -1178,7 +1198,6 @@ def checkout():
         cur.execute('SELECT * FROM dish_ingredient WHERE dish_id=%s',(dish_id,))
         ingredients=cur.fetchall()
         changes=''
-        print('session',session['cart'])
     if form.validate_on_submit():
         cardNum=form.cardNum.data
         cardHolder = form.cardHolder.data
@@ -1188,12 +1207,9 @@ def checkout():
         for dish_id in session['cart']:
             cur.execute('SELECT * FROM modifications WHERE dish_id=%s AND user=%s',(dish_id,g.user))
             result = cur.fetchall()
-            print('Result:',result)
             for values in result:
-                print('myval',values)
                 cur.execute('SELECT * FROM dish WHERE dish_id=%s',(dish_id,))
                 currentDish=cur.fetchone()
-                print('cd',currentDish)
                 cost=currentDish['cost']
                 changes=values['changes']
                 cur.execute('INSERT INTO transactions(username, dish_id,cost,quantity,date) VALUES(%s,%s,%s,%s,%s) ',(username, dish_id,cost,1,date))
@@ -1216,30 +1232,23 @@ def checkout():
 def customer_profile():
     username = session['username']
     cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM dish")
+    dishes= cur.fetchall()
     message = ''
-    transactionHistory=''
     image = None
     cur.execute(" SELECT * FROM customer WHERE email=%s",(username,))
     check= cur.fetchone()['profile_pic']
-    print(check)
     if check is None:
         error = 'No profile picture yet'
-        print('why')
     else:  
         image=check
-        print(image)
     cur.execute("SELECT * FROM transactions WHERE username=%s;",(username,))
-    check2 = cur.fetchall()
-    if check2 is not None:
+    transactionHistory = cur.fetchall()
+    if transactionHistory is not None:
         message = "You've made no transactions yet"
-    else:
-        cur.execute(" SELECT * FROM dishes;")
-        dish = cur.fetchall()
-        cur.execute(" SELECT * FROM transactions WHERE username=%s ",(username,))
-        transactionHistory = cur.fetchall()
     cur.close()
     #return render_template("customer/profile.html", title="My Profile")
-    return render_template('customer/customer_profile.html',image=image, transactionHistory=transactionHistory)
+    return render_template('customer/customer_profile.html',image=image, transactionHistory=transactionHistory,dishes=dishes,user=g.user)
 
 
 @app.route('/user_pic', methods=['GET','POST'])
@@ -1259,6 +1268,9 @@ def user_pic():
     return render_template('customer/profile_pic.html', form=form)
 
 
+
+
+
 #gonna implement this pretending 
 @app.route('/breaks', methods=['GET','POST'])
 def breakTimes():
@@ -1275,57 +1287,134 @@ def breakTimes():
         if working[day] != '':
             shift = working[day]
             workingToday[working['staff_id']] =shift
-    print('hello')
-    print(workingToday)
     numWorkers = len(workingToday)
-    for employee in workingToday:
-        shift = workingToday[employee]
-        print(shift)
-        hoursWorking= int(shift[0]+shift[1]) - int(shift[6]+shift[7])
-        if hoursWorking <0:
-            hoursWorking = hoursWorking*-1
-            workingToday[employee] = [shift,hoursWorking]
-        if hoursWorking >4 and hoursWorking >= 8:
-            breaks = 2
-            #want to do my little test here
-            #2 breaks needed
-        elif hoursWorking >4:
-            breaks=1
-            #1 break needed
-        else: 
-            breaks =0
-        start = int(shift[0]+shift[1])
-        endShift = int(shift[6] + shift[7])
-        for i in range(0,breaks):
-            print(i)
-            proposedBreak = 0
+    k= 0
+    while k <2:
+        assigned = 0
+        for employee in workingToday:
+            if k == 0:
+                shift = workingToday[employee]
+                hoursWorking= int(shift[0]+shift[1]) - int(shift[6]+shift[7])
+                #if hoursWorking <0:
+                hoursWorking = hoursWorking*-1
+                    #workingToday[employee] = [shift,hoursWorking]
+                if hoursWorking >4 and hoursWorking >= 8:
+                    breaks = 2
+                    workingToday[employee] = [shift,breaks]
+                elif hoursWorking >4:
+                    breaks=1
+                    workingToday[employee] = [shift,breaks]
+                    #1 break needed
+                else: 
+                    breaks =0
+                    assigned +=1
+                    workingToday.append("-")
+                start = int(shift[0]+shift[1])
+                endShift = int(shift[6] + shift[7])
+                proposedBreak = 0
+            else:
+                start = workingToday[employee][2]
             #start =None
+            proposedBreak = 0
             for j in range(4,1,-1):
-                print()
-                print('start',start)
+                if workingToday[employee][1] ==1 and len(working[employee] >=3):
+                    #norrrr 
+                    break
                 proposedBreak = start + j
                 if proposedBreak in breaksAssigned: 
                     proposedBreak = 0
-                elif proposedBreak  >= endShift or (proposedBreak) == endShift -2:
+                elif proposedBreak  >= endShift or (proposedBreak) >= endShift -1:
                     proposedBreak =0
                 else:
                     breaksAssigned[proposedBreak] =1
-                    if i == 0:
-                        start = start +j
-                        endBreak = start +0.45
-                        workingToday[employee].append(start)
+                    start = start +j
+                    endBreak = start +0.45
+                    workingToday[employee].append(start)
+                    assigned +=1
+                    """
                     elif i ==1:
                         start = start + j
                         endBreak =start+0.45
                         workingToday[employee].append(start)
+                        assigned +=1"""
                     break
-            #if breaksAssigned[proposedBreak] <=
-            #end = start +.45
-            #print(start)
-            #no break
-        print("shiftLength",hoursWorking) 
-    return ("breaks.html")
+                    
+                
+                #if breaksAssigned[proposedBreak] <=
+                #end = start +.45
+                #print(start)
+                #no break
+        i = 2
+        while assigned != len(workingToday):
+            print('hi')
+            for employee in workingToday:
+                shift = workingToday[employee][0]
+                start = int(shift[0]+shift[1])
+                endShift = int(shift[6] + shift[7])
+                if k == 1:
+                    start = workingToday[employee][2]
 
+                if (len(workingToday[employee]) <3 and k ==0) or (len(workingToday[employee]) <4 and k==1):
+                    #break hasn't been assigned 
+                    for j in range(4,1,-1):
+                        if workingToday[employee][1] ==1 and len(working[employee] >3):
+                            #norrrr 
+                            break
+                        print()
+                        print('start',start)
+                        proposedBreak = start + j
+                        if proposedBreak in breaksAssigned and breaksAssigned[proposedBreak] >=i: 
+                            proposedBreak = 0
+                        elif proposedBreak  >= endShift or (proposedBreak) >= endShift -1:
+                            proposedBreak =0
+                        elif proposedBreak == start:
+                            proposedBreak = 0
+                        else:
+                            print(proposedBreak)
+                            print(breaksAssigned)
+                            if proposedBreak not in breaksAssigned:
+                                breaksAssigned[proposedBreak] = 1
+                            else:
+                                breaksAssigned[proposedBreak] +=1
+                            start = start +j
+                            endBreak = start +0.45
+                            workingToday[employee].append(start)
+                            assigned +=1
+                            break
+                            """
+                            elif i ==1:
+                                start = start + j
+                                endBreak =start+0.45
+                                workingToday[employee].append(start)
+                                assigned +=1"""
+                        if k ==1:
+                            proposedBreak =start+ 0.3 +j
+                            if proposedBreak in breaksAssigned and breaksAssigned[proposedBreak] >=i: 
+                                proposedBreak = 0
+                            elif proposedBreak  >= endShift or (proposedBreak) >= endShift -1:
+                                proposedBreak =0
+                            elif proposedBreak == start:
+                                proposedBreak = 0
+                            else:
+                                print(proposedBreak)
+                                print(breaksAssigned)
+                                if proposedBreak not in breaksAssigned:
+                                    breaksAssigned[proposedBreak] = 1
+                                else:
+                                    breaksAssigned[proposedBreak] +=1
+                                start = proposedBreak
+                                endBreak = start +0.45
+                                workingToday[employee].append(start)
+                                assigned +=1
+                                break
+                        
+                        
+            i +=1
+            #need to loop back and allow overlapping breaks
+            #I think I'm going to change the way this entire thing works so it assigns the first break first and from there does the second adn that way it'll give priority to people who need a break faster than others
+        print("shiftLength",len(workingToday))
+        k +=1
+    return render_template("staff/breaks.html",staff=staff, workingToday=workingToday)
 
 
 
