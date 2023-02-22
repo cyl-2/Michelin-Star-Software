@@ -12,7 +12,7 @@ import random, string, time
 from random import sample
 from werkzeug.utils import secure_filename
 import os
-#import credentials
+import credentials
 
 app = Flask(__name__)
 
@@ -29,20 +29,20 @@ Session(app)
 mail= Mail(app)
 app.config['MAIL_SERVER']='smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
-#app.config['MAIL_USERNAME'] = credentials.flask_email
-#app.config['MAIL_PASSWORD'] = credentials.flask_email_password
+app.config['MAIL_USERNAME'] = credentials.flask_email
+app.config['MAIL_PASSWORD'] = credentials.flask_email_password
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
 app.config['MYSQL_USER'] = 'root' # someone's deets
-app.config['MYSQL_PASSWORD'] = 'PaZARIX9' # someone's deets
+app.config['MYSQL_PASSWORD'] = '8800' #'PaZARIX9' # someone's deets
 app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_DB'] = 'sys' # someone's deets
-#app.config['MYSQL_USER'] = credentials.user
-#app.config['MYSQL_PASSWORD'] = credentials.password
-#app.config['MYSQL_HOST'] = credentials.host
-#app.config['MYSQL_DB'] = credentials.db
+app.config['MYSQL_USER'] = credentials.user
+app.config['MYSQL_PASSWORD'] = credentials.password
+app.config['MYSQL_HOST'] = credentials.host
+app.config['MYSQL_DB'] = credentials.db
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
@@ -413,51 +413,118 @@ def user_pic():
 ##############################################################################################################################################
 ##############################################################################################################################################
 
+def undoList():
+    session['undoList']=[]
+
 @app.route('/kitchen', methods=['GET','POST'])
 def kitchen():
+    if 'undoList' not in session:
+        undoList()
     cur = mysql.connection.cursor()
-    cur.execute('''SELECT d.name, o.time, d.cook_time, o.tableNo, o.notes, o.status, o.dish_id
+    cur.execute('''SELECT o.order_id, d.name, o.time, d.cook_time, o.table_id, o.notes, o.status, o.dish_id
                     FROM orders as o 
                     JOIN dish as d 
                     ON o.dish_id=d.dish_id
                     ORDER BY o.notes='priority' DESC,
                             o.time,
                             o.time*d.cook_time DESC,
-                            o.tableNo,  
+                            o.table_id,  
                             d.cook_time DESC,
-                            d.category='starter',
-                            d.category='main',
-                            d.category='side',
-                            d.category='dessert';''')
+                            d.dishType='starter',
+                            d.dishType='main',
+                            d.dishType='side',
+                            d.dishType='dessert';''')
     orderlist=cur.fetchall()
     cur.close()
     return render_template('kitchen.html',orderlist=orderlist)
 
-@app.route('/<int:dish_id>,<int:time>/kitchenUpdate', methods=['GET','POST'])
-def kitchenUpdate(dish_id, time):
+@app.route('/<int:dish_id>,<int:order_id>,<int:time>/kitchenUpdate', methods=['GET','POST'])
+def kitchenUpdate(dish_id,order_id, time):
     cur = mysql.connection.cursor()
     cur.execute('''UPDATE orders
                                 SET status="ongoing" 
-                                WHERE time=%s and status="unmade" 
-                                and dish_id=%s 
-                                LIMIT 1;''',(time, dish_id))
+                                WHERE time=%s and status="not started" 
+                                and order_id=%s 
+                                LIMIT 1;''',(time, order_id))
     mysql.connection.commit()
+    session['undoList'].append(order_id)
+
+    cur.execute('''SELECT i.ingredient_id
+                    FROM orders as o
+                    JOIN dish_ingredient as di
+                    JOIN ingredient as i
+                    JOIN dish as d
+                    ON i.ingredient_id=di.ingredient_id AND di.dish_id=d.dish_id AND d.dish_id=o.dish_id
+                    WHERE di.dish_id=%s''',(dish_id,))
+    ingredientDict=cur.fetchall()
+    for ingredient in ingredientDict[0]:
+        cur.execute('''UPDATE stock
+                        SET quantity=quantity-1
+                        WHERE ingredient_id=%s
+                        ORDER BY batch_id
+                        LIMIT 1''',(ingredientDict[0][ingredient],) )
+        mysql.connection.commit()
     cur.close()
     return redirect(url_for('kitchen'))
 
-@app.route('/<int:dish_id>,<int:time>/kitchenDelete', methods=['GET','POST'])
-def kitchenSentOut(dish_id, time):
+@app.route('/<int:order_id>,<int:time>/kitchenDelete', methods=['GET','POST'])
+def kitchenSentOut(order_id, time):
 
     cur = mysql.connection.cursor()
 
     cur.execute('''UPDATE orders
                                 SET status="sent out"
                                 WHERE time=%s and status="ongoing" 
-                                and dish_id =%s
-                                LIMIT 1;''',(time, dish_id))
+                                and order_id =%s
+                                LIMIT 1;''',(time, order_id))
+    mysql.connection.commit()
+    session['undoList'].append(order_id)
+    cur.close()
+    return redirect(url_for('kitchen'))
+
+@app.route('/kitchenUndo', methods=['GET','POST'])
+def kitchenUndo():
+    if session['undoList']==[]:
+        return redirect(url_for('kitchen'))
+    undoID=session['undoList'][-1]
+    cur = mysql.connection.cursor()
+    cur.execute('''SELECT status
+                    FROM orders
+                    WHERE order_id=%s;''',(undoID,) )
+    status=cur.fetchall()
+    if status=="ongoing":
+        cur.execute('''UPDATE orders
+                                    SET status="not started"
+                                    WHERE order_id =%s;''',(undoID,))  
+        cur.execute('''SELECT dish_id
+                        FROM orders
+                        WHERE order_id=%s''',(undoID,))
+        dish_id=cur.fetchone()
+        cur.execute('''SELECT i.ingredient_id
+                    FROM orders as o
+                    JOIN dish_ingredient as di
+                    JOIN ingredient as i
+                    JOIN dish as d
+                    ON i.ingredient_id=di.ingredient_id AND di.dish_id=d.dish_id AND d.dish_id=o.dish_id
+                    WHERE di.dish_id=%s''',(dish_id,))
+    ingredientDict=cur.fetchall()
+    for ingredient in ingredientDict[0]:
+        cur.execute('''UPDATE stock
+                        SET quantity=quantity+1
+                        WHERE ingredient_id=%s
+                        ORDER BY batch_id
+                        LIMIT 1''',(ingredientDict[0][ingredient],) )
+        mysql.connection.commit()
+    else:
+        cur.execute('''UPDATE orders
+                                    SET status="ongoing"
+                                    WHERE order_id =%s;''',(undoID,))
     mysql.connection.commit()
     cur.close()
     return redirect(url_for('kitchen'))
+
+
+   
 
 ##############################################################################################################################################
 ##############################################################################################################################################
@@ -919,6 +986,40 @@ def get_random_password():
 def manager():
     cur = mysql.connection.cursor()
     date = datetime.now().date()
+
+    cur.execute('''SELECT i.name 
+                FROM ingredients as i 
+                JOIN stock as s 
+                ON i.ingredient_id=s.ingredient_id
+                WHERE expiry_date=%s;''', (date,))
+    name=cur.fetchall()
+
+    cur.execute('''DELETE FROM stock
+                WHERE expiry_date=%s;''', (date,))
+    mysql.connection.commit()
+    
+    message=""
+    for item in name:
+    # Notify manager about expiry of stock
+        message =message + f"Your {item['name']} is expired!\n"
+    msg = Message("Expiry Notice", sender=credentials.flask_email, recipients=[g.user])   
+    msg.body = f"""{message}"""
+    mail.send(msg)
+
+    cur.execute('''SELECT i.name, i.supplier_email, 
+                    FROM ingredients as i
+                    JOIN stock as s
+                    ON i.ingredient_id=s.ingredient_id
+                    WHERE o.quantity<=10;''')
+    emails=cur.fetchall()
+
+    for email in emails:
+    
+        message = f"can we have more {email['i.name']} please. Same as last week!"
+        msg = Message("Order Notice", sender=credentials.flask_email, recipients=[email["i.suplier_email"]])   
+        msg.body = f"""{message}"""
+        mail.send(msg)
+
 
     cur.execute("SELECT * FROM user_analytics")
     user_analytics = cur.fetchone()
