@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 {% block content %}
-    {% if dish is not none%}
+{% if dish is not none%}
 
         <p>{{dish['name']}}</p>
         <p>{{ dish['cost']}}</p>
@@ -81,5 +81,306 @@
             </div>
         </div>
 
-    {%endif%}
-{% endblock%}
+    <form action='' method="POST" enctype="multipart/form-data" novalidate>
+    {{form.hidden_tag()}}
+    {{form.submit()}}
+    </form>
+      
+    
+
+
+
+{%endif%}
+
+
+<div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
+
+        <div class="pcoded-content">
+            <div class="pcoded-inner-content">
+                <!-- [ breadcrumb ] start -->
+                <div class="row">
+
+
+                    <div class="col-sm-4">
+                        <div class="card">
+                            <div class="card-block">
+                                <div class="d-flex align-items-center justify-content-center flex-column">
+                                    <div class="w-50 p-3">
+                                        <img src="/static/picture/{{dish['dishPic']}}" alt="profile image"
+                                            class="img-fluid rounded-circle">
+                                    </div>
+                                </div>
+                
+                                <div class="small font-weight-light mt-4 text-center text-muted">
+                                    <h4 class="font-weight-bold h6">
+                                        {{dish['name']}}
+                                    </h4>
+                                    <p>
+                                        {{user}}
+                                        <br />
+                                    </p>
+                                </div>
+                                <div class="d-flex justify-content-center align-items-center">
+                                    <p><a href="{{url_for('user_pic')}}">Add/Change profile pic</a></p>
+                
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+<!-- [ rating list ] end-->
+<div class="col-xl-8 col-md-12 m-b-30">
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link" id="home-tab" data-toggle="tab" href="#home" role="tab"
+                aria-controls="home" aria-selected="false">Dish Modification</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active show" id="profile-tab" data-toggle="tab"
+                href="#profile" role="tab" aria-controls="profile" aria-selected="true">Leave a Review</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact"
+                role="tab" aria-controls="contact" aria-selected="false">All</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade" id="home" role="tabpanel" aria-labelledby="home-tab">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Activity</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th class="text-right"></th>
+                </tr>
+                </thead>
+                <table>
+                    <tr>
+                        <th>Ingredient</th>
+                        <th>Increase quantitiy</th>
+                        <th>quantitiy</th>
+                        <th>Decrease Quantity</th>
+                    </tr>  
+                    {%for ingredient in result%}
+                    <tr>
+                        <td>{{ingredient['name']}}</td>
+                        <td><a href="{{url_for('inc_quantity_ingredient',ingredient_id=ingredient['ingredient_id'],dish_id=dish['dish_id']) }}">+</a></td>
+                        <td>{{quant[ingredient['ingredient_id']]}}</td>
+                        <td><a href="{{url_for('dec_quantity_ingredient',ingredient_id=ingredient['ingredient_id']) }}">-</a></td>
+                    </tr>
+            
+                {% endfor %}
+                </table>
+                <form action='' method="POST" enctype="multipart/form-data" novalidate>
+                    {{form.hidden_tag()}}
+                    {{form.submit()}}
+                    </form>
+
+        </div>
+        <div class="tab-pane fade active show" id="profile" role="tabpanel"
+                aria-labelledby="profile-tab">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Activity</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th class="text-right"></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>
+                        <h6 class="m-0"><img class="rounded-circle  m-r-10"
+                                                style="width:40px;"
+                                                src="{{ config.ASSETS_ROOT }}/images/user/avatar-2.jpg"
+                                                alt="activity-user">Albert Andersen</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">Jumps over the lazy</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">2:37 PM</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0 text-c-red">Missed</h6>
+                    </td>
+                    <td class="text-right"><i class="fas fa-circle text-c-red f-10"></i>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h6 class="m-0"><img class="rounded-circle m-r-10"
+                                                style="width:40px;"
+                                                src="{{ config.ASSETS_ROOT }}/images/user/avatar-1.jpg"
+                                                alt="activity-user">Ida Jorgensen</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">The quick brown fox</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">3:28 PM</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0 text-c-green">Done</h6>
+                    </td>
+                    <td class="text-right"><i class="fas fa-circle text-c-green f-10"></i>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h6 class="m-0"><img class="rounded-circle  m-r-10"
+                                                style="width:40px;"
+                                                src="{{ config.ASSETS_ROOT }}/images/user/avatar-1.jpg"
+                                                alt="activity-user">Ida Jorgensen</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">The quick brown fox</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">4:28 PM</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0 text-c-green">Done</h6>
+                    </td>
+                    <td class="text-right"><i class="fas fa-circle text-c-green f-10"></i>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h6 class="m-0"><img class="rounded-circle  m-r-10"
+                                                style="width:40px;"
+                                                src="{{ config.ASSETS_ROOT }}/images/user/avatar-3.jpg"
+                                                alt="activity-user">Silje Larsen</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">Dog the quick brown</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">10:23 AM</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0 text-c-purple">Delayed</h6>
+                    </td>
+                    <td class="text-right"><i class="fas fa-circle text-c-purple f-10"></i>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+        <div class="tab-pane fade" id="contact" role="tabpanel"
+                aria-labelledby="contact-tab">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Activity</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th class="text-right"></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>
+                        <h6 class="m-0"><img class="rounded-circle  m-r-10"
+                                                style="width:40px;"
+                                                src="{{ config.ASSETS_ROOT }}/images/user/avatar-3.jpg"
+                                                alt="activity-user">Silje Larsen</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">Dog the quick brown</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">10:23 AM</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0 text-c-purple">Delayed</h6>
+                    </td>
+                    <td class="text-right"><i class="fas fa-circle text-c-purple f-10"></i>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h6 class="m-0"><img class="rounded-circle m-r-10"
+                                                style="width:40px;"
+                                                src="{{ config.ASSETS_ROOT }}/images/user/avatar-1.jpg"
+                                                alt="activity-user">Ida Jorgensen</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">The quick brown fox</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">3:28 PM</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0 text-c-green">Done</h6>
+                    </td>
+                    <td class="text-right"><i class="fas fa-circle text-c-green f-10"></i>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h6 class="m-0"><img class="rounded-circle  m-r-10"
+                                                style="width:40px;"
+                                                src="{{ config.ASSETS_ROOT }}/images/user/avatar-2.jpg"
+                                                alt="activity-user">Albert Andersen</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">Jumps over the lazy</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">2:37 PM</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0 text-c-red">Missed</h6>
+                    </td>
+                    <td class="text-right"><i class="fas fa-circle text-c-red f-10"></i>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h6 class="m-0"><img class="rounded-circle  m-r-10"
+                                                style="width:40px;"
+                                                src="{{ config.ASSETS_ROOT }}/images/user/avatar-1.jpg"
+                                                alt="activity-user">Ida Jorgensen</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">The quick brown fox</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0">4:28 PM</h6>
+                    </td>
+                    <td>
+                        <h6 class="m-0 text-c-green">Done</h6>
+                    </td>
+                    <td class="text-right"><i class="fas fa-circle text-c-green f-10"></i>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</div>
+<!-- [ Main Content ] end -->
+
+
+
+
+
+
+
+  
+    <!-- [ Main Content ] end -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
