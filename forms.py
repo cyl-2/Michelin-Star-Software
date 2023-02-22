@@ -130,3 +130,10 @@ class Review(FlaskForm):
     rating = DecimalRangeField('Rating', default=5)
     comment = StringField('Additional Comments: ')
     submit = SubmitField('Enter')
+    
+class makeBooking(FlaskForm):
+    name = StringField("Reservation Name: ", validators=[InputRequired()])
+    date = StringField("Date (DD-MM-YY): ", validators=[InputRequired()])
+    time = IntegerField("Time (XX:00):", validators=[InputRequired(), NumberRange(0,23)])
+    
+    submit = SubmitField("Make Reservation")

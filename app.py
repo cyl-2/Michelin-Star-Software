@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, g, request, make_response, flash, Markup
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm, submitModifications, AddDishForm, UserPic, cardDetails, Review
+from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm, submitModifications, AddDishForm, UserPic, cardDetails, Review, makeBooking
 from functools import wraps
 from flask_mysqldb import MySQL 
 from generate_roster import Roster
@@ -499,10 +499,28 @@ def choose_table():
         
     cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
     data = cur.fetchall()
+    
+    date = datetime.now().strftime("%Y-%m-%d")
+    time = datetime.now().strftime("%H")
+    
+    cur.execute('SELECT * FROM bookings WHERE time = %s AND date = %s',(time, date))
+    booking_current = cur.fetchall()
+    
+    cur.execute('SELECT * FROM bookings WHERE time = %s AND date = %s',(int(time)+1, date))
+    booking_next = cur.fetchall()
+    
     cur.close()
     table_positions = {}
     for i in range(len(data)):
-        table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
+        table_positions[data[i]['table_id']] = [data[i]['x'], data[i]['y'], 'btn btn-square btn-success', None]
+        
+    for booking in booking_next:
+        table_positions[booking['table_id']][2] = 'btn btn-square btn-warning'
+        
+    for booking in booking_current:
+        table_positions[booking['table_id']][2] = 'btn btn-square btn-danger'
+        table_positions[booking['table_id']][3] = booking['name']
+
     return render_template("staff/choose_table.html", table_positions=table_positions)
 
 @app.route("/<int:table>/take_order", methods=["GET","POST"])
@@ -522,12 +540,32 @@ def take_order(table):
         """,(table,'complete', 'cancelled')
     )
     ordered = cur.fetchall()
+    
+    current_day = datetime.now().strftime("%d")
+    current_month = datetime.now().strftime("%m")
+    current_year = datetime.now().strftime("%Y")
+    date = current_year+"-"+current_month+"-"+current_day
+    time = datetime.now().strftime("%H")
+    
+    cur.execute(
+        """
+            SELECT * FROM bookings
+            WHERE date = %s 
+            AND time = %s
+            AND table_id = %s
+        """,(date, time, table)
+    )
+    booking = cur.fetchall()
+    if len(booking) > 0:
+        allocated = 1
+    else:
+        allocated = 0
     if 'ordering' not in session:
         session['ordering'] = {}
     if table in session['ordering']:
         ordering = session['ordering'][table]
-        return render_template("staff/take_order.html", table=table, ordering=ordering, meals=meals, ordered=ordered)
-    return render_template("staff/take_order.html", table=table, meals=meals, ordered=ordered)
+        return render_template("staff/take_order.html", table=table, ordering=ordering, meals=meals, ordered=ordered, allocated=allocated)
+    return render_template("staff/take_order.html", table=table, meals=meals, ordered=ordered, allocated=allocated)
 
 @app.route('/<int:table>/waiter_customize_dish/<int:dish_id>', methods=['GET','POST'])
 def waiter_customize_dish(table, dish_id):
@@ -861,12 +899,12 @@ def contact_us():
         mysql.connection.commit()
         cur.close()
 
-        # only commented because of credentials    msg = Message(subject, sender=credentials.flask_email, recipients=[credentials.flask_email])   
-        # msg.body = f"""
-        # From: {name} <{email}>
-        # {message}
-        # """
-        # mail.send(msg)
+        msg = Message(subject, sender=credentials.flask_email, recipients=[credentials.flask_email])   
+        msg.body = f"""
+        From: {name} <{email}>
+        {message}
+        """
+        mail.send(msg)
         flash("Message sent. We will reply to you in 2-3 business days.")
     return render_template("customer/enquiry_form.html",form=form, title="Contact Us")
 
@@ -1389,7 +1427,7 @@ def dec_quantity(dish_id):
 
 #question does this need to be specific to user?? or is it already
 @app.route('/checkout', methods=['GET','POST'])##
-def checkout():##c
+def checkout():
     full =0
     form = cardDetails()
     names = {}
@@ -1443,9 +1481,143 @@ def checkout():##c
 
     #need table number to be inputed here 
 
+@app.route('/booking',methods=['GET', 'POST'])
+@login_required
+def booking():
+    form = makeBooking()
+    if form.validate_on_submit():
+        name = form.name.data
+        date = form.date.data
+        date = date.strip()
+        valid = True
+        
+        day = date[:2]
+        month = date[3:5]
+        year = date[6:]
+        current_day = datetime.now().strftime("%d")
+        current_month = datetime.now().strftime("%m")
+        current_year = datetime.now().strftime("%Y")[2:]
+        
+        if not (len(date) == 8 and int(date[:2]) > 0 and int(date[:2]) < 32 
+            and int(date[3:5]) > 0 and int(date[3:5]) < 13
+            and int(date[6:]) >= 23 and date[2] == "-" and date[5] == "-"):
+            form.date.errors.append('Invalid date given, use DD-MM-YY.')
+            valid = False
+        elif int(year+month+day) < int(current_year+current_month+current_day):
+            form.date.errors.append('Please pick a date in the future for booking.')
+            valid = False
+        else:
+            date = year+"-"+month+"-"+day
+            time = form.time.data
+            cur = mysql.connection.cursor()
+            cur.execute('SELECT * FROM tables')
+            tables = cur.fetchall()
+            
+            day = datetime(2000+int(year), int(month), int(day)).weekday()
+            days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+            cur.execute('SELECT * FROM shift_requirements WHERE day = %s',(days[day],))
+            hours = cur.fetchall()[0]
+            if time < hours['opening_time'] and time+2 > hours['closing_time']:
+                form.time.errors.append('Invalid time given, please try another!')
+                valid = False
+            
+            cur.execute('SELECT * FROM bookings WHERE time = %s AND date = %s',(time, date))
+            hour_1 = cur.fetchall()
+            cur.execute('SELECT * FROM bookings WHERE time = %s AND date = %s',(time-1, date))
+            hour_0 = cur.fetchall()
+            cur.execute('SELECT * FROM bookings WHERE time = %s AND date = %s',(time+1, date))
+            hour_2 = cur.fetchall()
+        
+            if len(hour_1) >= len(tables) or len(hour_2) >= len(tables) or len(hour_0) >= len(tables) and valid:
+                form.time.errors.append('We are fully booked at this time, please try another!')
+                valid = False
+                    
+            if valid:
+                cur.execute('SELECT * FROM customer WHERE email = %s',(g.user,))
+                customer_details = cur.fetchall()
+                if len(customer_details) == 0:
+                    customer_id = 0
+                else:
+                    customer_id = customer_details[0]['customer_id']
+                    
+                table_id = 0
+                for table in tables:
+                    available = True
+                    # reservation is 2 hours
+                    for reservations in hour_0: # check is second hour booked
+                        if table['table_id'] == reservations['table_id']:
+                            available = False
+                    for reservations in hour_1: # check is time booked
+                        if table['table_id'] == reservations['table_id']:
+                            available = False
+                    for reservations in hour_2: # check would second hour clash with a booking
+                        if table['table_id'] == reservations['table_id']:
+                            available = False
+                    if available:
+                        table_id = table['table_id']
+                    
+                cur.execute('INSERT INTO bookings(booker_id,table_id,name,date,time) VALUES(%s,%s,%s,%s,%s) ',(customer_id, table_id,name,date,time))
+                    
+                mysql.connection.commit()
+                
+                subject = "Booking Confirmation"
+                email = customer_details[0]['email']
+                message = f"""
+                Dear {name}
+                
+                Thank you for Booking with Michellin Star Software!
+                
+                Your booking is confirmed for 20{date} at {time}.
+                We have you booked for a duration of 2 hours.
+                
+                We look forward to seeing you!
+                """
+                msg = Message(subject, sender=credentials.flask_email, recipients=[email])   
+                msg.body = f"""
+                From: Booking Confirmation no reply <{credentials.flask_email}>
+                {message}
+                """
+                mail.send(msg)
+                
+                return redirect(url_for('menu'))
+    return render_template('customer/booking.html', form=form)
 
+@app.route('/cancel_bookings', methods=['GET','POST'])
+def cancel_bookings():
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT customer_id FROM customer WHERE email = %s',(g.user,))
+    customer_id = cur.fetchall()[0]['customer_id']
+    
+    current_day = datetime.now().strftime("%d")
+    current_month = datetime.now().strftime("%m")
+    current_year = datetime.now().strftime("%Y")
+    date = current_year+"-"+current_month+"-"+current_day
 
+    cur.execute('SELECT * FROM bookings WHERE booker_id = %s and date >= %s',(customer_id,date))
+    bookings = cur.fetchall()
+    return render_template('customer/cancel_booking.html', bookings=bookings)
 
+@app.route('/cancel_booking/<int:booking_id>', methods=['GET','POST'])
+def cancel_booking(booking_id):
+    cur = mysql.connection.cursor()
+    cur.execute('DELETE FROM bookings WHERE booking_id = %s',(booking_id,))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for('cancel_bookings'))
+
+@app.route('/allocate_table/<int:table>', methods=['GET','POST'])
+def allocate_table(table):
+    cur = mysql.connection.cursor()##c
+    current_day = datetime.now().strftime("%d")
+    current_month = datetime.now().strftime("%m")
+    current_year = datetime.now().strftime("%Y")
+    time = datetime.now().strftime("%H")
+    date = current_year+"-"+current_month+"-"+current_day
+    cur.execute('INSERT INTO bookings(booker_id,table_id,name,date,time) VALUES(%s,%s,%s,%s,%s) ',(0, table,'Walk in',date,time))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for('take_order', table=table))
+    
 #gonna implement this pretending 
 @app.route('/breaks', methods=['GET','POST'])
 def breakTimes():
@@ -1507,4 +1679,4 @@ def breakTimes():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
+    

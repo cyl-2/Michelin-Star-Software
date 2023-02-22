@@ -20,16 +20,17 @@
                                     <table class="table table-hover">
                                         <tr>
                                             <th>Ingredient</th>
-                                            <th>Increase</th>
-                                            <th>Quantitiy</th>
-                                            <th>Decrease</th>
+                                            <th>Potions</th>
+                                            <th>Change Quantitiy</th>
                                         </tr>
                                         {%for ingredient in result%}
                                             <tr>
                                                 <td>{{ingredient['name']}}</td>
-                                                <td><a href="{{url_for('waiter_inc_quantity_ingredient',table=table, ingredient_id=ingredient['ingredient_id']) }}">+</a></td>
                                                 <td>{{quant[ingredient['ingredient_id']]}}</td>
-                                                <td><a href="{{url_for('waiter_dec_quantity_ingredient', table=table, ingredient_id=ingredient['ingredient_id']) }}">-</a></td>
+                                                <td><a href="{{url_for('waiter_dec_quantity_ingredient', table=table, ingredient_id=ingredient['ingredient_id']) }}"> 
+                                                    <img src="{{ url_for('static', filename='minus.png' ) }}" style=" width: 20px;"/> </a> 
+                                                    <a href="{{url_for('waiter_inc_quantity_ingredient',table=table, ingredient_id=ingredient['ingredient_id']) }}"> 
+                                                        <img src="{{ url_for('static', filename='plus.png' ) }}" style=" width: 30px;"/> </a></td>
                                             </tr>
                                         {% endfor %}
                                     </table>

@@ -8,11 +8,13 @@
 
 <section>
     <!--<p><a href="{{ url_for('choose_table') }}">Change Table</a></p>-->
+    
     {% if ordering|length > 0 %}
         <div class="pcoded-wrapper">
             <div class="pcoded-content">
                 <div class="pcoded-inner-content">
                     <div class="col-xl-12">
+                        
                         <div class="card">
                             <div class="card-header">
                                 <h5>Ordering</h5>
@@ -55,6 +57,9 @@
             <div class="pcoded-inner-content">
                 <div class="col-xl-12">
                     <div class="card">
+                        {% if allocated == 0 %}
+                            <a  class="btn btn-outline-primary" href="{{ url_for('allocate_table',table=table) }}">Allocate Table</a>
+                        {% endif %}
                         <div class="card-header">
                             <h5>Menu</h5>
                         </div>
@@ -67,7 +72,7 @@
                                             {% if meal['dishType'] == 'starter' %}
                                                 <tr>
                                                     <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">{{ meal['name'] }}</a></td>
-                                                    <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">€{{ meal['cost'] }}:00</a></td>
+                                                    <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">€{{ meal['cost'] }}.00</a></td>
                                                     <td><a href="{{ url_for('waiter_customize_dish', table=table, dish_id=meal['dish_id']) }}">Customize Ingredients</a></td>
                                                 </tr>
                                             {% endif %}
@@ -84,7 +89,7 @@
                                             {% if meal['dishType'] == 'main' %}
                                                 <tr>
                                                     <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">{{ meal['name'] }}</a></td>
-                                                    <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">€{{ meal['cost'] }}:00</a></td>
+                                                    <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">€{{ meal['cost'] }}.00</a></td>
                                                     <td><a href="{{ url_for('waiter_customize_dish', table=table, dish_id=meal['dish_id']) }}">Customize Ingredients</a></td>
                                                 </tr>
                                             {% endif %}
@@ -101,7 +106,7 @@
                                             {% if meal['dishType'] == 'dessert' %}
                                                 <tr>
                                                     <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">{{ meal['name'] }}</a></td>
-                                                    <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">€{{ meal['cost'] }}:00</a></td>
+                                                    <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}">€{{ meal['cost'] }}.00</a></td>
                                                     <td><a href="{{ url_for('waiter_customize_dish', table=table, dish_id=meal['dish_id']) }}">Customize Ingredients</a></td>
                                                     
                                                 </tr>

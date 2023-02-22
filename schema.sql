@@ -190,6 +190,8 @@ DROP TABLE IF EXISTS bookings;
 CREATE TABLE bookings
 (
     booking_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    booker_id INTEGER,
+    table_id INTEGER,
     name TEXT NOT NULL,
     date DATE NOT NULL,
     time INTEGER NOT NULL

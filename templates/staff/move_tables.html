@@ -61,6 +61,10 @@
                     <div class="card-header">
                         <h5>Move Tables</h5>
                     </div>
+                    <div class="card-body">
+                        <a class="btn btn-primary" href="{{ url_for('move_tables') }}" >Reset</a>
+                        <a id="save_changes" onclick="sendData()"></a>
+                    </div>
                     {% for table_index in table_positions %}
                         <img id='table{{ table_index }}' src="{{ url_for('static', filename='table.png' ) }}" style="position:absolute;  left: {{ table_positions[ table_index ][0] }}; top: {{ table_positions[ table_index ][1] }}; width: 90px;"/>
                     {% endfor %}
@@ -71,8 +75,6 @@
 </div>
 
 </section>
-<p><a href="{{ url_for('move_tables') }}" >Reset</a></p>
-<p id="save_changes" onclick="sendData()"></p>
 <script>
     let co_ords = [];
     function readyToSave(){
@@ -85,7 +87,7 @@
             co_ords.push(table.style.left);
             co_ords.push(table.style.top);
         {% endfor %}
-        document.getElementById("save_changes").innerHTML = '<a href="{{ url_for('save_tables') }}">Save Changes</a>';
+        document.getElementById("save_changes").innerHTML = '<a class="btn btn-primary" href="{{ url_for('save_tables') }}">Save Changes</a>';
     }
 
 
