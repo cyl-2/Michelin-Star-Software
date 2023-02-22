@@ -1,20 +1,33 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
-{% block title %}
-    <title>Menu</title>
-{% endblock %}
+{% block title %} Waiter Menu {% endblock %} 
 
-{% block main_content %}
-<h1>Menu</h1>
-<section>
-    <p><a href="{{ url_for('choose_table') }}">Take Order</a></p>
- 
+{% block stylesheets %}{% endblock stylesheets %}
 
-    <p><a href="{{ url_for('roster_timetable') }}">Roster</a></p>
-        <!--
-    <p><a class="button" href="{{ url_for('index') }}">Roster</a></p>
-    <p><a class="button" href="{{ url_for('index') }}">Clock Out</a></p>
-    -->
-    
-</section>
-{% endblock %}
+{% block content %}
+
+<!--
+    <p><a href="{{ url_for('generate_roster') }}">Generate Roster</a></p>
+    <p><a href="{{ url_for('delete_from_roster') }}">Delete From Roster</a></p>
+    <p><a href="{{ url_for('add_to_roster_timetable') }}">Add Slot to Roster</a></p>
+-->
+    <div class="pcoded-wrapper">
+        <div class="pcoded-content">
+            <div class="pcoded-inner-content">
+                <div class="col-xl-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><a href="{{ url_for('choose_table') }}">Take Order</a></h5>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><a href="{{ url_for('roster_timetable') }}">Roster</a></h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %} 

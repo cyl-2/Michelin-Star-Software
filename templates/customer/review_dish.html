@@ -1,0 +1,42 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Review {{ dish['name'] }} {% endblock %} 
+
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+    <div class="pcoded-wrapper">
+        <div class="pcoded-content">
+            <div class="pcoded-inner-content">
+                <div class="col-xl-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Review {{ dish['name'] }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="" method="post" novalidate> 
+                                {{ form.hidden_tag() }}
+
+                                {{ form.rating.label }}
+                                <p id="slider_value"></p>
+                                {{ form.rating(min=0, max=10, step=1, class="form-control custom-range") }}
+                                {% for error in form.rating.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                                <br>
+                                {{ form.comment.label }}
+                                {{ form.comment(class="form-control") }}
+                                {% for error in form.comment.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                                <br>
+                                {{ form.submit(class="submit btn btn-primary") }}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %} 
+

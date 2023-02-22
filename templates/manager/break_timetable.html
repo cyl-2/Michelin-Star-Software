@@ -1,36 +1,60 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
-{% block title %}
-    <title>Break Timetable</title>
-{% endblock %}
+{% block title %} Break Timetable {% endblock %} 
 
-{% block main_content %}
-    <h1>Break Timetable</h1>
+{% block stylesheets %}{% endblock stylesheets %}
 
-    <table>
-        <tr>
-            <th scope="col"></th>
-            {%  for staff in staff_breaks %}
-            <th scope="col">{{ staff['name'] }}</th>
-            {% endfor %}
-        </tr>
-        {% for j in range(24) %}
-        <tr>
-            <th scope="row">{{j + 0}}:00</th>
-            {% for i in range(staff_breaks|length) %}
-            <td>
-                {% for staff in staff_breaks %}
-                    {% if staff["name"] ==  staff_breaks[i]["name"] %}
-                        {% if staff["time"] == (j+0)|string+":00" %}
-                            1 hour
-                        {% endif %}
-                    {% endif %}
-                {% endfor %}
-            </td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
-    </table>
+{% block content %}
+<!--
+    <p><a href="{{ url_for('generate_roster') }}">Generate Roster</a></p>
+    <p><a href="{{ url_for('delete_from_roster') }}">Delete From Roster</a></p>
+    <p><a href="{{ url_for('add_to_roster_timetable') }}">Add Slot to Roster</a></p>
+-->
+    <div class="pcoded-wrapper">
 
+        <div class="pcoded-content">
+            <div class="pcoded-inner-content">
+                <div class="col-xl-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Break Timetable</h5>
+                        </div>
+                        <div class="card-block table-border-style">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col"></th>
+                                            {%  for staff in staff_breaks %}
+                                            <th scope="col">{{ staff['name'] }}</th>
+                                            {% endfor %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for j in range(24) %}
+                                        <tr>
+                                            <th scope="row">{{j + 0}}:00</th>
+                                            {% for i in range(staff_breaks|length) %}
+                                            <td>
+                                                {% for staff in staff_breaks %}
+                                                    {% if staff["name"] ==  staff_breaks[i]["name"] %}
+                                                        {% if staff["time"] == (j+0)|string+":00" %}
+                                                            1 hour
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </td>
+                                            {% endfor %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-{% endblock %}
+{% endblock content %} 
