@@ -41,12 +41,12 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField("Submit")
 
 class LoginForm(FlaskForm):
-    email = StringField('Email Address', validators=[InputRequired("Email doesn't exist")])
+    email = StringField('Email Address', validators=[InputRequired()])
     password = PasswordField("Password", validators=[InputRequired()])
     submit = SubmitField("Login")
 
 class ContactForm(FlaskForm):
-    email = StringField("Email Address", [validators.Length(min=6, max=100)])
+    email = StringField("Email Address", [InputRequired(), validators.Length(min=6, max=100), Email(message="Please enter a valid email address!")])
     name = StringField(validators=[InputRequired()])
     subject = StringField(validators=[InputRequired()])
     message = TextAreaField(validators=[InputRequired()], widget=TextArea())

@@ -25,7 +25,6 @@
     <link rel="stylesheet" href="/static/assets/css/style.css">
     <!-- dark mode css -->
     <link rel="stylesheet" href="/static/assets/css/dark.css">
-
     <!-- Specific CSS goes HERE -->
     {% block stylesheets %}{% endblock stylesheets %}
 
@@ -35,7 +34,7 @@
     <nav>
         <a href="{{ url_for('index') }}">Home</a>
     </nav>
-    <section>
+    <!--section>
         {% if g.user %}
             <p class="buttons">
                 <a class="button" href="{{ url_for('logout') }}">Log out</a>
@@ -47,7 +46,7 @@
                 <a class="button" href="{{ url_for('staff_login') }}">Staff Login</a>
             </p>
         {% endif %}
-    </section>
+    </section-->
 
     <!-- [ Pre-loader ] start -->
     <div class="loader-bg">
@@ -57,13 +56,24 @@
     </div>
     <!-- [ Pre-loader ] End -->
 
+    {% if g.access == "ordinary staff" %}
+        {% include 'includes/staff_sidebar.html' %}
+    {% endif %}
+
+    {% if g.access == "managerial" %}
+        {% include 'includes/manager_sidebar.html' %}
+    {% endif %}
+
+    {% if g.access == "customer" %}
+        {% include 'includes/customer_sidebar.html' %}
+    {% endif %}    
+
+    {% include 'includes/navigation.html' %}
+
     {% block content %}{% endblock content %}
 
     {% include 'includes/scripts.html' %}
-        {% include 'includes/sidebar.html' %}
     
-
-    {% include 'includes/navigation.html' %}
     <!-- Specific Page JS goes HERE  -->
     {% block javascripts %}{% endblock javascripts %}
 </body>
