@@ -1339,9 +1339,7 @@ def add_default_meal(dish_id):
     changes=""
     cur.execute("SELECT * FROM dish_ingredient JOIN ingredient ON dish_ingredient.ingredient_id = ingredient.ingredient_id  WHERE dish_ingredient.dish_id=%s",(dish_id,))
     result=cur.fetchall()
-    print(result)
     for value in result:
-        print("ee",value)
         name=value['name']
         changes+=str(name)+"1"
 
@@ -1536,13 +1534,9 @@ def breakTimes():
                     break
                     
                 
-                #if breaksAssigned[proposedBreak] <=
-                #end = start +.45
-                #print(start)
-                #no break
+
         i = 2
         while assigned != len(workingToday):
-            print('hi')
             for employee in workingToday:
                 shift = workingToday[employee][0]
                 start = int(shift[0]+shift[1])
@@ -1556,8 +1550,6 @@ def breakTimes():
                         if workingToday[employee][1] ==1 and len(working[employee] >3):
                             #norrrr 
                             break
-                        print()
-                        print('start',start)
                         proposedBreak = start + j
                         if proposedBreak in breaksAssigned and breaksAssigned[proposedBreak] >=i: 
                             proposedBreak = 0
@@ -1566,8 +1558,6 @@ def breakTimes():
                         elif proposedBreak == start:
                             proposedBreak = 0
                         else:
-                            print(proposedBreak)
-                            print(breaksAssigned)
                             if proposedBreak not in breaksAssigned:
                                 breaksAssigned[proposedBreak] = 1
                             else:
@@ -1592,8 +1582,6 @@ def breakTimes():
                             elif proposedBreak == start:
                                 proposedBreak = 0
                             else:
-                                print(proposedBreak)
-                                print(breaksAssigned)
                                 if proposedBreak not in breaksAssigned:
                                     breaksAssigned[proposedBreak] = 1
                                 else:
@@ -1606,9 +1594,7 @@ def breakTimes():
                         
                         
             i +=1
-            #need to loop back and allow overlapping breaks
-            #I think I'm going to change the way this entire thing works so it assigns the first break first and from there does the second adn that way it'll give priority to people who need a break faster than others
-        print("shiftLength",len(workingToday))
+           
         k +=1
     return render_template("staff/breaks.html",staff=staff, workingToday=workingToday)
 
