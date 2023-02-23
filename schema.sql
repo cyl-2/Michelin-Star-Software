@@ -34,7 +34,7 @@ CREATE TABLE staff
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-INSERT INTO staff
+/*INSERT INTO staff
   ( role, first_name, last_name, password)
 VALUES
   ( 'waiter', 'Ben', '', ''),
@@ -42,7 +42,7 @@ VALUES
   ( 'waiter', 'Emma', '', ''),
   ( 'waiter', 'Cherry', '', ''),
   ( 'manager', 'Aodh', '', '');
-  
+  */
 
 DROP TABLE IF EXISTS shift_requirements;
 
@@ -110,22 +110,52 @@ CREATE TABLE ingredient
 (   
     ingredient_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     name TEXT NOT NULL,
-    quantity INTEGER NOT NULL
+    supplier_email TEXT
 );
 
 INSERT INTO ingredient
-  ( name, quantity )
+  ( name )
 VALUES
-  ('Patty', 40),
-  ('Chips', 150),
-  ('Chicken', 40),
-  ('Fish', 0), 
-  ('Buns', 70),
-  ('Soup', 40),
-  ('Ice cream', 40),
-  ('Brownie', 40),
-  ('Lettuce', 70);
+  ('Patty'),
+  ('Chips'),
+  ('Chicken'),
+  ('Fish'), 
+  ('Buns'),
+  ('Soup'),
+  ('Ice cream'),
+  ('Brownie'),
+  ('Lettuce');
 
+ DROP TABLE IF EXISTS stock;
+
+CREATE TABLE stock
+(   
+    batch_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    ingredient_id INTEGER NOT NULL,
+    expiry_date DATE NOT NULL,
+    quantity INTEGER NOT NULL
+);
+
+INSERT INTO stock
+( ingredient_id, expiry_date, quantity)
+VALUES
+(1, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
+(2, DATE_ADD(CURDATE(), INTERVAL 0 DAY),  20);
+
+
+/*CREATE DEFINER=`root`@`localhost` TRIGGER `lowerIngredients` AFTER INSERT ON `orders` FOR EACH ROW BEGIN
+UPDATE stock
+SET quantity=quantity-1
+WHERE ingredient_id in (
+                    SELECT i.ingredient_id
+                    FROM orders as o
+                    JOIN dish_ingredient as di
+                    JOIN ingredient as i
+                    JOIN dish as d
+                    ON i.ingredient_id=di.ingredient_id AND di.dish_id=d.dish_id AND d.dish_id=o.dish_id
+                    WHERE di.dish_id=NEW.dish_id)
+END
+*/
 DROP TABLE IF EXISTS dish;
 
 CREATE TABLE dish
@@ -181,8 +211,8 @@ CREATE TABLE orders
     time INTEGER NOT NULL,
     dish_id INTEGER NOT NULL,
     table_id INTEGER NOT NULL,
-    status TEXT,
-    info TEXT
+    notes TEXT,
+    status TEXT
 );
 
 
@@ -289,6 +319,7 @@ VALUES
   ("benc190514il.com", "AMAZING", 10, 5);
 
 
+/*
 ############
 TRIGGER TO UPDATE STATUS AFTER UPDATING QUANTITY IN INGREDIENT TABLE
 
@@ -314,3 +345,5 @@ STARTS (CURRENT_TIMESTAMP + INTERVAL 10 SECOND)
 DO 
 UPDATE staff
 SET code = null WHERE TIMESTAMPDIFF(SECOND, last_updated, NOW()) >= 10 ;
+
+*/
