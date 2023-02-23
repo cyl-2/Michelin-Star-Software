@@ -12,18 +12,8 @@ CREATE TABLE staff
     bio TEXT,
     address TEXT,
     password TEXT NOT NULL,
-    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    last_updated TEXT NOT NULL
 );
-
-INSERT INTO staff
-  ( role, first_name, last_name, password)
-VALUES
-  ( 'waiter', 'Ben', '', ''),
-  ( 'waiter', 'Tommy', '', ''),
-  ( 'waiter', 'Emma', '', ''),
-  ( 'waiter', 'Cherry', '', ''),
-  ( 'manager', 'Aodh', '', '');
-  
 
 DROP TABLE IF EXISTS shift_requirements;
 
@@ -54,11 +44,10 @@ CREATE TABLE customer
     customer_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     email TEXT NOT NULL,
     code TEXT,
-    access_level TEXT DEFAULT "customer" NOT NULL,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     password TEXT NOT NULL,
-    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    profile_pic varchar(45)
 );
 
 DROP TABLE IF EXISTS roster;
@@ -92,7 +81,7 @@ CREATE TABLE ingredient
     ingredient_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     name TEXT NOT NULL,
     quantity INTEGER NOT NULL
-);
+);/* supplier */
 
 INSERT INTO ingredient
   ( name, quantity )
@@ -115,20 +104,23 @@ CREATE TABLE dish
     name TEXT NOT NULL,
     cost INTEGER NOT NULL,
     cook_time Integer NOT NULL,
-    dishType TEXT NOT NULL,
-    allergies TEXT DEFAULT NULL
+    dishType TEXT,
+    dishPic TEXT,
+    description TEXT,
+    allergies TEXT
+    
 );
 
 INSERT INTO dish
-  ( name, cost, cook_time, allergies, dishType )
+  ( name, cost, cook_time, dishType, dishPic, description, allergies )
 VALUES
-  ('Burger and chips', 20, 30, '', 'main'),
-  ('Chicken and chips', 15, 20, '', 'main'),
-  ('Fish and chips', 25, 20, '', 'main'),
-  ('Tomato soup', 20, 30, '', 'starter'),
-  ('Chicken Salad', 15, 20, '', 'starter'),
-  ('Ice Cream', 20, 30, '', 'dessert'),
-  ('Chocolate Brownie', 15, 20, '', 'dessert');
+  ('Burger and chips', 20, 30, 'main', '1', 'burger and chips description', ''),
+  ('Chicken and chips', 15, 20, 'main', '1', 'chicken and chips description', ''),
+  ('Fish and chips', 25, 20, 'main', '1', 'fish and chips description', ''),
+  ('Tomato soup', 20, 30, 'starter', '1', 'Soup description', ''),
+  ('Chicken Salad', 15, 20, 'starter', '1', 'Chicken salad description', ''),
+  ('Ice Cream', 20, 30, 'dessert', '1', 'Ice cream description', ''),
+  ('Chocolate Brownie', 15, 20, 'dessert', '1', 'brownie description', '');
 
 DROP TABLE IF EXISTS dish_ingredient;
 
@@ -158,11 +150,12 @@ DROP TABLE IF EXISTS orders;
 
 CREATE TABLE orders
 (
-    order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     time INTEGER NOT NULL,
     dish_id INTEGER NOT NULL,
     table_id INTEGER NOT NULL,
-    status TEXT
+    status TEXT, 
+    info TEXT/* notes */
 );
 
 
@@ -170,7 +163,7 @@ DROP TABLE IF EXISTS tables;
 
 CREATE TABLE tables
 (   
-    table_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    table_id INTEGER PRIMARY KEY,
     seats INTEGER NOT NULL,
     x TEXT NOT NULL,
     y TEXT NOT NULL
@@ -183,7 +176,6 @@ VALUES
   (2, 4, "200px", "200px"), 
   (3, 4, "300px", "300px"),
   (4, 4, "400px", "400px");
-
 
 DROP TABLE IF EXISTS bookings;
 
@@ -218,41 +210,30 @@ CREATE TABLE user_queries
     subject TEXT NOT NULL,
     name TEXT NOT NULL,
     message TEXT NOT NULL,
-    date_received TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    date DATE NOT NULL
 );
 
-DROP TABLE IF EXISTS roster_requests;
+DROP TABLE IF EXISTS transactions;
 
-CREATE TABLE roster_requests
+CREATE TABLE transactions
 (
-    request_id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    employee TEXT NOT NULL,
-    message TEXT,
-    response TEXT,
-    date_received TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    status VARCHAR(20) default 'Pending',
-    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    username TEXT,
+    dish_id INTEGER,
+    cost INTEGER,
+    quantity INTEGER,
+    date TEXT
 );
 
-DROP TABLE IF EXISTS user_analytics;
-
-CREATE TABLE user_analytics
-(
-    todays_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    daily_users INTEGER,
-    new_daily_users INTEGER
-);
-
-DROP TABLE IF EXISTS sales_analytics;
-CREATE TABLE sales_analytics
-(
-	the_month TEXT NOT NULL,
-    daily_sales DECIMAL,
-    monthly_sales DECIMAL,
-    yearly_sales DECIMAL
-);
-
-DROP TABLE IF EXISTS reviews;
+INSERT INTO transactions
+  ( username, dish_id, cost, quantity, date )
+VALUES
+  ("benc190514@gmail.com", 1, 2, 1, null), 
+  ("benc190514@gmail.com", 2, 2, 1, null), 
+  ("benc190514@gmail.com", 3, 2, 1, null),
+  ("benc190514il.com", 5, 2, 1, null);
+  
+  
+  DROP TABLE IF EXISTS reviews;
 
 CREATE TABLE reviews
 (
@@ -269,30 +250,13 @@ VALUES
   ("benc190514@gmail.com", "bad", 2, 2), 
   ("benc190514@gmail.com", "okay", 4, 3),
   ("benc190514il.com", "AMAZING", 10, 5);
+  
+SELECT AVG(rating), dish_id FROM reviews GROUP BY dish_id;
 
-
-############
-TRIGGER TO UPDATE STATUS AFTER UPDATING QUANTITY IN INGREDIENT TABLE
-
-CREATE DEFINER=`root`@`localhost` TRIGGER `ingredient_BEFORE_UPDATE` BEFORE UPDATE ON `ingredient` FOR EACH ROW BEGIN
-	IF NEW.quantity <= 10 THEN
-        SET NEW.status = 'RED';
-    END IF;
-    IF NEW.quantity >= 11 THEN
-        SET NEW.status = 'AMBER';
-    END IF;
-    IF NEW.quantity >= 50 THEN
-        SET NEW.status = 'GREEN';
-    END IF;
-END
-
-############
-CLEARS CODE AFTER 10 SECONDS OF INSERTING
-
-CREATE EVENT clear_code
-ON SCHEDULE
-EVERY 5 SECOND
-STARTS (CURRENT_TIMESTAMP + INTERVAL 10 SECOND)
-DO 
-UPDATE staff
-SET code = null WHERE TIMESTAMPDIFF(SECOND, last_updated, NOW()) >= 10 ;
+CREATE TABLE modifications
+(
+	modifications_id INTEGER,
+	dish_id INTEGER,
+    changes TEXT,
+    user TEXT
+);
