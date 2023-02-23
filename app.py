@@ -1307,7 +1307,7 @@ def dish(dish_id):
                 quantity=session[str(dish_id)][ingredient_id]
                 changes+= str(ing_name) + str(quantity)
                 session[str(dish_id)][ingredient_id] =1
-        cur.execute("INSERT INTO modifications(dish_id,changes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
+        cur.execute("INSERT INTO modifications(dish_id,info,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
         mysql.connection.commit()
         session['CurrentDish'] = None
         return redirect(url_for('add_to_cart', dish_id=dish['dish_id']))
@@ -1377,7 +1377,7 @@ def add_default_meal(dish_id):
         session['cart'][dish_id] = 0
     session['cart'][dish_id]=session['cart'][dish_id]+1
     changes=""
-    cur.execute("INSERT INTO modifications(dish_id,changes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
+    cur.execute("INSERT INTO modifications(dish_id,info,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
     mysql.connection.commit()
 
     return redirect(url_for('cart'))
@@ -1469,7 +1469,7 @@ def checkout():
                 changes=values['changes']
                 cur.execute('INSERT INTO transactions(username, dish_id,cost,quantity,date) VALUES(%s,%s,%s,%s,%s) ',(username, dish_id,cost,1,date))
                 mysql.connection.commit()
-                cur.execute("INSERT INTO orders(time,dish_id,changes) VALUES(%s,%s,%s)",(now,dish_id,changes))
+                cur.execute("INSERT INTO orders(time,dish_id,info) VALUES(%s,%s,%s)",(now,dish_id,changes))
                 mysql.connection.commit()
             #cur.execute('DELETE FROM modifications WHERE user=%s',(g.user,))
         cur.execute('DELETE FROM modifications WHERE user=%s',(g.user,))
