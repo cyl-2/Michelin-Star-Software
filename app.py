@@ -403,51 +403,118 @@ def user_pic():
 ##############################################################################################################################################
 ##############################################################################################################################################
 
+def undoList():
+    session['undoList']=[]
+
 @app.route('/kitchen', methods=['GET','POST'])
 def kitchen():
+    if 'undoList' not in session:
+        undoList()
     cur = mysql.connection.cursor()
-    cur.execute('''SELECT d.name, o.time, d.cook_time, o.tableNo, o.notes, o.status, o.dish_id
+    cur.execute('''SELECT o.order_id, d.name, o.time, d.cook_time, o.table_id, o.notes, o.status, o.dish_id
                     FROM orders as o 
                     JOIN dish as d 
                     ON o.dish_id=d.dish_id
                     ORDER BY o.notes='priority' DESC,
                             o.time,
                             o.time*d.cook_time DESC,
-                            o.tableNo,  
+                            o.table_id,  
                             d.cook_time DESC,
-                            d.category='starter',
-                            d.category='main',
-                            d.category='side',
-                            d.category='dessert';''')
+                            d.dishType='starter',
+                            d.dishType='main',
+                            d.dishType='side',
+                            d.dishType='dessert';''')
     orderlist=cur.fetchall()
     cur.close()
     return render_template('kitchen.html',orderlist=orderlist)
 
-@app.route('/<int:dish_id>,<int:time>/kitchenUpdate', methods=['GET','POST'])
-def kitchenUpdate(dish_id, time):
+@app.route('/<int:dish_id>,<int:order_id>,<int:time>/kitchenUpdate', methods=['GET','POST'])
+def kitchenUpdate(dish_id,order_id, time):
     cur = mysql.connection.cursor()
     cur.execute('''UPDATE orders
                                 SET status="ongoing" 
-                                WHERE time=%s and status="unmade" 
-                                and dish_id=%s 
-                                LIMIT 1;''',(time, dish_id))
+                                WHERE time=%s and status="not started" 
+                                and order_id=%s 
+                                LIMIT 1;''',(time, order_id))
     mysql.connection.commit()
+    session['undoList'].append(order_id)
+
+    cur.execute('''SELECT i.ingredient_id
+                    FROM orders as o
+                    JOIN dish_ingredient as di
+                    JOIN ingredient as i
+                    JOIN dish as d
+                    ON i.ingredient_id=di.ingredient_id AND di.dish_id=d.dish_id AND d.dish_id=o.dish_id
+                    WHERE di.dish_id=%s''',(dish_id,))
+    ingredientDict=cur.fetchall()
+    for ingredient in ingredientDict[0]:
+        cur.execute('''UPDATE stock
+                        SET quantity=quantity-1
+                        WHERE ingredient_id=%s
+                        ORDER BY batch_id
+                        LIMIT 1''',(ingredientDict[0][ingredient],) )
+        mysql.connection.commit()
     cur.close()
     return redirect(url_for('kitchen'))
 
-@app.route('/<int:dish_id>,<int:time>/kitchenDelete', methods=['GET','POST'])
-def kitchenSentOut(dish_id, time):
+@app.route('/<int:order_id>,<int:time>/kitchenDelete', methods=['GET','POST'])
+def kitchenSentOut(order_id, time):
 
     cur = mysql.connection.cursor()
 
     cur.execute('''UPDATE orders
                                 SET status="sent out"
                                 WHERE time=%s and status="ongoing" 
-                                and dish_id =%s
-                                LIMIT 1;''',(time, dish_id))
+                                and order_id =%s
+                                LIMIT 1;''',(time, order_id))
+    mysql.connection.commit()
+    session['undoList'].append(order_id)
+    cur.close()
+    return redirect(url_for('kitchen'))
+
+@app.route('/kitchenUndo', methods=['GET','POST'])
+def kitchenUndo():
+    if session['undoList']==[]:
+        return redirect(url_for('kitchen'))
+    undoID=session['undoList'][-1]
+    cur = mysql.connection.cursor()
+    cur.execute('''SELECT status
+                    FROM orders
+                    WHERE order_id=%s;''',(undoID,) )
+    status=cur.fetchall()
+    if status=="ongoing":
+        cur.execute('''UPDATE orders
+                                    SET status="not started"
+                                    WHERE order_id =%s;''',(undoID,))  
+        cur.execute('''SELECT dish_id
+                        FROM orders
+                        WHERE order_id=%s''',(undoID,))
+        dish_id=cur.fetchone()
+        cur.execute('''SELECT i.ingredient_id
+                    FROM orders as o
+                    JOIN dish_ingredient as di
+                    JOIN ingredient as i
+                    JOIN dish as d
+                    ON i.ingredient_id=di.ingredient_id AND di.dish_id=d.dish_id AND d.dish_id=o.dish_id
+                    WHERE di.dish_id=%s''',(dish_id,))
+    ingredientDict=cur.fetchall()
+    for ingredient in ingredientDict[0]:
+        cur.execute('''UPDATE stock
+                        SET quantity=quantity+1
+                        WHERE ingredient_id=%s
+                        ORDER BY batch_id
+                        LIMIT 1''',(ingredientDict[0][ingredient],) )
+        mysql.connection.commit()
+    else:
+        cur.execute('''UPDATE orders
+                                    SET status="ongoing"
+                                    WHERE order_id =%s;''',(undoID,))
     mysql.connection.commit()
     cur.close()
     return redirect(url_for('kitchen'))
+
+
+   
 
 ##############################################################################################################################################
 ##############################################################################################################################################
@@ -948,6 +1015,40 @@ def manager():
     cur = mysql.connection.cursor()
     date = datetime.now().date()
 
+    cur.execute('''SELECT i.name 
+                FROM ingredients as i 
+                JOIN stock as s 
+                ON i.ingredient_id=s.ingredient_id
+                WHERE expiry_date=%s;''', (date,))
+    name=cur.fetchall()
+
+    cur.execute('''DELETE FROM stock
+                WHERE expiry_date=%s;''', (date,))
+    mysql.connection.commit()
+    
+    message=""
+    for item in name:
+    # Notify manager about expiry of stock
+        message =message + f"Your {item['name']} is expired!\n"
+    msg = Message("Expiry Notice", sender=credentials.flask_email, recipients=[g.user])   
+    msg.body = f"""{message}"""
+    mail.send(msg)
+
+    cur.execute('''SELECT i.name, i.supplier_email, 
+                    FROM ingredients as i
+                    JOIN stock as s
+                    ON i.ingredient_id=s.ingredient_id
+                    WHERE o.quantity<=10;''')
+    emails=cur.fetchall()
+
+    for email in emails:
+    
+        message = f"can we have more {email['i.name']} please. Same as last week!"
+        msg = Message("Order Notice", sender=credentials.flask_email, recipients=[email["i.suplier_email"]])   
+        msg.body = f"""{message}"""
+        mail.send(msg)
+
+
     cur.execute("SELECT * FROM user_analytics")
     user_analytics = cur.fetchone()
     cur.execute("SELECT * FROM sales_analytics")
@@ -1272,7 +1373,6 @@ def review_dish(dish_id):
         return redirect(url_for('menu'))
     return render_template('customer/review_dish.html', dish=dish, form=form)
 
-
 @app.route('/dish/<int:dish_id>', methods=['GET','POST'])
 def dish(dish_id):
     if str(dish_id) not in session:
@@ -1345,12 +1445,9 @@ def dec_quantity_ingredient(ingredient_id):
         session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] -1
     return redirect(url_for('dish',dish_id=dish_id))
 
-
-#this was not working yesterday so I don't get why its working today
 @app.route('/cart')
 @login_required
 def cart():
-    #session['cart'].clear()
     cur = mysql.connection.cursor()
     dish=''
     full = 0
@@ -1393,19 +1490,13 @@ def add_default_meal(dish_id):
     for value in result:
         name=value['name']
         changes+=str(name)+"1"
-
-
-    cur.execute("INSERT INTO modifications(dish_id,info,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
+    cur.execute("INSERT INTO modifications(dish_id,notes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
     mysql.connection.commit()
-
     return redirect(url_for('cart'))
 
-#There's an issue here 
 @app.route('/add_to_cart/<int:dish_id>')
 @login_required
 def add_to_cart(dish_id):
-    #session['cart'].clear()
-
     if 'cart' not in session:
         session['cart'] = {} 
     if dish_id not in session['cart']:
@@ -1432,8 +1523,6 @@ def remove_specific(changes,dish_id):
         session['cart'][dish_id] = session['cart'][dish_id] -1
     return redirect(url_for('cart'))
 
-
-
 @app.route('/remove/<int:dish_id>')
 @login_required
 def remove(dish_id):
@@ -1458,7 +1547,6 @@ def inc_quantity(dish_id):
 @app.route('/dec_quantity/<int:dish_id>')
 @login_required
 def dec_quantity(dish_id):
-
     return redirect(url_for('cart'))
 
 #question does this need to be specific to user?? or is it already
@@ -1633,7 +1721,6 @@ def cancel_bookings():
     bookings = cur.fetchall()
     return render_template('customer/cancel_booking.html', bookings=bookings)
 
-
 @app.route('/cancel_booking/<int:booking_id>', methods=['GET','POST'])
 def cancel_booking(booking_id):
     cur = mysql.connection.cursor()
@@ -1654,8 +1741,7 @@ def allocate_table(table):
     mysql.connection.commit()
     cur.close()
     return redirect(url_for('take_order', table=table))
-   
-#gonna implement this pretending 
+
 @app.route('/breaks', methods=['GET','POST'])
 def breakTimes():
     cur = mysql.connection.cursor()
@@ -1723,9 +1809,7 @@ def breakTimes():
                         workingToday[employee].append(start)
                         assigned +=1"""
                     break
-                    
-                
-
+              
         i = 2
         while assigned != len(workingToday):
             for employee in workingToday:
@@ -1734,7 +1818,6 @@ def breakTimes():
                 endShift = int(shift[6] + shift[7])
                 if k == 1:
                     start = workingToday[employee][2]
-
                 if (len(workingToday[employee]) <3 and k ==0) or (len(workingToday[employee]) <4 and k==1):
                     #break hasn't been assigned 
                     for j in range(4,1,-1):
@@ -1782,18 +1865,9 @@ def breakTimes():
                                 workingToday[employee].append(start)
                                 assigned +=1
                                 break
-                        
-                        
             i +=1
-           
         k +=1
     return render_template("staff/breaks.html",staff=staff, workingToday=workingToday)
-
-    return ("breaks.html")
-
-
-
-
 
 if __name__ == '__main__':
     app.run(debug=True)
