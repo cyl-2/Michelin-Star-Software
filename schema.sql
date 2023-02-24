@@ -289,16 +289,9 @@ CREATE TABLE reviews
     name TEXT,
     comment TEXT,
     rating INTEGER,
-    dish_name TEXT
+    dish_name TEXT,
+    dish_id INTEGER
 );
-
-INSERT INTO reviews
-  ( username, name, comment, rating, dish_name)
-VALUES
-  ("benc190514@gmail.com", "ben", "good", 5, "burger"), 
-  ("benc190514@gmail.com", "ben2","bad", 2, "tomato soup"), 
-  ("benc190514@gmail.com", "ben3","okay", 4, "broccoli sticks"),
-  ("benc190514il.com", "ben4","AMAZING", 10, "vegan gluten free salad");
 
 /*
 ############
