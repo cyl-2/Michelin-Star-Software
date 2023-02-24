@@ -49,7 +49,7 @@
                                                         {% endfor %}
                                                     {% endfor %}
                                                 </ul>
-                                                <p><a onClick="popUpAppear()" class="btn btn-danger">Cancel Order</a> <a href="{{ url_for('complete_order',table=table) }}" class="btn btn-success" >Complete Order</a></p>
+                                                <p><a onClick="popUpAppear()" href="#" class="btn btn-danger">Cancel Order</a> <a href="{{ url_for('complete_order',table=table) }}" class="btn btn-success" >Complete Order</a></p>
                                             </div>
                                         </div>
                                     </div>
@@ -168,7 +168,7 @@
             <h4>Are you sure you want to delete?</h4>
         </div>
         <div class="card-body">
-            <a onClick="popUpCancel()" class="btn btn-danger">No</a> <a href="{{ url_for('cancel_order', table=table) }}" class="btn btn-success" >Yes</a>
+            <a onClick="popUpCancel()" href="#" class="btn btn-danger">No</a> <a href="{{ url_for('cancel_order', table=table) }}" class="btn btn-success" >Yes</a>
         </div>
     </div>
 </div>

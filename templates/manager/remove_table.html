@@ -27,8 +27,8 @@
                         </div>
                         {% for table_index in table_positions %}
                             <div style="position:absolute;  left: {{ table_positions[table_index][0] }}; top: {{ table_positions[table_index][1] }};  width: 90px;">
-                                <a onClick="popUpAppear()">
-                                    <img src="{{ url_for('static', filename='table.png' ) }}" style="width: 90px;"/>
+                                <a onClick="popUpAppear()" href="#">
+                                    <img src="{{ url_for('static', filename='table.png' ) }}" style="width: 88px;"/>
                                     <p class="btn btn-square btn-info">Table {{ table_index }}</p>
                                 </a>
                             </div>
@@ -38,7 +38,7 @@
                                         <h4>Confirm Action: Delete table {{table_index}}</h4>
                                     </div>
                                     <div class="card-body">
-                                        <a onClick="popUpCancel()" class="btn btn-danger">No</a> <a href="{{ url_for('remove_table', table=table_index) }}" class="btn btn-success" >Yes</a>
+                                        <a onClick="popUpCancel()" href="#" class="btn btn-danger">No</a> <a href="{{ url_for('remove_table', table=table_index) }}" class="btn btn-success" >Yes</a>
                                     </div>
                                 </div>
                             </div>
