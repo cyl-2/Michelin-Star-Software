@@ -12,98 +12,100 @@
             <div class="pcoded-inner-content">
                 <div class="main-body">
                     <div class="page-wrapper">
-                        <!-- [ Main Content ] start -->
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <h5>Shift Requirements</h5>
-                                        </div>
-                                        <div class="card-block table-border-style">
-                                            <div class="table-responsive">
-                                                <table class="table table-hover">
-                                                    <thead>
-                                                        <tr>
-                                                            <th scope="col">Day</th>
-                                                            <th scope="col">Opening hours</th>
-                                                            <th scope="col">Minimum workers</th>
-                                                            <th scope="col">Unavailable</th>
-                                                        </tr>
-                                                    </thead>
-                                                    {% for day in requirements %}
-                                                    <tbody>
-                                                        <tr>
-                                                            <th scope="row">
-                                                                {{ week[day['day']] }}
-                                                            </th>
-                                                            <td>{{ day['opening_time'] }} - {{ day['closing_time'] }}</td>
-                                                            <td>{{ day['min_workers'] }}</td>
-                                                
-                                                            <td>
-                                                                {% for person in staff %}
-                                                                    {% for id in day['unavailable'] %}
-                                                                        {% if person['staff_id'] == id %}
-                                                                            {{ person['first_name'] }}
-                                                                        {% endif %}
-                                                                    {% endfor %}
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Current Shift Requirements</h5>
+                                    </div>
+                                    <div class="card-block table-border-style">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">Day</th>
+                                                        <th scope="col">Opening hours</th>
+                                                        <th scope="col">Minimum workers</th>
+                                                        <th scope="col">Unavailable</th>
+                                                    </tr>
+                                                </thead>
+                                                {% for day in requirements %}
+                                                <tbody>
+                                                    <tr>
+                                                        <th scope="row">
+                                                            {{ week[day['day']] }}
+                                                        </th>
+                                                        <td>{{ day['opening_time'] }} - {{ day['closing_time'] }}</td>
+                                                        <td>{{ day['min_workers'] }}</td>
+                                            
+                                                        <td>
+                                                            {% for person in staff %}
+                                                                {% for id in day['unavailable'] %}
+                                                                    {% if person['staff_id'] == id %}
+                                                                        {{ person['first_name'] }}
+                                                                    {% endif %}
                                                                 {% endfor %}
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                    {% endfor %}
-                                                </table>
-                                            </div>
+                                                            {% endfor %}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                                {% endfor %}
+                                            </table>
                                         </div>
                                     </div>
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <h5>Edit Requirements</h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <form action="" method="post" novalidate> 
-                                                {{ form.hidden_tag() }}
-                
-                                                {{ form.day.label }}
-                                                {{ form.day(class="mb-3 form-control") }}
-                                                {% for error in form.day.errors %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Edit Requirements Form</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form action="" method="post" novalidate> 
+                                            {{ form.hidden_tag() }}
+
+                                            {{ form.day.label }}
+                                            {{ form.day(class="mb-3 form-control") }}
+                                            {% for error in form.day.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+
+                                            <div class="form-group">
+                                                {{ form.opening_time.label }}
+                                                {{ form.opening_time(class="form-control") }}
+                                                {% for error in form.opening_time.errors %}
                                                     {{ error }}
                                                 {% endfor %}
-                
-                                                <div class="form-group">
-                                                    {{ form.opening_time.label }}
-                                                    {{ form.opening_time(class="form-control") }}
-                                                    {% for error in form.opening_time.errors %}
-                                                        {{ error }}
-                                                    {% endfor %}
-                                                </div>
-                
-                                                <div class="form-group">
-                                                    {{ form.closing_time.label }}
-                                                    {{ form.closing_time(class="form-control") }}
-                                                    {% for error in form.closing_time.errors %}
-                                                        {{ error }}
-                                                    {% endfor %}
-                                                </div>
-                
-                                                <div class="form-group">
-                                                    {{ form.min_workers.label }}
-                                                    {{ form.min_workers(class="form-control") }}
-                                                    {% for error in form.min_workers.errors %}
-                                                        {{ error }}
-                                                    {% endfor %}
-                                                </div>
-                
-                                                <div class="form-group">
-                                                    {{ form.unavailable.label }}
-                                                    {{ form.unavailable(class="form-control") }}
-                                                    {% for error in form.unavailable.errors %}
-                                                        {{ error }}
-                                                    {% endfor %}
-                                                </div>
-                
-                                                {{ form.submit(class="submit btn btn-primary") }}
-                                            </form>
-                                        </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                {{ form.closing_time.label }}
+                                                {{ form.closing_time(class="form-control") }}
+                                                {% for error in form.closing_time.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                {{ form.min_workers.label }}
+                                                {{ form.min_workers(class="form-control") }}
+                                                {% for error in form.min_workers.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                {{ form.unavailable.label }}
+                                                {{ form.unavailable(class="form-control") }}
+                                                {% for error in form.unavailable.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+
+                                            {{ form.submit(class="submit btn btn-primary") }}
+                                        </form>
                                     </div>
                                 </div>
                             </div>

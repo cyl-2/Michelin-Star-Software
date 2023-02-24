@@ -741,6 +741,59 @@ p.text-muted {
 }
 
 /* ================================    md animated mode End   ===================== */
+
+/* ================================    rating star Start  ===================== */
+/* credits to https://medium.com/codex/create-a-star-rating-widget-with-css-in-9-steps-fe323352dba4 */
+
+.star-rating {
+  display: flex;
+  align-items: left;
+  width: 200px;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  position: relative;
+}
+/* hide the inputs */
+.star-rating input {
+  display: none;
+}
+/* set properties of all labels */
+.star-rating > label {
+  width: 30px;
+  height: 30px;
+  font-family: Arial;
+  font-size: 40px;
+  transition: 0.2s ease;
+  color: #feed00;
+}
+/* give label a hover state */
+.star-rating label:hover {
+  color: yellow;
+  transition: 0.2s ease;
+}
+.star-rating label:active::before {
+  transform:scale(1.1);
+}
+
+/* set shape of unselected label */
+.star-rating label::before {
+  content: '\2606';
+  position: absolute;
+  line-height: 26px;
+}
+/* set full star shape for checked label and those that come after it */
+.star-rating input:checked ~ label:before {
+  content:'\2605';
+}
+
+@-moz-document url-prefix() {
+  .star-rating input:checked ~ label:before {
+  font-size: 36px;
+  line-height: 21px;
+  }
+} 
+/* ================================    rating star End  ===================== */
+
 /* ================================    range slider Start  ===================== */
 .tooltip.in {
   opacity: 0.9;
@@ -7567,6 +7620,31 @@ table.footable-paging-center > tfoot > tr.footable-paging > td {
 /**  =====================
       Button css start
 ==========================  **/
+
+.btn-notif {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 14px;
+  color: grey;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.btn-x {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 14px;
+  color: grey;
+  cursor: pointer;
+  position: absolute;
+  right: 0;
+  margin-right:5px;
+}
+
 .btn-theme,
 a.btn-theme {
   background: linear-gradient(-135deg, #1de9b6 0%, #1dc4e9 100%);

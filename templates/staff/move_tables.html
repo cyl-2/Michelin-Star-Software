@@ -5,6 +5,7 @@
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
+
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
 <script type ='text/javascript'> 
     let hOffset, vOffset = 0; 
@@ -99,16 +100,4 @@
         document.getElementById("save_changes").innerHTML = '<a class="btn btn-primary" href="{{ url_for('save_tables') }}">Save Changes</a>';
     }
 
-
-    function sendData(){
-        $.ajax(
-            {
-            url:"/save_tables",
-            type:"POST",
-            contentType: "application/json",
-            data: JSON.stringify(co_ords)
-            }
-        );
-    }
-</script>
 {% endblock content %} 
