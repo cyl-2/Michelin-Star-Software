@@ -977,6 +977,39 @@ def manager():
     cur = mysql.connection.cursor()
     date = datetime.now().date()
     
+    cur.execute('''SELECT i.name 
+                FROM ingredients as i 
+                JOIN stock as s 
+                ON i.ingredient_id=s.ingredient_id
+                WHERE expiry_date=%s;''', (date,))
+    name=cur.fetchall()
+
+    cur.execute('''DELETE FROM stock
+                WHERE expiry_date=%s;''', (date,))
+    mysql.connection.commit()
+
+    message=""
+    for item in name:
+    # Notify manager about expiry of stock
+        message =message + f"Your {item['name']} is expired!\n"
+    msg = Message("Expiry Notice", sender=credentials.flask_email, recipients=[g.user])   
+    msg.body = f"""{message}"""
+    mail.send(msg)
+
+    cur.execute('''SELECT i.name, i.supplier_email, 
+                    FROM ingredients as i
+                    JOIN stock as s
+                    ON i.ingredient_id=s.ingredient_id
+                    WHERE o.quantity<=10;''')
+    emails=cur.fetchall()
+
+    for email in emails:
+
+        message = f"can we have more {email['i.name']} please. Same as last week!"
+        msg = Message("Order Notice", sender=credentials.flask_email, recipients=[email["i.suplier_email"]])   
+        msg.body = f"""{message}"""
+        mail.send(msg)
+    
     cur.execute("SELECT * FROM user_analytics")
     user_analytics = cur.fetchone()
     cur.execute("SELECT * FROM sales_analytics")
