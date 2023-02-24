@@ -278,8 +278,10 @@ VALUES
 CREATE TABLE reviews
 (
     username TEXT,
+    name TEXT,
     comment TEXT,
     rating INTEGER,
+    dish_name TEXT,
     dish_id INTEGER
 );
 
