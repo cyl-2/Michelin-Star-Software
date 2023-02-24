@@ -2,46 +2,54 @@
 
 {% block content %}
 
+<div class="pcoded-main-container">
     <div class="pcoded-wrapper">
         <div class="pcoded-content">
             <div class="pcoded-inner-content">
-                <div class="col-xl-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>All Employees</h5>
-                            <p class="text-right"> <a href="{{ url_for('add_new_employee') }}"> Add new employee </a> </p>
-                        </div>
-                        <div class="card-block table-border-style">
-                            <div class="table-responsive">
-                            {% if employees %}
-                            <table class="table table-hover">
-                                <tr> 
-                                    <th> Staff ID </th>
-                                    <th> Role </th>
-                                    <th> First Name </th>
-                                    <th> Last Name </th>
-                                    <th> </th>
-                                </tr>
+                <div class="main-body">
+                    <div class="page-wrapper">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>All Employees</h5>
+                                        <p class="text-right"> <a href="{{ url_for('add_new_employee') }}"> Add new employee </a> </p>
+                                    </div>
+                                    <div class="card-block table-border-style">
+                                        <div class="table-responsive">
+                                        {% if employees %}
+                                        <table class="table table-hover">
+                                            <tr> 
+                                                <th> Staff ID </th>
+                                                <th> Role </th>
+                                                <th> First Name </th>
+                                                <th> Last Name </th>
+                                                <th> </th>
+                                            </tr>
 
-                                {% for employee in employees %}
-                                <tr> 
-                                    <td> {{ employee ["staff_id"] }} </td>
-                                    <td> {{ employee ["role"] }} </td>
-                                    <td> {{ employee ["first_name"] }} </td>
-                                    <td> {{ employee ["last_name"] }} </td>
-                                    <td> <a href="{{ url_for('remove_employee', id=employee ['staff_id']) }}">Remove</a></td>
-                                </tr>
-                                {% endfor %}
+                                            {% for employee in employees %}
+                                            <tr> 
+                                                <td> {{ employee ["staff_id"] }} </td>
+                                                <td> {{ employee ["role"] }} </td>
+                                                <td> {{ employee ["first_name"] }} </td>
+                                                <td> {{ employee ["last_name"] }} </td>
+                                                <td> <a href="{{ url_for('remove_employee', id=employee ['staff_id']) }}">Remove</a></td>
+                                            </tr>
+                                            {% endfor %}
 
-                            {% else %}
-                            <p> No employee data available </p>
-                            {% endif %}
-                            </table>
+                                        {% else %}
+                                        <p> No employee data available </p>
+                                        {% endif %}
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
 {% endblock content %}
