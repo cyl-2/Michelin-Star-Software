@@ -146,20 +146,19 @@ CREATE TABLE dish
     cost INTEGER NOT NULL,
     cook_time Integer NOT NULL,
     dishType TEXT NOT NULL,
-    allergies TEXT DEFAULT NULL,
-    number_of_orders INT DEFAULT 0
+    allergies TEXT DEFAULT NULL
 );
 
 INSERT INTO dish
-  ( name, cost, cook_time, allergies, dishType, number_of_orders )
+  ( name, cost, cook_time, allergies, dishType )
 VALUES
-  ('Burger and chips', 20, 30, '', 'main', 210),
-  ('Chicken and chips', 15, 20, '', 'main', 168),
-  ('Fish and chips', 25, 20, '', 'main', 98),
-  ('Tomato soup', 20, 30, '', 'starter', 35),
-  ('Chicken Salad', 15, 20, '', 'starter', 22),
-  ('Ice Cream', 20, 30, '', 'dessert', 354),
-  ('Chocolate Brownie', 15, 20, '', 'dessert', 123);
+  ('Burger and chips', 20, 30, '', 'main'),
+  ('Chicken and chips', 15, 20, '', 'main'),
+  ('Fish and chips', 25, 20, '', 'main'),
+  ('Tomato soup', 20, 30, '', 'starter'),
+  ('Chicken Salad', 15, 20, '', 'starter'),
+  ('Ice Cream', 20, 30, '', 'dessert'),
+  ('Chocolate Brownie', 15, 20, '', 'dessert');
 
 DROP TABLE IF EXISTS dish_ingredient;
 
