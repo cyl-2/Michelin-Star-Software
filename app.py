@@ -1314,8 +1314,8 @@ def review_dish(dish_id):
         comment = form.comment.data
         cur.execute("SELECT * FROM customer WHERE email=%s", (g.user,))
         customer = cur.fetchone()
-        cur.execute("""INSERT INTO reviews ( username, name, comment, rating, dish_name) VALUES
-                (%s,%s,%s,%s, %s)""",(g.user, customer["first_name"], comment, rating, dish["name"]))
+        cur.execute("""INSERT INTO reviews ( username, name, comment, rating, dish_id, dish_name) VALUES
+                (%s,%s,%s,%s, %s)""",(g.user, customer["first_name"], comment, rating, dish_id, dish["name"]))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('menu'))
