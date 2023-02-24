@@ -555,10 +555,6 @@ def edit_staff_profile():
         cur.close()
     return render_template("staff/edit_staff_profile.html", form=form, title="My Profile", profile=profile)
 
-@app.route("/waiter_menu", methods=["GET","POST"])
-def waiter_menu():     
-    return render_template("staff/waiter_menu.html")
-
 @app.route("/choose_table", methods=["GET","POST"])
 def choose_table():
     cur = mysql.connection.cursor()
@@ -597,7 +593,7 @@ def take_order(table):
         
     cur.execute(
         """
-            SELECT dish.name, orders.status, order_id, dish.dishType, orders.info
+            SELECT dish.name, orders.status, order_id, dish.dishType, orders.notes
             FROM orders JOIN dish 
             ON orders.dish_id = dish.dish_id
             WHERE orders.table_id = %s 
@@ -633,6 +629,10 @@ def take_order(table):
         return render_template("staff/take_order.html", table=table, ordering=ordering, meals=meals, ordered=ordered, allocated=allocated)
     return render_template("staff/take_order.html", table=table, meals=meals, ordered=ordered, allocated=allocated)
 
+@app.route('/popup', methods=['GET','POST'])
+def popup():
+    return render_template("staff/popup.html")
+
 @app.route('/<int:table>/waiter_customize_dish/<int:dish_id>', methods=['GET','POST'])
 def waiter_customize_dish(table, dish_id):
     if str(dish_id) not in session:
@@ -661,8 +661,12 @@ def waiter_customize_dish(table, dish_id):
         
         min = 100
         for id in ingredient_ids:
-            cur.execute('SELECT MIN(quantity) FROM ingredient WHERE ingredient_id = %s',(id['ingredient_id'],))
+            cur.execute('''SELECT MIN(quantity) FROM stock WHERE ingredient_id = %s
+                        ORDER BY batch_id
+                        LIMIT 1''',(id['ingredient_id'],))
             value = cur.fetchone()
+            print(id['ingredient_id'])
+            print(value)
             if value['MIN(quantity)'] < min:
                 min = value['MIN(quantity)']
         if min > 0:
@@ -717,10 +721,9 @@ def add_order(table, meal):
     for id in dish_ids:
         cur.execute('SELECT ingredient_id FROM dish_ingredient WHERE dish_id = %s',(id['dish_id'],))
         ingredient_ids = cur.fetchall()
-    
     min = 100
     for id in ingredient_ids:
-        cur.execute('SELECT MIN(quantity) FROM ingredient WHERE ingredient_id = %s',(id['ingredient_id'],))
+        cur.execute('SELECT MIN(quantity) FROM stock WHERE ingredient_id = %s ORDER BY batch_id LIMIT 1',(id['ingredient_id'],))
         value = cur.fetchone()
         if value['MIN(quantity)'] < min:
             min = value['MIN(quantity)']
@@ -778,7 +781,7 @@ def complete_order(table):
                 for ingredients in times:
                     if times[ingredients] != 1:
                         info += ingredients+"-"+str(times[ingredients])+", "
-                cur.execute("INSERT INTO orders (time, dish_id, table_id, status, info) VALUES (%s, %s, %s, 'waiting', %s);",(data['cook_time'], data['dish_id'], table, info))
+                cur.execute("INSERT INTO orders (time, dish_id, table_id, status, notes) VALUES (%s, %s, %s, 'waiting', %s);",(data['cook_time'], data['dish_id'], table, info))
                 mysql.connection.commit()
     
     session['ordering'][table] = {}
@@ -1336,6 +1339,10 @@ def menu():
     drink= cur.fetchall()
     cur.execute(" SELECT * FROM dish WHERE dishType='side'")
     side = cur.fetchall()
+    
+    day = datetime.now().weekday()
+    cur.execute(" SELECT * FROM dish WHERE dishType='special' AND day = %s",(day,))
+    special = cur.fetchall()
 
     cur.execute(" SELECT * FROM transactions WHERE username = %s ORDER BY date",(g.user,))
     transactions = cur.fetchall()
@@ -1348,7 +1355,7 @@ def menu():
             max_dish_id = dish['dish_id']
             max_dish_rating = dish['AVG(rating)']
     cur.close()
-    return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side, transactions=transactions, max_dish_id=max_dish_id)
+    return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side, transactions=transactions, max_dish_id=max_dish_id, special=special)
 
 @app.route('/review_dish/<int:dish_id>',methods=['GET', 'POST'])
 @login_required
@@ -1409,7 +1416,7 @@ def dish(dish_id):
                 quantity=session[str(dish_id)][ingredient_id]
                 changes+= str(ing_name) + str(quantity)
                 session[str(dish_id)][ingredient_id] =1
-        cur.execute("INSERT INTO modifications(dish_id,info,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
+        cur.execute("INSERT INTO modifications(dish_id,notes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
         mysql.connection.commit()
         session['CurrentDish'] = None
         return redirect(url_for('add_to_cart', dish_id=dish['dish_id']))
@@ -1593,7 +1600,7 @@ def checkout():
                 changes=values['changes']
                 cur.execute('INSERT INTO transactions(username, dish_id,cost,quantity,date) VALUES(%s,%s,%s,%s,%s) ',(username, dish_id,cost,1,date))
                 mysql.connection.commit()
-                cur.execute("INSERT INTO orders(time,dish_id,info) VALUES(%s,%s,%s)",(now,dish_id,changes))
+                cur.execute("INSERT INTO orders(time,dish_id,notes) VALUES(%s,%s,%s)",(now,dish_id,changes))
                 mysql.connection.commit()
             #cur.execute('DELETE FROM modifications WHERE user=%s',(g.user,))
         cur.execute('DELETE FROM modifications WHERE user=%s',(g.user,))
@@ -1731,7 +1738,7 @@ def cancel_booking(booking_id):
 
 @app.route('/allocate_table/<int:table>', methods=['GET','POST'])
 def allocate_table(table):
-    cur = mysql.connection.cursor()##c
+    cur = mysql.connection.cursor()
     current_day = datetime.now().strftime("%d")
     current_month = datetime.now().strftime("%m")
     current_year = datetime.now().strftime("%Y")

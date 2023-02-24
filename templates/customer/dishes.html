@@ -1,103 +1,39 @@
 {% extends "layouts/base.html" %}
+
+{% block stylesheets %}
+
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="static/assets/css/menu.css">
+{% endblock stylesheets %}
+
+
 {% block content %}
-{% if dishes is not none %}
+<!-- header section starts -->
 
+<header>
+    <section class="flex">
+        <div class="icons">
+            <i class="fas fa-bars" id="menu-bars"></i>
+            <i id="search-icon"></i>
+        </div>
+    </section>
+</header>
 
+<!-- header section ends-->
 
-<script>
-var swiper = new Swiper(".home-slider", {
-  spaceBetween: 30,
-  centeredSlides: true,
-  autoplay: {
-    delay: 7500,
-    disableOnInteraction: false,
-  },
-  pagination: {
-    el: ".swiper-pagination",
-    clickable: true,
-  },
-  loop:true,
-});
-window.alert('help');
-</script>
+<!-- the next few lines will have to be here  -->
+
+<form action="" id="search-form">
+    <i class="fas fa-times" id="close"></i>
+</form>
+
+<!-- home section starts  -->
 
 <div class="container">
-
     <section class="home" id="home">
-
-        <div class="home-slider">
-
-<div class="dropdown drp-user">
-    <a href="javascript:" class="dropdown-toggle" data-toggle="dropdown">
-        <i class="icon feather"></i>Leave a Review
-    </a>
-    <div class="dropdown-menu dropdown-menu-right profile-notification">
-        {% if transactions|length > 0 %}
-            <ul class="pro-body">
-                {% for transaction in transactions %}
-                    <li>
-                        <a href="{{ url_for('review_dish', dish_id=transaction['dish_id']) }}" class="dropdown-item">
-                            {% for dish in dishes %}
-                                {% if dish['dish_id'] == transaction['dish_id'] %}
-                                    {{ dish['name'] }}
-                                {% endif %}
-                            {% endfor %}
-                        </a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No Meals to Review</p>
-        {% endif %}
-    </div>
-</div>
-
-{% if transactions|length > 0 %}
-<div class="col-xl-12">
-    <div class="card">
-        <div class="card-header">
-            <h5>Past Purchases</h5>
-        </div>
-        <div class="card-block table-border-style">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Image</th>
-                            <th>Dish Name</th>
-                            <th>Cost</th>
-                            <th>Dish info</th>
-                            <th>Add to cart</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for i in range(transactions|length) %}
-                        {% for dish in dishes%}
-
-                            {% if dish['dish_id'] == transactions[i]['dish_id'] and i < 5 %} <!-- 5 limits the number of past purchases shown -->
-                                <tr>
-                                    <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
-                                    <td>
-                                        {{dish['name']}}
-                                        {% if dish['dish_id'] == max_dish_id %}
-                                            <img src="{{ url_for('static', filename='best-rated.png' ) }}" style="width: 70px;"/>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{dish['cost']}}</td>
-                                    <td><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Go to dish</a></td>
-                                    <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
-                                </tr>
-                            {% endif %}
-                        {% endfor%}
-                    {% endfor%}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
+        <div class="swiper home-slider">
             <div class="swiper-wrapper">
-    
                 <div class="swiper-slide slide">
                     <div class="content">
                         <span>our special dish</span>
@@ -106,10 +42,9 @@ window.alert('help');
                         <a href="#" class="btn">order now</a>
                     </div>
                     <div class="image">
-                        <img src="static/picture/20191220_192241.jpg" alt="">
+                        <img src="static/images-menu/home-img-1.png" alt="">
                     </div>
                 </div>
-    
                 <div class="swiper-slide slide">
                     <div class="content">
                         <span>our special dish</span>
@@ -118,9 +53,8 @@ window.alert('help');
                         <a href="#" class="btn">order now</a>
                     </div>
                     <div class="image">
-                        <img src="static/picture/20191220_192241.jpg" alt="">
+                        <img src="static/images-menu/home-img-2.png" alt="">
                     </div>
-
                 </div>
     
                 <div class="swiper-slide slide">
@@ -131,205 +65,235 @@ window.alert('help');
                         <a href="#" class="btn">order now</a>
                     </div>
                     <div class="image">
-                        <img src="static/picture/20191220_192241.jpg" alt="">
+                        <img src="static/images-menu/home-img-3.png" alt="">
                     </div>
                 </div>
-    
             </div>
-    
             <div class="swiper-pagination"></div>
-    
         </div>
-    
     </section>
-
 </div>
 
+<!-- home section ends -->
 
-
-
-<div class="pcoded-main-container" id="menu">
-
-    
- 
-<!-- [ rating list ] end-->
-<div class="tab" id="menuCont">
-    <ul class="nav nav-tabs" id="myTab" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link" id="home-tab" data-toggle="tab" href="#home" role="tab"
-                aria-controls="home" aria-selected="false">Starters</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link active show" id="profile-tab" data-toggle="tab"
-                href="#profile" role="tab" aria-controls="profile" aria-selected="true">Main Course</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact"
-                role="tab" aria-controls="contact" aria-selected="false">Side</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact2"
-                role="tab" aria-controls="contact2" aria-selected="false">Dessert</a>
-        </li>
-    </ul>
-    <div class="tab-content" id="myTabContent">
-        <div class="tab-pane fade" id="home" role="tabpanel" aria-labelledby="home-tab">
-                <div class="container">
-
-                    <section class="menu" id="menu">
-                
-                        <div class="box-container">
-                            {% for dish in starter%}
-                            <div class="box">
-                                <div class="image">
-                                    <img src="/static/picture/{{dish['dishPic']}}" class="dishPic">
-                                    <a href="#" class="fas fa-heart"></a>
-                                </div>
-                                <div class="content">
-                                    <div class="stars">
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star-half-alt"></i>
-                                    </div>
-                                    <h3>{{dish['name']}}</h3>
-                                    <p>{{dish['cost']}}</p>
-                                    <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Go to dish</a></p>
-                                    <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">add to cart</a></p>
-                                    <span class="price">€{{dish['cost']}}</span>
-                                </div>
-                            </div>
-                            {%endfor%}
-                        </div>
-                
-                    </section>
-                </div>
-
-        </div>
-                <div class="tab-pane fade active show" id="profile" role="tabpanel"
-                        aria-labelledby="profile-tab">
-                        <div class="container">
-
-
-                            <section class="menu" id="menu">
-                        
-                                <div class="box-container">
-                                    {% for dish in mainCourse%}
-                                    <div class="box">
-                                        <div class="image">
-                                            <img src="/static/picture/{{dish['dishPic']}}" class="dishPic">
-                                            <a href="#" class="fas fa-heart"></a>
-                                        </div>
-                                        <div class="content">
-                                            <div class="stars">
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star-half-alt"></i>
-                                            </div>
-                                            <h3>{{dish['name']}}</h3>
-                                            <p>{{dish['cost']}}</p>
-                                            <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Go to dish</a></p>
-                                            <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">add to cart</a></p>
-                                            <span class="price">€{{dish['cost']}}</span>
-                                        </div>
-                                    </div>
-                                    {%endfor%}
-                                </div>
-                        
-                            </section>
-                        </div>
-
-                 </div>
-        <div class="tab-pane fade" id="contact" role="tabpanel"
-                aria-labelledby="contact-tab">
-                <div class="container">
-
-                    <section class="menu" id="menu">
-                
-                        <div class="box-container">
-                            {% for dish in side%}
-                            <div class="box">
-                                <div class="image">
-                                    <img src="/static/picture/{{dish['dishPic']}}" class="dishPic">
-                                    <a href="#" class="fas fa-heart"></a>
-                                </div>
-                                <div class="content">
-                                    <div class="stars">
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star-half-alt"></i>
-                                    </div>
-                                    <h3>{{dish['name']}}</h3>
-                                    <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Go to dish</a></p>
-                                    <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">add to cart</a></p>
-                                    <span class="price">€{{dish['cost']}}</span>
-                                </div>
-                            </div>
-                            {%endfor%}
-                        </div>
-                
-                    </section>
-                </div>
-        </div>
-        <div class="tab-pane fade" id="contact2" role="tabpanel"
-                aria-labelledby="contact-tab">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Image</th>
-                            <th>Name</th>
-                            <th>Price</th>
-                            <th>Go to info Page</th>
-                            <th>Add to cart</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for dish in dessert%}
-                        <tr>
-                            <td><img src="/static/picture/{{dish['dishPic']}}" class="dishPic"></td>
-                            <td>{{dish['name']}}</td>
-                            <td>{{dish['cost']}}</td>
-                            <td><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Go to dish</a></td>
-                            <td><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">add to cart</a></td>
-                        </tr>
-                    {% endfor%}
-                    </tbody>
-                </table>
-        </div>
-
-
-
-
-
-
+<div class="tab">
+    <div class= "center">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <button class="tablinks nav-link" onclick="openCity(event, 'Starter')">Starter</button>
+            <button class="tablinks nav-link" onclick="openCity(event, 'Main')">Main</button>
+            <button class="tablinks nav-link" onclick="openCity(event, 'Dessert')">Desserts</button>
+            <button class="tablinks nav-link" onclick="openCity(event, 'Side')">Sides</button>
+            <button class="tablinks nav-link" onclick="openCity(event, 'Drinks')">Drinks</button>
+            <button class="tablinks nav-link" onclick="openCity(event, 'Special')">Specials</button>
+        </ul>
     </div>
 </div>
 
+<div id="Starter" class="tabcontent">
+    <div class="container">
+        <section class="menu" id="menu">
+            <div class="box-container">
+                {% for dish in starter%}
+                <div class="box">
+                    <div class="image">
+                        <img src="/static/picture/{{ dish['dishPic'] }}" class="dishPic">
+                        <a href="#" class="fas fa-heart"></a>
+                    </div>
+                    <div class="content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <h3>{{dish['name']}}</h3>
+                        <p>{{dish['cost']}}</p>
+                        <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
+                        <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
+                        <span class="price">€{{dish['cost']}}</span>
+                    </div>
+                </div>
+                {%endfor%}
+            </div>
+        </section>
+    </div>
+</div>
+
+<div id="Main" class="tabcontent">
+    <div class="container">
+        <section class="menu" id="menu">
+            <div class="box-container">
+                {% for dish in mainCourse%}
+                <div class="box">
+                    <div class="image">
+                        <img src="/static/picture/{{dish['dishPic']}}" class="dishPic">
+                        <a href="#" class="fas fa-heart"></a>
+                    </div>
+                    <div class="content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <h3>{{dish['name']}}</h3>
+                        <p>{{dish['cost']}}</p>
+                        <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
+                        <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
+                        <span class="price">€{{dish['cost']}}</span>
+                    </div>
+                </div>
+                {%endfor%}
+            </div>
+        </section>
+    </div>
+</div>
+
+<div id="Side" class="tabcontent">
+    <div class="container">
+        <section class="menu" id="menu">
+            <div class="box-container">
+                {% for dish in side%}
+                <div class="box">
+                    <div class="image">
+                        <img src="/static/picture/{{dish['dishPic']}}" class="dishPic">
+                        <a href="#" class="fas fa-heart"></a>
+                    </div>
+                    <div class="content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <h3>{{dish['name']}}</h3>
+                        <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
+                        <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
+                        <span class="price">€{{dish['cost']}}</span>
+                    </div>
+                </div>
+                {%endfor%}
+            </div>
+        </section>
+    </div>
 </div>
 
 
+<div id="Dessert" class="tabcontent">
+    <div class="container">
+        <section class="menu" id="menu">
+            <div class="box-container">
+                {% for dish in dessert %}
+                <div class="box">
+                    <div class="image">
+                        <img src="/static/picture/{{dish['dishPic']}}" class="dishPic">
+                        <a href="#" class="fas fa-heart"></a>
+                    </div>
+                    <div class="content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <h3>{{dish['name']}}</h3>
+                        <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
+                        <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
+                        <span class="price">€{{dish['cost']}}</span>
+                    </div>
+                </div>
+                {%endfor%}
+            </div>
+        </section>
+    </div>
 </div>
+
+<div id="Special" class="tabcontent">
+    <div class="container">
+        <section class="menu" id="menu">
+            <div class="box-container">
+                {% for dish in special%}
+                <div class="box">
+                    <div class="image">
+                        <img src="/static/picture/{{ dish['dishPic'] }}" class="dishPic">
+                        <a href="#" class="fas fa-heart"></a>
+                    </div>
+                    <div class="content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <h3>{{dish['name']}}</h3>
+                        <p>{{dish['cost']}}</p>
+                        <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
+                        <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
+                        <span class="price">€{{dish['cost']}}</span>
+                    </div>
+                </div>
+                {%endfor%}
+            </div>
+        </section>
+    </div>
 </div>
+<!-- review section starts  -->
+
+<div class="container">
+    <section class="review" id="review">
+        <h3 class="sub-heading"> customer's review </h3>
+        <h1 class="heading"> what they say </h1>
+        <div class="swiper review-slider">
+            <div class="swiper-wrapper">
+                
+                {% if reviews %}
+                {% for review in reviews %}
+                <div class="swiper-slide slide">
+                    <i class="fas fa-quote-right"></i>
+                    <div class="user">
+                        <div class="user-info">
+                            <h3>{{ review["name"] }}</h3>
+                            <h6>Review for: {{ review["dish_name"] }}</h>
+                            {% if review["rating"] == 4 %}
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            {% else %}
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <p>{{ review["comment"] }}</p>
+                </div>
+                {% endfor %}
+                {% endif %}
+                
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+    </section>
 </div>
-</div>
+<!-- review section ends -->
 
+{% block javascripts %}
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 
+<!-- custom js file link  -->
+<script src="static/assets/js/menu.js"></script>
+{% endblock javascripts %}
 
-
-
-
- 
-    {%endif%}
-
-
-
-
-{%endblock content%}
-
-{%endblock%}
-
+{% endblock content %}

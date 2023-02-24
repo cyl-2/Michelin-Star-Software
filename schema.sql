@@ -150,7 +150,7 @@ CREATE TABLE dish
     allergies TEXT
     
 );
-
+/*
 INSERT INTO dish
   ( name, cost, cook_time, dishType, dishPic, description, allergies )
 VALUES
@@ -161,7 +161,7 @@ VALUES
   ('Chicken Salad', 15, 20, 'starter', '1', 'Chicken salad description', ''),
   ('Ice Cream', 20, 30, 'dessert', '1', 'Ice cream description', ''),
   ('Chocolate Brownie', 15, 20, 'dessert', '1', 'brownie description', '');
-
+*/
 DROP TABLE IF EXISTS dish_ingredient;
 
 CREATE TABLE dish_ingredient
@@ -295,10 +295,10 @@ DROP TABLE IF EXISTS modifications;
 
 CREATE TABLE modifications
 (
-	modifications_id INTEGER,
+	modifications_id INTEGER PRIMARY KEY AUTOINCREMENT,
 	dish_id INTEGER,
-    changes TEXT,
-    user TEXT
+  changes TEXT,
+  user TEXT
 );
 
 /*

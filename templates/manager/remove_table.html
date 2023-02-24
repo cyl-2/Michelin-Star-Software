@@ -5,6 +5,17 @@
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
+<script type="text/javascript">
+    
+    function popUpAppear(table_input) {
+        document.getElementById('popup').style.display = 'inline';
+    }
+
+    function popUpCancel() {
+        document.getElementById('popup').style.display = 'none'
+    }
+</script>
+{% set table = 0 %}
 <!--<p><a href="{{ url_for('roster_timetable') }}">Roster</a></p>-->
     <div class="pcoded-wrapper">
         <div class="pcoded-content">
@@ -16,10 +27,20 @@
                         </div>
                         {% for table_index in table_positions %}
                             <div style="position:absolute;  left: {{ table_positions[table_index][0] }}; top: {{ table_positions[table_index][1] }};  width: 90px;">
-                                <a href="{{ url_for('remove_table', table=table_index) }}">
+                                <a onClick="popUpAppear()">
                                     <img src="{{ url_for('static', filename='table.png' ) }}" style="width: 90px;"/>
                                     <p class="btn btn-square btn-info">Table {{ table_index }}</p>
                                 </a>
+                            </div>
+                            <div id="popup" class="col-sm-5" style="position: absolute; top: 100px; left: 400px; display: none;">
+                                <div class="card" style=" border-radius:10px; box-shadow: 5px 10px 8px #888888;">
+                                    <div class="card-header">
+                                        <h4>Confirm Action: Delete table {{table_index}}</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <a onClick="popUpCancel()" class="btn btn-danger">No</a> <a href="{{ url_for('remove_table', table=table_index) }}" class="btn btn-success" >Yes</a>
+                                    </div>
+                                </div>
                             </div>
                         {% endfor %}
                     </div>
@@ -27,5 +48,17 @@
             </div>
         </div>
     </div>
-
+    <!--
+    <div id="popup" class="col-sm-4" style="position: absolute; top: 100px; left: 400px; display: none;">
+        <div class="card" style=" border-radius:10px; box-shadow: 5px 10px 8px #888888;">
+            <div class="card-header">
+                <h4>Are you sure you want to remove this table?</h4>
+            </div>
+            <div class="card-body">
+                <a onClick="popUpCancel()" class="btn btn-danger">No</a> <a id="link" href="{{ url_for('remove_table', table=table) }}" class="btn btn-success" >Yes</a>
+            </div>
+        </div>
+    </div>
+    -->
+    
 {% endblock content %} 
