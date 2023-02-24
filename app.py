@@ -44,8 +44,8 @@ mysql = MySQL(app)
 
 @app.before_request
 def logged_in():
-    g.user = "cherrylin20172027@gmail.com" #session.get("username", None)
-    g.access = "managerial" #session.get("access_level", None)
+    g.user = session.get("username", None)
+    g.access = session.get("access_level", None)
 
 def login_required(view):
     @wraps(view)
