@@ -44,8 +44,8 @@ mysql = MySQL(app)
 
 @app.before_request
 def logged_in():
-    g.user = session.get("username", None)
-    g.access = session.get("access_level", None)
+    g.user = "cherrylin20172027@gmail.com" #session.get("username", None)
+    g.access = "managerial" #session.get("access_level", None)
 
 def login_required(view):
     @wraps(view)
@@ -976,41 +976,7 @@ def get_random_password():
 def manager():
     cur = mysql.connection.cursor()
     date = datetime.now().date()
-
-    cur.execute('''SELECT i.name 
-                FROM ingredients as i 
-                JOIN stock as s 
-                ON i.ingredient_id=s.ingredient_id
-                WHERE expiry_date=%s;''', (date,))
-    name=cur.fetchall()
-
-    cur.execute('''DELETE FROM stock
-                WHERE expiry_date=%s;''', (date,))
-    mysql.connection.commit()
     
-    message=""
-    for item in name:
-    # Notify manager about expiry of stock
-        message =message + f"Your {item['name']} is expired!\n"
-    msg = Message("Expiry Notice", sender=credentials.flask_email, recipients=[g.user])   
-    msg.body = f"""{message}"""
-    mail.send(msg)
-
-    cur.execute('''SELECT i.name, i.supplier_email, 
-                    FROM ingredients as i
-                    JOIN stock as s
-                    ON i.ingredient_id=s.ingredient_id
-                    WHERE o.quantity<=10;''')
-    emails=cur.fetchall()
-
-    for email in emails:
-    
-        message = f"can we have more {email['i.name']} please. Same as last week!"
-        msg = Message("Order Notice", sender=credentials.flask_email, recipients=[email["i.suplier_email"]])   
-        msg.body = f"""{message}"""
-        mail.send(msg)
-
-
     cur.execute("SELECT * FROM user_analytics")
     user_analytics = cur.fetchone()
     cur.execute("SELECT * FROM sales_analytics")
@@ -1281,7 +1247,6 @@ def addDish():
 ##############################################################################################################################################
 ##############################################################################################################################################
 
-#initally i'm gonna just get all dishes to display but i do want to be able to separate it into like starter, main course etc
 @app.route('/menu',methods=['GET'])
 def menu():
     cur=mysql.connection.cursor()
@@ -1298,28 +1263,27 @@ def menu():
     drink= cur.fetchall()
     cur.execute(" SELECT * FROM dish WHERE dishType='side'")
     side = cur.fetchall()
-    cur.close()#
-    return render_template('customer/dishes.html', dishes=dishes, starter=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side)
+    cur.execute(" SELECT * FROM reviews where rating >= 4 and comment != '' ")
+    reviews=cur.fetchall()
+    cur.close()
+    return render_template('customer/dishes.html', reviews=reviews, dishes=dishes, starter=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side)
 
 @app.route('/review_dish/<int:dish_id>',methods=['GET', 'POST'])
-@login_required
+#@login_required
 def review_dish(dish_id):
     cur=mysql.connection.cursor()
     cur.execute('''SELECT * FROM dish WHERE dish_id = %s''',(dish_id,))
-    dish =cur.fetchone()
+    dish = cur.fetchone()
     
     form = Review()
     if form.validate_on_submit():
         rating = form.rating.data
         comment = form.comment.data
-        if comment == '' or comment == None:
-            cur.execute("""INSERT INTO reviews ( username, comment, rating, dish_id) VALUES
-                (%s,%s,%s,%s)""",(g.user,'', rating, dish_id))
-        else:
-            cur.execute("""INSERT INTO reviews ( username, comment, rating, dish_id) VALUES
-                (%s,%s,%s,%s)""",(g.user, comment, rating, dish_id))
+        cur.execute("SELECT * FROM customer WHERE email=%s", (g.user,))
+        customer = cur.fetchone()
+        cur.execute("""INSERT INTO reviews ( username, name, comment, rating, dish_name) VALUES
+                (%s,%s,%s,%s, %s)""",(g.user, customer["first_name"], comment, rating, dish["name"]))
         mysql.connection.commit()
-        
         cur.close()
         return redirect(url_for('menu'))
     return render_template('customer/review_dish.html', dish=dish, form=form)

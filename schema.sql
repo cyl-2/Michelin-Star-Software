@@ -146,19 +146,20 @@ CREATE TABLE dish
     cost INTEGER NOT NULL,
     cook_time Integer NOT NULL,
     dishType TEXT NOT NULL,
-    allergies TEXT DEFAULT NULL
+    allergies TEXT DEFAULT NULL,
+    number_of_orders INT DEFAULT 0
 );
 
 INSERT INTO dish
-  ( name, cost, cook_time, allergies, dishType )
+  ( name, cost, cook_time, allergies, dishType, number_of_orders )
 VALUES
-  ('Burger and chips', 20, 30, '', 'main'),
-  ('Chicken and chips', 15, 20, '', 'main'),
-  ('Fish and chips', 25, 20, '', 'main'),
-  ('Tomato soup', 20, 30, '', 'starter'),
-  ('Chicken Salad', 15, 20, '', 'starter'),
-  ('Ice Cream', 20, 30, '', 'dessert'),
-  ('Chocolate Brownie', 15, 20, '', 'dessert');
+  ('Burger and chips', 20, 30, '', 'main', 210),
+  ('Chicken and chips', 15, 20, '', 'main', 168),
+  ('Fish and chips', 25, 20, '', 'main', 98),
+  ('Tomato soup', 20, 30, '', 'starter', 35),
+  ('Chicken Salad', 15, 20, '', 'starter', 22),
+  ('Ice Cream', 20, 30, '', 'dessert', 354),
+  ('Chocolate Brownie', 15, 20, '', 'dessert', 123);
 
 DROP TABLE IF EXISTS dish_ingredient;
 
@@ -286,19 +287,19 @@ DROP TABLE IF EXISTS reviews;
 CREATE TABLE reviews
 (
     username TEXT,
+    name TEXT,
     comment TEXT,
     rating INTEGER,
-    dish_id INTEGER
+    dish_name TEXT
 );
 
 INSERT INTO reviews
-  ( username, comment, rating, dish_id)
+  ( username, name, comment, rating, dish_name)
 VALUES
-  ("benc190514@gmail.com", "good", 5, 1), 
-  ("benc190514@gmail.com", "bad", 2, 2), 
-  ("benc190514@gmail.com", "okay", 4, 3),
-  ("benc190514il.com", "AMAZING", 10, 5);
-
+  ("benc190514@gmail.com", "ben", "good", 5, "burger"), 
+  ("benc190514@gmail.com", "ben2","bad", 2, "tomato soup"), 
+  ("benc190514@gmail.com", "ben3","okay", 4, "broccoli sticks"),
+  ("benc190514il.com", "ben4","AMAZING", 10, "vegan gluten free salad");
 
 /*
 ############

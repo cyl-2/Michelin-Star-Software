@@ -1,81 +1,3 @@
-{% extends "layouts/base.html" %}
-
-{% block stylesheets %}
-
-    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="static/assets/css/menu.css">
-{% endblock stylesheets %}
-
-
-{% block content %}
-<!-- header section starts -->
-
-<header>
-    <section class="flex">
-        <div class="icons">
-            <i class="fas fa-bars" id="menu-bars"></i>
-            <i id="search-icon"></i>
-        </div>
-    </section>
-</header>
-
-<!-- header section ends-->
-
-<!-- the next few lines will have to be here  -->
-
-<form action="" id="search-form">
-    <i class="fas fa-times" id="close"></i>
-</form>
-
-<!-- home section starts  -->
-
-<div class="container">
-    <section class="home" id="home">
-        <div class="swiper home-slider">
-            <div class="swiper-wrapper">
-                <div class="swiper-slide slide">
-                    <div class="content">
-                        <span>our special dish</span>
-                        <h3>spicy noodles</h3>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Sit natus dolor cumque?</p>
-                        <a href="#" class="btn">order now</a>
-                    </div>
-                    <div class="image">
-                        <img src="static/images-menu/home-img-1.png" alt="">
-                    </div>
-                </div>
-                <div class="swiper-slide slide">
-                    <div class="content">
-                        <span>our special dish</span>
-                        <h3>fried chicken</h3>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Sit natus dolor cumque?</p>
-                        <a href="#" class="btn">order now</a>
-                    </div>
-                    <div class="image">
-                        <img src="static/images-menu/home-img-2.png" alt="">
-                    </div>
-                </div>
-    
-                <div class="swiper-slide slide">
-                    <div class="content">
-                        <span>our special dish</span>
-                        <h3>hot pizza</h3>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Sit natus dolor cumque?</p>
-                        <a href="#" class="btn">order now</a>
-                    </div>
-                    <div class="image">
-                        <img src="static/images-menu/home-img-3.png" alt="">
-                    </div>
-                </div>
-            </div>
-            <div class="swiper-pagination"></div>
-        </div>
-    </section>
-</div>
-
-<!-- home section ends -->
-
 <div class="tab">
     <div class= "center">
         <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -211,58 +133,25 @@
     </div>
 </div>
 
-<!-- review section starts  -->
-
-<div class="container">
-    <section class="review" id="review">
-        <h3 class="sub-heading"> customer's review </h3>
-        <h1 class="heading"> what they say </h1>
-        <div class="swiper review-slider">
-            <div class="swiper-wrapper">
-                
-                {% if reviews %}
-                {% for review in reviews %}
-                <div class="swiper-slide slide">
-                    <i class="fas fa-quote-right"></i>
-                    <div class="user">
-                        <div class="user-info">
-                            <h3>{{ review["name"] }}</h3>
-                            <h6>Review for: {{ review["dish_name"] }}</h>
-                            {% if review["rating"] == 4 %}
-                            <div class="stars">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            {% else %}
-                            <div class="stars">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <p>{{ review["comment"] }}</p>
-                </div>
-                {% endfor %}
-                {% endif %}
-                
-            </div>
-            <div class="swiper-pagination"></div>
-        </div>
-    </section>
-</div>
-<!-- review section ends -->
-
-{% block javascripts %}
-<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
-
-<!-- custom js file link  -->
-<script src="static/assets/js/menu.js"></script>
-{% endblock javascripts %}
-
-{% endblock content %}
+<script> 
+    function openCity(evt, cityName) {
+      // Declare all variables
+      var i, tabcontent, tablinks;
+    
+      // Get all elements with class="tabcontent" and hide them
+      tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+      }
+    
+      // Get all elements with class="tablinks" and remove the class "active"
+      tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById(cityName).style.display = "block";
+      evt.currentTarget.className += " active";
+    }
+</script>
