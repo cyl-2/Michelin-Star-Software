@@ -1315,7 +1315,7 @@ def addDish():
     cur = mysql.connection.cursor()
     form = AddDishForm()
     if form.validate_on_submit():
-        name = form.name.data
+        name = form.name.data.lower()
         cur.execute('SELECT * from dish WHERE name=%s',(name,))
         result = cur.fetchone()
         if result is not None:
@@ -1325,35 +1325,41 @@ def addDish():
             cookTime = form.cookTime.data
             dishType = (form.dishType.data).lower()
             dishDescription = form.dishDescription.data
-            dishPic = form.dishPic.data
+            #dishPic = form.dishPic.data
             ingredients = form.ingredients.data
             allergins= form.allergins.data
-            filename = secure_filename(dishPic.filename)
-            dishPic.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
-            cur.execute("INSERT INTO dish (name, cost, cook_time, dishType, description,dishPic,allergies) VALUES(%s,%s,%s,%s,%s,%s,%s);", (name,cost,cookTime,dishType,dishDescription,filename,allergins))
+            allergens_str = ','.join(allergins)
+            #filename = secure_filename(dishPic.filename)
+            #dishPic.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
+
+            cur.execute("""INSERT INTO dish (name, cost, cook_time, dishType, description, allergies) VALUES (%s,%s,%s,%s,%s,%s);""", (name,cost,cookTime,dishType,dishDescription,allergens_str))
             mysql.connection.commit()
-            if ingredients is not None:
-                ingredients=ingredients.split(',')
-                for ingredient in ingredients:
+
+            ingredients=ingredients.split(',')
+            print(ingredients)
+            for ingredient in ingredients:
+                cur.execute("SELECT * FROM ingredient WHERE name=%s",(ingredient,))
+                ingredient_item = cur.fetchone()
+                
+                if ingredient_item is not None:
+                    ingredient_id=ingredient_item['ingredient_id']
+                    cur.execute('SELECT * FROM dish WHERE name=%s AND cost=%s AND cook_time=%s',(name, cost, cookTime))
+                    dish=cur.fetchone()
+                    cur.execute("INSERT INTO dish_ingredient(ingredient_id,dish_id) VALUES (%s,%s)",(ingredient_id,dish['dish_id']))
+                    mysql.connection.commit()
+                else:
+                    cur.execute('SELECT * FROM dish WHERE name=%s AND cost=%s AND cook_time=%s',(name, cost, cookTime))
+                    dish=cur.fetchone()
+                    cur.execute("INSERT INTO ingredient (name) VALUES (%s)",(ingredient.lower(),))
+                    mysql.connection.commit()
                     cur.execute("SELECT * FROM ingredient WHERE name=%s",(ingredient,))
-                    ingredient_id=cur.fetchone()
-                    if ingredient_id is not None:
-                        ingredient_id=ingredient_id['ingredient_id']
-                        cur.execute('SELECT * FROM dish WHERE name=%s AND cost=%s AND cook_time=%s',(name, cost, cookTime))
-                        dish_id=cur.fetchone()['dish_id']
-                        cur.execute("INSERT INTO dish_ingredient(ingredient_id,dish_id) VALUES (%s,%s)",(ingredient_id,dish_id))
-                        mysql.connection.commit()
-                    else:
-                        cur.execute('SELECT * FROM dish WHERE name=%s AND cost=%s AND cook_time=%s',(name, cost, cookTime))
-                        dish_id=cur.fetchone()['dish_id']
-                        cur.execute("INSERT INTO ingredient(name,quantity) VALUES (%s,%s)",(ingredient,0))
-                        mysql.connection.commit()
-                        cur.execute("SELECT * FROM ingredient WHERE name=%s",(ingredient,))
-                        ingredient_id=cur.fetchone()['ingredient_id']
-                        cur.execute("INSERT INTO dish_ingredient(ingredient_id,dish_id) VALUES (%s,%s)",(ingredient_id,dish_id))
-                        mysql.connection.commit()
-            #cur.close()
-            return redirect(url_for('menu'))
+                    ingredient_id=cur.fetchone()['ingredient_id']
+                    cur.execute("INSERT INTO dish_ingredient(ingredient_id,dish_id) VALUES (%s,%s)",(ingredient_id,dish['dish_id']))
+                    mysql.connection.commit()
+            cur.close()
+
+            flash("Successfully added new menu item!")
+            return redirect(url_for('addDish'))
     return render_template('manager/addDish.html', form=form)
 
 # View and manage all existing menu items

@@ -1,7 +1,7 @@
-from wtforms import SubmitField, StringField, SelectField, PasswordField, TextAreaField, IntegerField, DateField, DecimalRangeField, RadioField, validators, FileField, SelectMultipleField
+from wtforms import SubmitField, StringField, SelectField, PasswordField, DecimalField, TextAreaField, IntegerField, DateField, DecimalRangeField, RadioField, validators, FileField, SelectMultipleField
 from flask_wtf import FlaskForm
 from wtforms.validators import InputRequired, EqualTo, NumberRange, Email
-from wtforms.widgets import TextArea
+from wtforms.widgets import TextArea, CheckboxInput
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 
 class TableForm(FlaskForm):
@@ -28,7 +28,6 @@ class RosterRequirementsForm(FlaskForm):
     min_workers = IntegerField( validators=[ NumberRange(0,24)])
     unavailable = StringField()
     submit = SubmitField("Confirm Changes")
-
 
 class RegistrationForm(FlaskForm):
     email = StringField("Email Address", [InputRequired(), validators.Length(min=6, max=100), Email(message="Please enter a valid email address!")])
@@ -100,13 +99,25 @@ class RejectRosterRequestForm(FlaskForm):
 
 class AddDishForm(FlaskForm):
     name = StringField('Dish Name: ', validators=[InputRequired()])
-    cost = IntegerField('Dish Price', validators=[InputRequired()])
-    cookTime= IntegerField('Cook Time', validators=[InputRequired()])
-    dishType = StringField('Dish type:',validators=[InputRequired()])
+    cost = DecimalField('Dish Price', validators=[InputRequired()])
+    cookTime= IntegerField('Cook Time (in minutes)', validators=[InputRequired()])
+    dishType = SelectField("Category", 
+                                        choices = [("starter", "Starter"),
+                                                    ("main course", "Main Course"),
+                                                    ("dessert", "Dessert"),
+                                                    ("side", "Side"),
+                                                    ("drink", "Drink"),
+                                                    ("special", "Special")], validators=[InputRequired()])
     dishDescription = TextAreaField('Dish Description: ')
-    #allergins= TextAreaField('Add any allergins that are applicable: ')
-    allergins=SelectMultipleField('Allergins:', choices=[('gluten','Gluten'),('dairy','Dairy'),('nut','Nut'),('soya','soya'),('egg','Egg')],validators=[InputRequired()])
-    dishPic = FileField('Upload a picture of dish:',validators=[FileRequired(),FileAllowed(['jpg','png'],'Images Only!')])
+    allergins=SelectMultipleField('Allergens (if any)', 
+                                choices=[('not applicable','Not applicable'),
+                                ('gluten','Gluten'),
+                                ('dairy','Dairy'),
+                                ('nut','Nut'),
+                                ('soya','Soya'),
+                                ('egg','Egg')], option_widget=CheckboxInput(),
+                                validators=[InputRequired()])
+    dishPic = FileField('Upload a picture of dish:', validators=[FileRequired(), FileAllowed(['jpg','png'],'Images Only!')])
     ingredients= TextAreaField('Add ingredients necessary for this dish',default="In the format ingredient1,ingredient2, pls separte with a comma!")
     submit = SubmitField('Submit')
 
@@ -114,7 +125,6 @@ class UserPic(FlaskForm):
     profile_pic = FileField('Upload a cover', validators=[FileRequired(),FileAllowed(['jpg','png'],'Images Only!')])
     submit = SubmitField('Enter')
 
-    
 class cardDetails(FlaskForm):
     cardNum = IntegerField('Enter card number:', validators=[InputRequired()])
     cardHolder = StringField('Enter card holders name:', validators=[InputRequired()])

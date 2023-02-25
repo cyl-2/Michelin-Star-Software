@@ -7,6 +7,15 @@
             <div class="pcoded-inner-content">
                 <div class="main-body">
                     <div class="page-wrapper">
+                        <div>
+                            {% with messages = get_flashed_messages() %}
+                                {% if messages %}
+                                    {% for message in messages %}
+                                        <p> {{ message }}</p>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
+                        </div>
                         <div class="row">
                             <div class="col-sm-12">
                                 <div class="card">
@@ -62,7 +71,7 @@
                                                 <div class="col-sm-12 mb-4">
                                                     <div class="form-group">
                                                         {{form.dishType.label}}
-                                                        {{form.dishType(class="form-control")}}
+                                                        {{form.dishType(class="form-control", placeholder="Choose a category option for the menu item")}}
                                                         <span class="mb-0 text-muted">
                                                             <span class="text-danger">
                                                             {% for error in form.dishType.errors %}
@@ -116,7 +125,12 @@
                                                 <div class="col-sm-12 mb-4">
                                                     <div class="form-group">
                                                         {{form.allergins.label}}
-                                                        {{form.allergins(class="form-control")}}
+                                                        {% for subfield in form.allergins %}
+                                                        <div class="form-check">
+                                                        {{ subfield }}
+                                                        <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+                                                        </div>
+                                                        {% endfor %}
                                                         <span class="mb-0 text-muted">
                                                             <span class="text-danger">
                                                             {%for error in form.allergins.errors%}
@@ -135,15 +149,6 @@
                                             </div>
                                         </form>
 
-                                        <div>
-                                            {% with messages = get_flashed_messages() %}
-                                                {% if messages %}
-                                                    {% for message in messages %}
-                                                        <p> {{ message }}</p>
-                                                    {% endfor %}
-                                                {% endif %}
-                                            {% endwith %}
-                                        </div>
                                     </div>
                                 </div>
                             </div>

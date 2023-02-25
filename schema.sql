@@ -109,6 +109,7 @@ CREATE TABLE ingredient
 (   
     ingredient_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     name TEXT NOT NULL,
+    quantity INTEGER DEFAULT 0,
     supplier_email TEXT
 );
 
@@ -164,14 +165,15 @@ CREATE TABLE dish
 (   
     dish_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     name TEXT NOT NULL,
-    cost INTEGER NOT NULL,
-    cook_time Integer NOT NULL,
+    description TEXT NOT NULL,
+    cost DECIMAL NOT NULL,
+    cook_time INTEGER NOT NULL,
     dishType TEXT NOT NULL,
-    allergies TEXT DEFAULT NULL
+    allergies JSON DEFAULT NULL
 );
 
 INSERT INTO dish
-  ( name, cost, cook_time, allergies, dishType )
+  ( name, cost, description, cook_time, allergies, dishType )
 VALUES
   ('Burger and chips', 20, 30, '', 'main'),
   ('Chicken and chips', 15, 20, '', 'main'),
