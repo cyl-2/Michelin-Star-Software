@@ -1188,7 +1188,7 @@ def add_to_roster_timetable():
             cur.execute("UPDATE roster SET "+day+" = %s WHERE staff_id = %s;",(time, staff_id,))
             mysql.connection.commit()
         else:
-            form.staff_id.errors = "Staff ID does not exists"
+            form.staff_id.errors = "Staff ID does not exist"
     cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
     roster = cur.fetchall() 
     cur.close()
@@ -1203,6 +1203,17 @@ def view_all_employees():
     employees = cur.fetchall()
     cur.close()
     return render_template("manager/employees.html", employees=employees, title="Employee Data")
+
+# View and manage all existing menu items
+#@manager_only
+@app.route("/view_all_menu_items")
+@manager_only
+def view_all_menu_items():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM dish")
+    menu_items = cur.fetchall()
+    cur.close()
+    return render_template("manager/menu_items.html", menu_items=menu_items, title="Menu Items Data")
 
 # Add new employee
 @app.route("/add_new_employee", methods=["GET", "POST"])
