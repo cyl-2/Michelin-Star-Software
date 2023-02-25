@@ -106,6 +106,7 @@ def auto_login_check_staff():
     if request.cookies.get("email"):
         session.clear()
         session["username"] = request.cookies.get("email")
+        session['access']
         next_page = request.args.get("next")
         if not next_page:
             return redirect("index")
@@ -1366,20 +1367,42 @@ def addDish():
 
 @app.route('/menu',methods=['GET'])
 def menu():
+    if 'order_by' not in session:
+        session['order_by'] = 'low'
     cur=mysql.connection.cursor()
     cur.execute('''SELECT * FROM dish ORDERBY; ''')
     dishes =cur.fetchall()
     #want to order this so that we display by dishtype
-    cur.execute(" SELECT * FROM dish WHERE dishType='starter' ")
-    starters =cur.fetchall()
-    cur.execute(" SELECT * FROM dish WHERE dishType='main' ")
-    mainCourse = cur.fetchall()
-    cur.execute(" SELECT * FROM dish WHERE dishType='dessert' ")
-    dessert= cur.fetchall()
-    cur.execute(" SELECT * FROM dish WHERE dishType='drink'")
-    drink= cur.fetchall()
-    cur.execute(" SELECT * FROM dish WHERE dishType='side'")
-    side = cur.fetchall()
+    if session['order_by'] == 'low':
+        cur.execute(" SELECT * FROM dish WHERE dishType='starter' ORDER BY cost")
+        starters =cur.fetchall()
+        cur.execute(" SELECT * FROM dish WHERE dishType='main' ORDER BY cost")
+        mainCourse = cur.fetchall()
+        cur.execute(" SELECT * FROM dish WHERE dishType='dessert' ORDER BY cost")
+        dessert= cur.fetchall()
+        cur.execute(" SELECT * FROM dish WHERE dishType='drink' ORDER BY cost")
+        drink= cur.fetchall()
+        cur.execute(" SELECT * FROM dish WHERE dishType='side' ORDER BY cost")
+        side = cur.fetchall()
+    else:
+        cur.execute(" SELECT * FROM dish WHERE dishType='starter' ORDER BY cost DESC")
+        starters =cur.fetchall()
+        cur.execute(" SELECT * FROM dish WHERE dishType='main' ORDER BY cost DESC")
+        mainCourse = cur.fetchall()
+        cur.execute(" SELECT * FROM dish WHERE dishType='dessert' ORDER BY cost DESC")
+        dessert= cur.fetchall()
+        cur.execute(" SELECT * FROM dish WHERE dishType='drink' ORDER BY cost DESC")
+        drink= cur.fetchall()
+        cur.execute(" SELECT * FROM dish WHERE dishType='side' ORDER BY cost DESC")
+        side = cur.fetchall()
+    
+    cur.execute("SELECT dish_id FROM reviews ORDER BY rating DESC LIMIT 3")
+    slider_ids = cur.fetchall()
+    slider_list = []
+    for id in slider_ids:
+        slider_list.append(id['dish_id'])
+    cur.execute(" SELECT * FROM dish WHERE dish_id IN %s",(slider_list,))
+    slider = cur.fetchall()
     
     day = datetime.now().weekday()
     cur.execute(" SELECT * FROM dish WHERE dishType='special' AND day = %s",(day,))
@@ -1388,8 +1411,16 @@ def menu():
     cur.execute(" SELECT * FROM reviews where rating >= 4 and comment != '' ")
     reviews=cur.fetchall()
     cur.close()
-    return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side, reviews=reviews, special=special)
-    
+    return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side, reviews=reviews, special=special, slider=slider, session=session)
+
+@app.route('/swap_sort',methods=['GET', 'POST'])
+def swap_sort():
+    if session['order_by'] == 'low':
+        session['order_by'] = 'high'
+    else:
+        session['order_by'] = 'low'
+    return redirect(url_for('menu'))
+
 @app.route('/review_dish/<int:dish_id>',methods=['GET', 'POST'])
 #@login_required
 def review_dish(dish_id):

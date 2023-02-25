@@ -316,9 +316,9 @@ DROP TABLE IF EXISTS modifications;
 
 CREATE TABLE modifications
 (
-	modifications_id INTEGER PRIMARY KEY AUTOINCREMENT,
+	modifications_id INTEGER PRIMARY KEY auto_increment,
 	dish_id INTEGER,
-  changes TEXT,
+  notes TEXT,
   user TEXT
 );
 

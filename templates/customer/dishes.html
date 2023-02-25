@@ -34,40 +34,19 @@
     <section class="home" id="home">
         <div class="swiper home-slider">
             <div class="swiper-wrapper">
-                <div class="swiper-slide slide">
-                    <div class="content">
-                        <span>our special dish</span>
-                        <h3>spicy noodles</h3>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Sit natus dolor cumque?</p>
-                        <a href="#" class="btn">order now</a>
+                {% for meal in slider %}
+                    <div class="swiper-slide slide">
+                        <div class="content">
+                            <span>our best loved dishes</span>
+                            <h3>{{ meal['name'] }}</h3>
+                            <p>{{ meal['description'] }}</p>
+                            <a href="{{url_for('add_default_meal', dish_id=meal['dish_id'])}}" class="btn">order now</a>
+                        </div>
+                        <div class="image">
+                            <img src="static/images-menu/{{ meal['dishPic'] }}" alt="">
+                        </div>
                     </div>
-                    <div class="image">
-                        <img src="static/images-menu/home-img-1.png" alt="">
-                    </div>
-                </div>
-                <div class="swiper-slide slide">
-                    <div class="content">
-                        <span>our special dish</span>
-                        <h3>fried chicken</h3>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Sit natus dolor cumque?</p>
-                        <a href="#" class="btn">order now</a>
-                    </div>
-                    <div class="image">
-                        <img src="static/images-menu/home-img-2.png" alt="">
-                    </div>
-                </div>
-    
-                <div class="swiper-slide slide">
-                    <div class="content">
-                        <span>our special dish</span>
-                        <h3>hot pizza</h3>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Sit natus dolor cumque?</p>
-                        <a href="#" class="btn">order now</a>
-                    </div>
-                    <div class="image">
-                        <img src="static/images-menu/home-img-3.png" alt="">
-                    </div>
-                </div>
+                {% endfor %}
             </div>
             <div class="swiper-pagination"></div>
         </div>
@@ -84,6 +63,14 @@
             <button class="tablinks nav-link" onclick="openCity(event, 'Dessert')">Desserts</button>
             <button class="tablinks nav-link" onclick="openCity(event, 'Side')">Sides</button>
             <button class="tablinks nav-link" onclick="openCity(event, 'Drinks')">Drinks</button>
+            <button class="tablinks nav-link" onclick="openCity(event, 'Special')">Special</button>
+            <a href="{{ url_for('swap_sort') }}" class="btn btn-light">
+                {% if session['order_by'] == 'low' %}
+                    Sort by Price: Low -> High
+                {% else %}
+                    Sort by Price: High -> Low
+                {% endif %}
+            </a>
         </ul>
     </div>
 </div>
