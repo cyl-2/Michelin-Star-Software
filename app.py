@@ -236,6 +236,13 @@ def customer_login():
             session['counter'] = session.get('counter') + 1
             if session.get('counter')==3:
                 flash(Markup('Oh no, are you having trouble logging in? Click <a href="forgot_password">here</a> to reset your password.')) # reset password link need to go here
+            if session.get('counter')==5:
+                msg = Message(f"Various Login Attempts For Your Michelin Star Account", sender=credentials.flask_email, recipients=[email])
+                msg.body = f"""
+                Hello,
+                There has been an abnormal number of attempts of logins to your account.
+                If it wasn't you, please take action to reset your password now."""
+                mail.send(msg)
                 session.pop('counter', None)
         else:
             session.clear()
@@ -363,7 +370,8 @@ def forgot_password():
                 mysql.connection.commit()
             cur.close()
 
-            # only commented because of credentials    msg = Message(f"Hello, {user['first_name']}", sender=credentials.flask_email, recipients=[user["email"]])
+            # only commented because of credentials
+            msg = Message(f"Hello, {user['first_name']}", sender=credentials.flask_email, recipients=[user["email"]])
             msg.body = f"""
             Hello,
             To reset your password, enter this code: 

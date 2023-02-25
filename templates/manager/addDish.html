@@ -1,7 +1,6 @@
 {% extends "layouts/base.html" %}
 {% block content %}
 
-
 <div class="pcoded-main-container">
     <div class="pcoded-wrapper">
         <div class="pcoded-content">
@@ -12,7 +11,7 @@
                             <div class="col-sm-12">
                                 <div class="card">
                                     <div class="card-header">
-                                        <h5>Add New Dish to Menu</h5>
+                                        <h5>Add New Menu Item</h5>
                                     </div>
                                     <div class="card-block">
 
@@ -26,8 +25,8 @@
                                                         <span class="mb-0 text-muted">
                                                             <span class="text-danger">
                                                             {% for error in form.name.errors %}
-                                                                {{error}}
-                                                            {%endfor%}
+                                                                {{ error }}
+                                                            {% endfor %}
                                                             </span>
                                                         </span>
                                                     </div>
