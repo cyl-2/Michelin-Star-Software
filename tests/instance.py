@@ -1,8 +1,6 @@
 from flask import Flask
 from flask_testing import TestCase
-from flask_mysqldb import MySQL 
-from flask_login import LoginManager
-login_manager = LoginManager()
+from flask_mysqldb import MySQL
 from . import config
 
 class BaseTestCase(TestCase):

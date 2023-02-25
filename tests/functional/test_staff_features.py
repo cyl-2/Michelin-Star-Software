@@ -36,14 +36,14 @@ class TestStaffFeatures(MockDB, BaseTestCase):
         response = client.get('/choose_table')
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Choose Table", response.data)
+        self.assertIn(b"Choose A Table", response.data)
         self.assert_template_used('staff/choose_table.html')
 
     def test_move_tables_page_loads_successfully(self):
         response = client.get('/move_tables')
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Move Table", response.data)
+        self.assertIn(b"Change Table Positions", response.data)
         self.assert_template_used('staff/move_tables.html')
     
     def test_roster_request_page_loads_successfully(self):
