@@ -23,9 +23,13 @@
                                                         {{form.hidden_tag()}}
                                                         {{form.name.label}}
                                                         {{form.name(class="form-control")}}
-                                                        {% for error in form.name.errors %}
-                                                            {{error}}
-                                                        {%endfor%}
+                                                        <span class="mb-0 text-muted">
+                                                            <span class="text-danger">
+                                                            {% for error in form.name.errors %}
+                                                                {{error}}
+                                                            {%endfor%}
+                                                            </span>
+                                                        </span>
                                                     </div>
                                                 </div>
 
@@ -33,18 +37,26 @@
                                                     <div class="form-group">
                                                         {{form.cost.label}}
                                                         {{form.cost(class="form-control")}}
-                                                        {% for error in form.cost.errors %}
-                                                            {{error}}
-                                                        {%endfor%}
+                                                        <span class="mb-0 text-muted">
+                                                            <span class="text-danger">
+                                                            {% for error in form.cost.errors %}
+                                                                {{error}}
+                                                            {%endfor%}
+                                                            </span>
+                                                        </span>
                                                     </div>
                                                 </div>                      
                                                 <div class="col-sm-6 mb-4">
                                                     <div class="form-group">
                                                         {{form.cookTime.label}}
                                                         {{form.cookTime(class="form-control")}}
-                                                        {% for error in form.cookTime.errors %}
-                                                            {{error}}
-                                                        {%endfor%}
+                                                        <span class="mb-0 text-muted">
+                                                            <span class="text-danger">
+                                                            {% for error in form.cookTime.errors %}
+                                                                {{error}}
+                                                            {%endfor%}
+                                                            </span>
+                                                        </span>
                                                     </div>
                                                 </div>
                                                 
@@ -52,59 +64,73 @@
                                                     <div class="form-group">
                                                         {{form.dishType.label}}
                                                         {{form.dishType(class="form-control")}}
-                                                        {% for error in form.dishType.errors %}
-                                                            {{error}}
-                                                        {%endfor%}
+                                                        <span class="mb-0 text-muted">
+                                                            <span class="text-danger">
+                                                            {% for error in form.dishType.errors %}
+                                                                {{error}}
+                                                            {%endfor%}
+                                                            </span>
+                                                        </span>    
                                                     </div>
                                                 </div>
                                                 <div class="col-sm-12 mb-4">
                                                     <div class="form-group">
                                                         {{form.dishPic.label}}
                                                         {{form.dishPic(class="form-control")}}
-                                                        {%for error in form.dishPic.errors%}
-                                                            {{error}}
-                                                        {%endfor%}
+                                                        <span class="mb-0 text-muted">
+                                                            <span class="text-danger">
+                                                            {%for error in form.dishPic.errors%}
+                                                                {{error}}
+                                                            {%endfor%}
+                                                            </span>
+                                                        </span>    
                                                     </div>
-                                                    <div class="col-sm-12 mb-4">
-                                                        <div class="form-group">
-                                                            {{form.dishDescription.label}}
-                                                            <br>
-                                                            {{form.dishDescription(class="form-control")}}
+                                                </div>
+                                                <div class="col-sm-12 mb-4">
+                                                    <div class="form-group">
+                                                        {{form.dishDescription.label}}
+                                                        <br>
+                                                        {{form.dishDescription(class="form-control")}}
+                                                        <span class="mb-0 text-muted">
+                                                            <span class="text-danger">
                                                             {%for error in form.dishDescription.errors%}
                                                                 {{error}}
                                                             {%endfor%}
-                                                        </div>
+                                                            </span>
+                                                        </span>
                                                     </div>
-                                                    <div class="col-sm-12 mb-4">
-                                                        <div class="form-group">
-                                                    {{form.ingredients.label}}
-                                                    <br>
-                                                    {{form.ingredients(class="form-control")}}
-                                                    {%for error in form.ingredients.errors%}
-                                                        {{error}}
-                                                    {%endfor%}    
-                                                        </div>
+                                                </div>
+                                                <div class="col-sm-12 mb-4">
+                                                    <div class="form-group">
+                                                {{form.ingredients.label}}
+                                                <br>
+                                                {{form.ingredients(class="form-control")}}
+                                                        <span class="mb-0 text-muted">
+                                                            <span class="text-danger">
+                                                            {%for error in form.ingredients.errors%}
+                                                                {{error}}
+                                                            {%endfor%}
+                                                            </span>
+                                                        </span> 
                                                     </div>
-                                                    <div class="col-sm-12 mb-4">
-                                                        <div class="form-group">
-                                                            {{form.allergins.label}}
-                                                            {{form.allergins(class="form-control")}}
+                                                </div>
+                                                <div class="col-sm-12 mb-4">
+                                                    <div class="form-group">
+                                                        {{form.allergins.label}}
+                                                        {{form.allergins(class="form-control")}}
+                                                        <span class="mb-0 text-muted">
+                                                            <span class="text-danger">
                                                             {%for error in form.allergins.errors%}
                                                                 {{error}}
                                                             {%endfor%}
-                                                        </div>
+                                                            </span>
+                                                        </span>
                                                     </div>
+                                                </div>
 
-
-
-
-
-
-
-                                                    <div class="col-sm-12 mb-2">
-                                                        <div class="form-group">
-                                                            {{ form.submit(class="btn btn-primary") }}
-                                                        </div>
+                                                <div class="col-sm-12 mb-2">
+                                                    <div class="form-group">
+                                                        {{ form.submit(class="btn btn-primary") }}
                                                     </div>
                                                 </div>
                                             </div>
