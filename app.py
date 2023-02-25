@@ -58,8 +58,8 @@ def get_managerial_notifs():
 
 @app.before_request
 def logged_in():
-    g.user = session.get("username", None)
-    g.access = session.get("access_level", None) ##
+    g.user = "cherrylin20172027@gmail.com"#session.get("username", None)
+    g.access = "ordinary staff"#session.get("access_level", None)
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
 
@@ -67,15 +67,24 @@ def login_required(view):
     @wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
-            return redirect(url_for("customer_login")) #,next=request.url))
+            return render_template("error.html"), 404
         return view(**kwargs)
     return wrapped_view
+
+def business_only(view):
+    @wraps(view)
+    def wrapped_view(**kwargs):
+        if g.access != "ordinary staff" and g.access != "managerial":
+            return render_template("error.html"), 404
+        return view(**kwargs)
+    return wrapped_view
+
 
 def staff_only(view):
     @wraps(view)
     def wrapped_view(**kwargs):
         if g.access != "ordinary staff":
-            return redirect(url_for("index")) #,next=request.url))
+            return render_template("error.html"), 404
         return view(**kwargs)
     return wrapped_view
 
@@ -83,7 +92,7 @@ def manager_only(view):
     @wraps(view)
     def wrapped_view(**kwargs):
         if g.access != "managerial":
-            return redirect(url_for("index"))
+            return render_template("error.html"), 404
         return view(**kwargs)
     return wrapped_view
 
@@ -124,11 +133,18 @@ def logout():
 
 @app.errorhandler(404)
 def page_not_found(error):
-    return render_template("error.html"),404
+    return render_template("error.html"), 404
 
 @app.route("/", methods=["GET","POST"])
 def index():
-    return render_template("home.html", title = "Home")
+    if g.access is None:
+        return redirect( url_for("menu"))
+    if g.access == "managerial":
+        return redirect( url_for("manager"))
+    if g.access == "ordinary staff":
+        return redirect( url_for("choose_table"))
+    if g.access == "customer":
+        return redirect( url_for("customer_profile"))
 
 @app.route("/clear_all_notifications", methods=["POST"])
 def clear_all_notifications():
@@ -270,8 +286,10 @@ def staff_login():
             session.clear()
             session["username"] = email
             if staff["access_level"] == "managerial":
+                g.access = "managerial"
                 return redirect(url_for("manager"))
             elif staff["access_level"] == "ordinary staff":
+                g.access = "ordinary staff"
                 return redirect(url_for("staff_profile"))
                 '''next_page = request.args.get("next")
                 if not next_page:
@@ -564,7 +582,7 @@ def kitchenUndo():
 ##############################################################################################################################################
 # Staff profile
 @app.route("/staff_profile", methods=["GET", "POST"])
-#@staff_only
+@staff_only
 def staff_profile():
     return render_template("staff/staff_profile.html", title="My Profile")
 
@@ -916,7 +934,7 @@ def manage_shift_requirements():
     return render_template("manager/shift_requirements.html", requirements=requirements, staff=staff, week=week, form=form)
 
 @app.route("/roster_request", methods=["GET", "POST"])
-#@staff_only
+@staff_only
 def roster_request():
     cur = mysql.connection.cursor()
     form = RosterRequestForm()
@@ -977,7 +995,9 @@ def contact_us():
         flash("Message sent. We will reply to you in 2-3 business days.")
     return render_template("customer/enquiry_form.html",form=form, title="Contact Us")
 
+
 @app.route("/roster_timetable", methods=["GET","POST"])
+@business_only
 def roster_timetable():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
@@ -1012,44 +1032,13 @@ def get_random_password():
     return password
 
 # Manager account
-#@manager_only
+@manager_only
 @app.route("/manager")
 def manager():
     cur = mysql.connection.cursor()
     date = datetime.now().date()
     
-    cur.execute('''SELECT i.name 
-                FROM ingredients as i 
-                JOIN stock as s 
-                ON i.ingredient_id=s.ingredient_id
-                WHERE expiry_date=%s;''', (date,))
-    name=cur.fetchall()
-
-    cur.execute('''DELETE FROM stock
-                WHERE expiry_date=%s;''', (date,))
-    mysql.connection.commit()
-
-    message=""
-    for item in name:
-    # Notify manager about expiry of stock
-        message =message + f"Your {item['name']} is expired!\n"
-    msg = Message("Expiry Notice", sender=credentials.flask_email, recipients=[g.user])   
-    msg.body = f"""{message}"""
-    mail.send(msg)
-
-    cur.execute('''SELECT i.name, i.supplier_email, 
-                    FROM ingredients as i
-                    JOIN stock as s
-                    ON i.ingredient_id=s.ingredient_id
-                    WHERE o.quantity<=10;''')
-    emails=cur.fetchall()
-
-    for email in emails:
-
-        message = f"can we have more {email['i.name']} please. Same as last week!"
-        msg = Message("Order Notice", sender=credentials.flask_email, recipients=[email["i.suplier_email"]])   
-        msg.body = f"""{message}"""
-        mail.send(msg)
+    
     
     cur.execute("SELECT * FROM user_analytics")
     user_analytics = cur.fetchone()
