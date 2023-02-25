@@ -240,6 +240,7 @@ def customer_login():
         else:
             session.clear()
             session["username"] = email
+            session["access_level"] = "customer"
             
             # cur = mysql.connection.cursor()
             # cur.execute("SELECT last_updated FROM customer WHERE email = %s", (email,))
@@ -286,10 +287,10 @@ def staff_login():
             session.clear()
             session["username"] = email
             if staff["access_level"] == "managerial":
-                g.access = "managerial"
+                session["access_level"] = "managerial"
                 return redirect(url_for("manager"))
             elif staff["access_level"] == "ordinary staff":
-                g.access = "ordinary staff"
+                session["access_level"] = "ordinary staff"
                 return redirect(url_for("staff_profile"))
                 '''next_page = request.args.get("next")
                 if not next_page:
