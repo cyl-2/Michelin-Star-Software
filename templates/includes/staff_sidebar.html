@@ -1,4 +1,4 @@
-<nav class="pcoded-navbar">
+<nav class="pcoded-navbar navbar-collapsed">
     <div class="navbar-wrapper">
         <div class="navbar-brand header-logo">
             <a href="{{url_for('choose_table') }}" class="b-brand">
@@ -41,7 +41,6 @@
                     <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span
                             class="pcoded-mtext">Roster</span></a>
                     <ul class="pcoded-submenu">
-                        <!-- I want the view roster and generate random functionalities (ask ben about those webpages) as dropdown options -->
                         <li><a href="{{ url_for('roster_timetable') }}">View Roster Timetable</a></li>
                         <li><a href="{{ url_for('break_timetable') }}">View Break Timetable</a></li>
                         <li><a href="{{ url_for('roster_request') }}">Submit Roster Request</a></li>
