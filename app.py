@@ -1212,16 +1212,15 @@ def view_all_employees():
     cur.close()
     return render_template("manager/employees.html", employees=employees, title="Employee Data")
 
-# View and manage all existing menu items
+# Remove existing employee
+@app.route("/remove_employee/<int:id>")
 #@manager_only
-@app.route("/view_all_menu_items")
-@manager_only
-def view_all_menu_items():
+def remove_employee(id):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM dish")
-    menu_items = cur.fetchall()
+    cur.execute("""DELETE FROM staff WHERE staff_id=%s""", (id,))
+    mysql.connection.commit()
     cur.close()
-    return render_template("manager/menu_items.html", menu_items=menu_items, title="Menu Items Data")
+    return redirect(url_for("view_all_employees"))
 
 # Add new employee
 @app.route("/add_new_employee", methods=["GET", "POST"])
@@ -1251,16 +1250,6 @@ def add_new_employee():
         flash ("New employee successfully added!")
         return redirect(url_for("view_all_employees"))
     return render_template("manager/add_new_staff.html", form=form, title="Add New Employee")   
-
-# Remove existing employee
-@app.route("/remove_employee/<int:id>")
-#@manager_only
-def remove_employee(id):
-    cur = mysql.connection.cursor()
-    cur.execute("""DELETE FROM staff WHERE staff_id=%s""", (id,))
-    mysql.connection.commit()
-    cur.close()
-    return redirect(url_for("view_all_employees"))  
 
 # View queries from users
 #@manager_only
@@ -1366,6 +1355,27 @@ def addDish():
             #cur.close()
             return redirect(url_for('menu'))
     return render_template('manager/addDish.html', form=form)
+
+# View and manage all existing menu items
+#@manager_only
+@app.route("/view_all_menu_items")
+@manager_only
+def view_all_menu_items():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM dish")
+    menu_items = cur.fetchall()
+    cur.close()
+    return render_template("manager/menu_items.html", menu_items=menu_items, title="Menu Items Data")
+
+# Remove existing employee
+@app.route("/remove_menu_item/<int:id>")
+#@manager_only
+def remove_menu_item(id):
+    cur = mysql.connection.cursor()
+    cur.execute("""DELETE FROM dish WHERE dish_id=%s""", (id,))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for("view_all_menu_items"))
 
 ##############################################################################################################################################
 ##############################################################################################################################################

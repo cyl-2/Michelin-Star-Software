@@ -45,11 +45,7 @@
                 <li class="nav-item pcoded-menu-caption">
                     <label>Menu & Restaurant Operations Tools</label>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('addDish') }}" class="nav-link">
-                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Add New Item To Menu</span>
-                    </a>
-                </li>
+                
                 <li class="nav-item pcoded-hasmenu">
                     <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span
                             class="pcoded-mtext">Restaurant Layout</span></a>
@@ -62,10 +58,11 @@
                 <li data-username="Authentication Sign up Sign in reset password Change password Personal information profile settings map form subscribe"
                     class="nav-item pcoded-hasmenu">
                     <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span
-                            class="pcoded-mtext">Inventory</span></a>
+                            class="pcoded-mtext">Menu Management</span></a>
                     <ul class="pcoded-submenu">
+                        <li><a href="{{ url_for('addDish') }}">Add New Item To Menu</a></li>
+                        <li><a href="{{ url_for('view_all_menu_items') }}">View All Menu Items</a></li>
                         <li><a href="{{ url_for('view_inventory') }}">View All Inventory</a></li>
-                        
                     </ul>
                 </li>
                 

@@ -33,7 +33,7 @@
                                                 <td> {{ employee ["role"] }} </td>
                                                 <td> {{ employee ["first_name"] }} </td>
                                                 <td> {{ employee ["last_name"] }} </td>
-                                                <td> <a href="{{ url_for('remove_employee', id=employee ['staff_id']) }}">Remove</a></td>
+                                                <td> <a href="{{ url_for('remove_employee', id=employee ['staff_id']) }}" class="text-danger">Remove</a></td>
                                             </tr>
                                             {% endfor %}
 

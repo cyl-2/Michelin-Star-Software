@@ -16,7 +16,8 @@
                             <div class="col-sm-12">
                                 <div class="card">
                                     <div class="card-header">
-                                        <h5>Inventory List</h5>
+                                        <h5>Existing Menu Items On Offer</h5>
+                                        <p class="text-right"> <a href="{{ url_for('addDish') }}"> Add new menu item </a> </p>
                                     </div>
                                     <div class="card-block table-border-style">
                                         <div class="table-responsive">
@@ -29,6 +30,7 @@
                                                         <th>Category</th>
                                                         <th>Allergens Information</th>
                                                         <th>Price</th>
+                                                        <th></th>
                                                     </tr>
                                                 </thead>
                                                 {% for item in menu_items %}
@@ -39,6 +41,7 @@
                                                         <td> {{ item ["dishType"]|capitalize }} </td>
                                                         <td> {{ item ["allergies"]|capitalize }} </td>
                                                         <td> {{ item ["cost"] }} </td>
+                                                        <td> <a href="{{ url_for('remove_menu_item', id=item['dish_id']) }}" class="text-danger">Remove</a></td>
                                                     </tr>
                                                 </tbody>
                                                 {% endfor %}
