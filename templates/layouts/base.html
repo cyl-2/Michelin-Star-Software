@@ -56,17 +56,19 @@
     </div>
     <!-- [ Pre-loader ] End -->
 
+
     {% if g.access == "ordinary staff" %}
         {% include 'includes/staff_sidebar.html' %}
-    {% endif %}
 
-    {% if g.access == "managerial" %}
+    {% elif g.access == "managerial" %}
         {% include 'includes/manager_sidebar.html' %}
-    {% endif %}
 
-    {% if g.access == "customer" %}
+    {% elif g.access == "customer" %}
         {% include 'includes/customer_sidebar.html' %}
-    {% endif %}    
+        
+    {% else %}
+        {% include 'includes/guest_sidebar.html' %}
+    {% endif %}
 
     {% include 'includes/navigation.html' %}
 

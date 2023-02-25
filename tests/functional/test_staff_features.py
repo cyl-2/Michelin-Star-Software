@@ -70,9 +70,3 @@ class TestStaffFeatures(MockDB, BaseTestCase):
         #self.assertEqual(response.status_code, 200)
         #self.assertIn(b"Order", response.data)
         self.assert_template_used('staff/take_order.html')'''
-            
-    def test_waiter_menu_returns_success(self):
-        response = client.get('/waiter_menu')
-
-        self.assertEqual(response.status_code, 200)
-        self.assert_template_used('staff/waiter_menu.html')

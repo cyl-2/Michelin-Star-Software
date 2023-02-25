@@ -16,12 +16,6 @@
                 </li>
 
                 <li class="nav-item">
-                    <a href="{{ url_for('waiter_menu') }}" class="nav-link">
-                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Menu</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
                     <a href="{{ url_for('choose_table') }}" class="nav-link">
                         <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Take Order</span>
                     </a>
@@ -51,7 +45,7 @@
                     <label>Account & Settings</label>
                 </li>
 
-                <li class="nav-item {% if 'profile' in segment %} active {% endif %}">
+                <li class="nav-item">
                     <a href="{{ url_for('staff_profile') }}" class="nav-link">
                         <span class="pcoded-micon"><i class="feather icon-user"></i></span>
                             <span class="pcoded-mtext">Profile Page</span></a>

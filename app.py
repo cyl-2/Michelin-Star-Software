@@ -58,8 +58,8 @@ def get_managerial_notifs():
 
 @app.before_request
 def logged_in():
-    g.user = session.get("username", None)
-    g.access = session.get("access_level", None)
+    g.user = "cherrylin20172027@gmail.com"#session.get("username", None)
+    g.access = "managerial"#session.get("access_level", None)
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
 
@@ -288,6 +288,7 @@ def staff_login():
             session["username"] = email
             if staff["access_level"] == "managerial":
                 session["access_level"] = "managerial"
+                session['expiry_check_executed'] = False
                 return redirect(url_for("manager"))
             elif staff["access_level"] == "ordinary staff":
                 session["access_level"] = "ordinary staff"
@@ -610,10 +611,6 @@ def edit_staff_profile():
         profile = cur.fetchone()
         cur.close()
     return render_template("staff/edit_staff_profile.html", form=form, title="My Profile", profile=profile)
-
-@app.route("/waiter_menu", methods=["GET","POST"])
-def waiter_menu():     
-    return render_template("staff/waiter_menu.html")
 
 @app.route("/choose_table", methods=["GET","POST"])
 def choose_table():
@@ -1033,8 +1030,11 @@ def get_random_password():
     return password
     
 def notify_supplier():
+    cur = mysql.connection.cursor()
+    date = datetime.now().date()
+
     cur.execute('''SELECT i.name 
-                FROM ingredients as i 
+                FROM ingredient as i 
                 JOIN stock as s 
                 ON i.ingredient_id=s.ingredient_id
                 WHERE expiry_date=%s;''', (date,))
@@ -1046,32 +1046,45 @@ def notify_supplier():
 
     message=""
     
-    for item in name:
+    expired_foods = []
+    for item in names:
+        expired_foods.append(item['name'])
         # Notify manager about expiry of stock
-        message =message + f"Your {item['name']} is expired!\n"
+        message = message + f"Your {item['name']} is expired!\n"
         msg = Message("Expiry Notice", sender=credentials.flask_email, recipients=[g.user])   
         msg.body = f"""{message}"""
         mail.send(msg)
 
-    cur.execute('''SELECT i.name, i.supplier_email, 
-                    FROM ingredients as i
+    print(expired_foods)
+
+    cur.execute('''SELECT *
+                    FROM ingredient as i
                     JOIN stock as s
                     ON i.ingredient_id=s.ingredient_id
-                    WHERE o.quantity<=10;''')
+                    WHERE s.quantity<=10;''')
     emails=cur.fetchall()
 
     for email in emails:
-        message = f"can we have more {email['i.name']} please. Same as last week!"
-        msg = Message("Order Notice", sender=credentials.flask_email, recipients=[email["i.supplier_email"]])   
-        msg.body = f"""{message}"""
-        mail.send(msg)
+        if email["supplier_email"] is not None:
+            message = f"can we have more {email['name']} please. Same as last week!"
+            msg = Message("Order Notice", sender=credentials.flask_email, recipients=[email["supplier_email"]])   
+            msg.body = f"""{message}"""
+            mail.send(msg)
+        else:
+            cur.execute("""INSERT INTO notifications (user, title, message)
+                    VALUES ("manager", "Inventory Expired Notice","Inventory items %s has expired, please take action.");""", (expired_foods,))
+            mysql.connection.commit()
 
 # Manager account
 @manager_only
 @app.route("/manager")
 def manager():
-    notify_supplier()
 
+    if not session.get('expiry_check_executed', False):
+        # Call the function to check the expiry of foods
+        notify_supplier()
+        session['expiry_check_executed'] = True
+    
     cur = mysql.connection.cursor()
     date = datetime.now().date()
     

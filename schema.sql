@@ -105,7 +105,6 @@ VALUES
   
 
 DROP TABLE IF EXISTS ingredient;
-
 CREATE TABLE ingredient
 (   
     ingredient_id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -123,10 +122,13 @@ VALUES
   ('Buns'),
   ('Soup'),
   ('Ice cream'),
-  ('Brownie'),
-  ('Lettuce');
+  ('Brownie');
+  
+INSERT INTO ingredient ( name, supplier_email )
+VALUES
+('Lettuce', "cherrylin20172027@gmail.com");
 
- DROP TABLE IF EXISTS stock;
+DROP TABLE IF EXISTS stock;
 
 CREATE TABLE stock
 (   

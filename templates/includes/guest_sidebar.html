@@ -1,0 +1,49 @@
+<nav class="pcoded-navbar navbar-collapsed">
+    <div class="navbar-wrapper">
+        <div class="navbar-brand header-logo">
+            <a href="{{url_for('menu') }}" class="b-brand">
+                <div class="b-bg">
+                    <i class="feather icon-trending-up"></i>
+                </div>
+                <span class="b-title">Michelin Star</span>
+            </a>
+            <a class="mobile-menu" id="mobile-collapse" href="javascript:"><span></span></a>
+        </div>
+        <div class="navbar-content scroll-div">
+            <ul class="nav pcoded-inner-navbar">
+                
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Order</label>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ url_for('menu') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-user"></i></span>
+                            <span class="pcoded-mtext">Menu</span></a>
+                </li>
+                
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Create An Account Today!</label>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('registration') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Register For An Account</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('customer_login') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Login To Your Account</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('staff_login') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Staff Login</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
