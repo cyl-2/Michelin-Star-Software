@@ -140,6 +140,15 @@
                                                         </span>
                                                     </div>
                                                 </div>
+                                                <script type="text/javascript">
+                                                    // Disable other options when "Not applicable" is selected
+                                                    document.getElementById("allergens").addEventListener("change", function() {
+                                                        var options = this.options;
+                                                        for (var i = 1; i < options.length; i++) {
+                                                            options[i].disabled = (options[0].selected) ? true : false;
+                                                        }
+                                                    });
+                                                </script>
 
                                                 <div class="col-sm-12 mb-2">
                                                     <div class="form-group">
@@ -159,9 +168,6 @@
         </div>
     </div>
 </div>
-
-
-
 
     
 {%endblock%}

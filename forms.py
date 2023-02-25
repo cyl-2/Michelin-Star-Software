@@ -121,6 +121,11 @@ class AddDishForm(FlaskForm):
     ingredients= TextAreaField('Add ingredients necessary for this dish',default="In the format ingredient1,ingredient2, pls separte with a comma!")
     submit = SubmitField('Submit')
 
+    def validate_allergins(form, field):
+        if 'not applicable' in field.data and len(field.data) > 1:
+            form.allergins.errors.append('You cannot select "Not applicable" along with other options.')
+
+
 class UserPic(FlaskForm):
     profile_pic = FileField('Upload a cover', validators=[FileRequired(),FileAllowed(['jpg','png'],'Images Only!')])
     submit = SubmitField('Enter')

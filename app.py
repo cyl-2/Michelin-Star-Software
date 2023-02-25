@@ -1307,10 +1307,9 @@ def view_inventory():
     return render_template("manager/inventory.html", inventory=inventory, title="Inventory List")
 
 # Add a new dish to the menu
-#manager only
-#should add instead of a text box for dishtype like a drop down with only a couple of options
 #NEED TO ADD ABILITY TO LIST INGREDIENTS NECESSARY FOR EACH DISH.
 @app.route('/addDish', methods=['GET','POST'])
+@manager_only
 def addDish():
     cur = mysql.connection.cursor()
     form = AddDishForm()
@@ -1332,11 +1331,11 @@ def addDish():
             #filename = secure_filename(dishPic.filename)
             #dishPic.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
 
+            # need to add dishPic back in later
             cur.execute("""INSERT INTO dish (name, cost, cook_time, dishType, description, allergies) VALUES (%s,%s,%s,%s,%s,%s);""", (name,cost,cookTime,dishType,dishDescription,allergens_str))
             mysql.connection.commit()
 
             ingredients=ingredients.split(',')
-            print(ingredients)
             for ingredient in ingredients:
                 cur.execute("SELECT * FROM ingredient WHERE name=%s",(ingredient,))
                 ingredient_item = cur.fetchone()
