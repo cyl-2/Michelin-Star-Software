@@ -1048,14 +1048,14 @@ def notify_supplier():
     
     expired_foods = []
     for item in names:
-        expired_foods.append(item['name'])
+        cur.execute("""INSERT INTO notifications (user, title, message)
+                    VALUES ("manager", "Inventory Expired Notice","Inventory items << %s >> has expired, please take action.");""", (item['name'],))
+        mysql.connection.commit()
         # Notify manager about expiry of stock
         message = message + f"Your {item['name']} is expired!\n"
         msg = Message("Expiry Notice", sender=credentials.flask_email, recipients=[g.user])   
         msg.body = f"""{message}"""
         mail.send(msg)
-
-    print(expired_foods)
 
     cur.execute('''SELECT *
                     FROM ingredient as i
@@ -1070,16 +1070,16 @@ def notify_supplier():
             msg = Message("Order Notice", sender=credentials.flask_email, recipients=[email["supplier_email"]])   
             msg.body = f"""{message}"""
             mail.send(msg)
-        else:
-            cur.execute("""INSERT INTO notifications (user, title, message)
-                    VALUES ("manager", "Inventory Expired Notice","Inventory items %s has expired, please take action.");""", (expired_foods,))
-            mysql.connection.commit()
+            for item in names:
+                cur.execute("""INSERT INTO notifications (user, title, message)
+                        VALUES ("manager", "Inventory Expired Notice","An email has been sent successfully to the supplier for item << %s >>");""", (item['name'],))
+                mysql.connection.commit()
+    cur.close()
 
 # Manager account
 @manager_only
 @app.route("/manager")
 def manager():
-
     if not session.get('expiry_check_executed', False):
         # Call the function to check the expiry of foods
         notify_supplier()
