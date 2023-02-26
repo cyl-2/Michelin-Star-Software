@@ -30,6 +30,8 @@
 
 <!-- home section starts  -->
 
+<div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
 <div class="container">
     <section class="home" id="home">
         <div class="swiper home-slider">
@@ -106,8 +108,7 @@
                             <i class="fas fa-star"></i>
                             <i class="fas fa-star-half-alt"></i>
                         </div>
-                        <h3>{{dish['name']}}</h3>
-                        <p>{{dish['cost']}}</p>
+                        <h4>{{dish['name']}}</h4>
                         <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
                         <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
                         <span class="price">€{{dish['cost']}}</span>
@@ -255,6 +256,9 @@
             <div class="swiper-pagination"></div>
         </div>
     </section>
+</div>
+
+</div>
 </div>
 <!-- review section ends -->
 
