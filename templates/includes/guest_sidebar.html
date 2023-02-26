@@ -18,7 +18,7 @@
 
                 <li class="nav-item">
                     <a href="{{ url_for('menu') }}" class="nav-link">
-                        <span class="pcoded-micon"><i class="feather icon-user"></i></span>
+                        <span class="pcoded-micon"><i class="feather icon-search"></i></span>
                             <span class="pcoded-mtext">Menu</span></a>
                 </li>
                 
@@ -28,21 +28,33 @@
                 
                 <li class="nav-item">
                     <a href="{{ url_for('registration') }}" class="nav-link">
-                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Register For An Account</span>
+                        <span class="pcoded-micon"><i class="feather icon-user-plus"></i></span><span class="pcoded-mtext">Register For An Account</span>
                     </a>
                 </li>
                 
                 <li class="nav-item">
                     <a href="{{ url_for('customer_login') }}" class="nav-link">
-                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Login To Your Account</span>
+                        <span class="pcoded-micon"><i class="feather icon-log-in"></i></span><span class="pcoded-mtext">Customer Login</span>
                     </a>
                 </li>
                 
                 <li class="nav-item">
                     <a href="{{ url_for('staff_login') }}" class="nav-link">
-                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Staff Login</span>
+                        <span class="pcoded-micon"><i class="feather icon-log-in"></i></span><span class="pcoded-mtext">Staff Login</span>
                     </a>
                 </li>
+                
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Customer Support</label>
+                </li>                    
+                <li data-username="Support Page" class="nav-item ">
+                    <a target="_blank" href="{{ url_for('contact_us') }}" class="nav-link">
+                        <span class="pcoded-micon">
+                            <i class="feather icon-headphones"></i>
+                        </span>
+                        <span class="pcoded-mtext">Contact Us</span>
+                    </a>
+                </li>    
             </ul>
         </div>
     </div>
