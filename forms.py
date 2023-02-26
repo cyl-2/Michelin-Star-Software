@@ -102,12 +102,21 @@ class AddDishForm(FlaskForm):
     cost = DecimalField('Dish Price', validators=[InputRequired()])
     cookTime= IntegerField('Cook Time (in minutes)', validators=[InputRequired()])
     dishType = SelectField("Category", 
-                                        choices = [("starter", "Starter"),
-                                                    ("main course", "Main Course"),
-                                                    ("dessert", "Dessert"),
-                                                    ("side", "Side"),
-                                                    ("drink", "Drink"),
-                                                    ("special", "Special")], validators=[InputRequired()])
+                            choices = [("starter", "Starter"),
+                                        ("main course", "Main Course"),
+                                        ("dessert", "Dessert"),
+                                        ("side", "Side"),
+                                        ("drink", "Drink"),
+                                        ("special", "Special")], validators=[InputRequired()])
+    display = SelectField("Display day for menu item? Menu items are displayed on all days of the week by default", 
+                            choices = [("all week", "All week"),
+                                        ("monday", "Monday"),
+                                        ("tuesday", "Tuesday"),
+                                        ("wednesday", "Wednesday"), 
+                                        ("thursday", "Thursday"), 
+                                        ("friday", "Friday"), 
+                                        ("saturday", "Saturday"), 
+                                        ("sunday", "Sunday")], validators=[InputRequired()])
     dishDescription = TextAreaField('Dish Description: ')
     allergins=SelectMultipleField('Allergens (if any)', 
                                 choices=[('not applicable','Not applicable'),
@@ -118,7 +127,7 @@ class AddDishForm(FlaskForm):
                                 ('egg','Egg')], option_widget=CheckboxInput(),
                                 validators=[InputRequired()])
     dishPic = FileField('Upload a picture of dish:', validators=[FileRequired(), FileAllowed(['jpg','png'],'Images Only!')])
-    ingredients= TextAreaField('Add ingredients necessary for this dish',default="In the format ingredient1,ingredient2, pls separte with a comma!")
+    ingredients= TextAreaField('Add ingredients necessary for this dish',default="In the format: ingredient1, ingredient2... each ingredient is separated by a comma!")
     submit = SubmitField('Submit')
 
     def validate_allergins(form, field):

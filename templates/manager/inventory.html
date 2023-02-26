@@ -27,6 +27,7 @@
                                                         <th>ID</th>
                                                         <th>Item</th>
                                                         <th>Quantity</th>
+                                                        <th>Status</th>
                                                     </tr>
                                                 </thead>
                                                 {% for item in inventory %}
@@ -35,6 +36,13 @@
                                                         <th scope="row"> {{ item ["ingredient_id"] }} </th>
                                                         <td> {{ item ["name"] }} </td>
                                                         <td> {{ item ["quantity"] }} </td>
+                                                        {% if item["status"] == "amber" %}
+                                                            <td class="text-left"><i class="fas fa-circle text-c-amber f-15"></i> </td>
+                                                        {% elif item["status"] == "green" %}
+                                                            <td><i class="fas fa-circle text-c-green f-15"></i> </td>
+                                                        {% else %}
+                                                            <td><i class="fas fa-circle text-c-red f-15"></i> </td>
+                                                        {% endif %}
                                                     </tr>
                                                 </tbody>
                                                 {% endfor %}

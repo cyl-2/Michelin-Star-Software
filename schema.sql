@@ -110,20 +110,22 @@ CREATE TABLE ingredient
     ingredient_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     name TEXT NOT NULL,
     quantity INTEGER DEFAULT 0,
-    supplier_email TEXT
+    supplier_email TEXT,
+    status TEXT
 );
 
 INSERT INTO ingredient
-  ( name )
+  ( name, quantity, status )
 VALUES
-  ('Patty'),
-  ('Chips'),
-  ('Chicken'),
-  ('Fish'), 
-  ('Buns'),
-  ('Soup'),
-  ('Ice cream'),
-  ('Brownie');
+  ('Patty', 10, 'red'),
+  ('Chips', 10, 'red'),
+  ('Chicken', 55, 'amber'),
+  ('Fish', 100, 'green'), 
+  ('Buns', 500, 'green'),
+  ('Soup', 50, 'amber'),
+  ('Ice cream', 20, 'red'),
+  ('Brownie', 10, 'red'),
+  ('Water', 0, '');
   
 INSERT INTO ingredient ( name, supplier_email )
 VALUES
@@ -167,6 +169,7 @@ CREATE TABLE dish
     name TEXT NOT NULL,
     description TEXT NOT NULL,
     cost DECIMAL NOT NULL,
+    display TEXT DEFAULT 'all week',
     cook_time INTEGER NOT NULL,
     dishType TEXT NOT NULL,
     allergies JSON DEFAULT NULL

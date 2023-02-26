@@ -68,13 +68,26 @@
                                                     </div>
                                                 </div>
                                                 
-                                                <div class="col-sm-12 mb-4">
+                                                <div class="col-sm-6 mb-4">
                                                     <div class="form-group">
                                                         {{form.dishType.label}}
                                                         {{form.dishType(class="form-control", placeholder="Choose a category option for the menu item")}}
                                                         <span class="mb-0 text-muted">
                                                             <span class="text-danger">
                                                             {% for error in form.dishType.errors %}
+                                                                {{error}}
+                                                            {%endfor%}
+                                                            </span>
+                                                        </span>    
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-6 mb-4">
+                                                    <div class="form-group">
+                                                        {{form.display.label}}
+                                                        {{form.display(class="form-control")}}
+                                                        <span class="mb-0 text-muted">
+                                                            <span class="text-danger">
+                                                            {% for error in form.display.errors %}
                                                                 {{error}}
                                                             {%endfor%}
                                                             </span>

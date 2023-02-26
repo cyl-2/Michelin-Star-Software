@@ -1352,6 +1352,10 @@ p.text-muted {
   color: #a389d4;
 }
 
+.text-c-amber {
+  color: #fbbb4d;
+}
+
 /*====== text-color css ends ======*/
 /*====== Card top border css starts ======*/
 .card-border-c-blue {
