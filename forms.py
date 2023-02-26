@@ -75,7 +75,7 @@ class ProfileForm(FlaskForm):
 
 class NewPasswordForm(FlaskForm):
     new_password = PasswordField("New Password", validators=[InputRequired()])
-    password2 = PasswordField("Confirm new password", validators=[InputRequired("Password doesn't match"), EqualTo("new_password")])
+    password2 = PasswordField("Confirm new password", validators=[InputRequired("Passwords don't match"), EqualTo("new_password")])
     submit = SubmitField("Change password")
 
 class ResetPasswordForm(FlaskForm):

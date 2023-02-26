@@ -371,7 +371,6 @@ def forgot_password():
                 mysql.connection.commit()
             cur.close()
 
-            # only commented because of credentials
             msg = Message(f"Hello, {user['first_name']}", sender=credentials.flask_email, recipients=[user["email"]])
             msg.body = f"""
             Hello,
@@ -403,6 +402,15 @@ def confirm_code(email, table):
         else:
             flash("Code correct! Now you can reset your password :)")
             session["username"] = email
+            # next 8 lines have not been tested -> cyl
+            if table == "customer":
+                session["access_level"] = "customer"
+            else:
+                cur = mysql.connection.cursor()
+                cur.execute("SELECT * FROM staff WHERE email=%s;", (email,) )
+                staff = cur.fetchone()
+                session["access_level"] = staff['access_level']
+                cur.close()
             return redirect(url_for("change_password", table=table))
     return render_template("password_management/confirm_code.html", form=form, title= "Confirm code")
 
@@ -613,7 +621,7 @@ def edit_staff_profile():
                             WHERE email=%s;""", (address, bio, first_name, last_name, g.user))
         mysql.connection.commit()
         cur.close()
-        flash ("successfully updated!")
+        flash ("Successfully updated!")
     else:
         cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM staff WHERE email=%s;", (g.user,))
@@ -988,12 +996,12 @@ def contact_us():
         mysql.connection.commit()
         cur.close()
 
-        # only commented because of credentials    msg = Message(subject, sender=credentials.flask_email, recipients=[credentials.flask_email])   
-        # msg.body = f"""
-        # From: {name} <{email}>
-        # {message}
-        # """
-        # mail.send(msg)
+        msg = Message(subject, sender=credentials.flask_email, recipients=[credentials.flask_email])   
+        msg.body = f"""
+        From: {name} <{email}>
+        {message}
+        """
+        mail.send(msg)
         flash("Message sent. We will reply to you in 2-3 business days.")
     return render_template("customer/enquiry_form.html",form=form, title="Contact Us")
 
@@ -1119,8 +1127,8 @@ def roster_approve(id):
     status = "Approved"
     cur.execute("""UPDATE roster_requests SET status=%s, last_updated=CURRENT_TIMESTAMP WHERE request_id= %s;""", (status, id))
     mysql.connection.commit()
-    flash("Approved")
     cur.close()
+    flash("Approved")
     return redirect(url_for("manager"))
 
 #@manager_only
@@ -1265,8 +1273,8 @@ def delete_query(id):
     cur.execute("DELETE FROM user_queries WHERE query_id=%s", (id,))
     cur.fetchone()
     mysql.connection.commit()
-    flash ("Deleted!")
     cur.close()
+    flash ("Deleted!")
     return redirect(url_for("view_query"))
 
 # Manager can reply to user queries
@@ -1445,7 +1453,7 @@ def review_dish(dish_id):
     cur=mysql.connection.cursor()
     cur.execute('''SELECT * FROM dish WHERE dish_id = %s''',(dish_id,))
     dish = cur.fetchone()
-    url = request.url
+    url = request.url # current webpage
     form = Review()
     if form.validate_on_submit():
         rating = request.form['stars'] # this would give a value between 1 to 5, depending on the num of stars selected
