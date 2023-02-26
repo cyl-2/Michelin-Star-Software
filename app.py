@@ -60,7 +60,7 @@ def get_managerial_notifs():
 @app.before_request
 def logged_in():
     g.user = "cherrylin20172027@gmail.com"#session.get("username", None)
-    g.access = "managerial"#session.get("access_level", None)
+    g.access = "ordinary staff"#session.get("access_level", None)
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
 
