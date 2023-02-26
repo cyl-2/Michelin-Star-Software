@@ -290,11 +290,11 @@ header .flex .icons #menu-bars{
 
 .dishes .box-container .box .stars i{
     font-size: 1.7rem;
-    color:var(--green);
+    color:rgba(255, 255, 0, 0.905);
 }
 
 .dishes .box-container .box span{
-    color:var(--green);
+    color:yellow;
     font-weight: bolder;
     margin-right: 1rem;
     font-size: 2.5rem;
@@ -420,7 +420,7 @@ header .flex .icons #menu-bars{
 
 .menu .box-container .box .content .stars i{
    font-size: 1.7rem;
-   color:var(--green);
+   color:yellow;
 }
 
 .menu .box-container .box .content h3{
@@ -478,7 +478,7 @@ header .flex .icons #menu-bars{
 
 .review .slide .user i{
     font-size: 1.3rem;
-    color:var(--green);
+    color:rgba(255, 255, 0, 0.905);
 }
 
 .review .slide p{

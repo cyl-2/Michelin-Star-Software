@@ -102,11 +102,17 @@
                     </div>
                     <div class="content">
                         <div class="stars">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
+                            {% set full_stars = dish['avg_rating'] | int %}
+                            {% set half_stars = dish['avg_rating'] % 1 == 0.5 %}
+                            {% for i in range(full_stars) %}
+                                <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% if half_stars %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% endif %}
+                            {% if dish['avg_rating'] == 0 %}
+                                <p> No review yet </p>
+                            {% endif %}
                         </div>
                         <h4>{{dish['name']}}</h4>
                         <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
@@ -132,11 +138,17 @@
                     </div>
                     <div class="content">
                         <div class="stars">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
+                            {% set full_stars = dish['avg_rating'] | int %}
+                            {% set half_stars = dish['avg_rating'] % 1 == 0.5 %}
+                            {% for i in range(full_stars) %}
+                                <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% if half_stars %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% endif %}
+                            {% if dish['avg_rating'] == 0 %}
+                                <p> No review yet </p>
+                            {% endif %}
                         </div>
                         <h3>{{dish['name']}}</h3>
                         <p>{{dish['cost']}}</p>
@@ -163,11 +175,17 @@
                     </div>
                     <div class="content">
                         <div class="stars">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
+                            {% set full_stars = dish['avg_rating'] | int %}
+                            {% set half_stars = dish['avg_rating'] % 1 == 0.5 %}
+                            {% for i in range(full_stars) %}
+                                <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% if half_stars %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% endif %}
+                            {% if dish['avg_rating'] == 0 %}
+                                <p> No review yet </p>
+                            {% endif %}
                         </div>
                         <h3>{{dish['name']}}</h3>
                         <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
@@ -194,11 +212,17 @@
                     </div>
                     <div class="content">
                         <div class="stars">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
+                            {% set full_stars = dish['avg_rating'] | int %}
+                            {% set half_stars = dish['avg_rating'] % 1 == 0.5 %}
+                            {% for i in range(full_stars) %}
+                                <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% if half_stars %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% endif %}
+                            {% if dish['avg_rating'] == 0 %}
+                                <p> No review yet </p>
+                            {% endif %}
                         </div>
                         <h3>{{dish['name']}}</h3>
                         <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
@@ -229,22 +253,12 @@
                         <div class="user-info">
                             <h3>{{ review["name"] }}</h3>
                             <h6>Review for: {{ review["dish_name"] }}</h>
-                            {% if review["rating"] == 4 %}
                             <div class="stars">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
+                                {% set full_stars = review['rating'] | int %}
+                                {% for i in range(full_stars) %}
+                                    <i class="fas fa-star"></i>
+                                {% endfor %}
                             </div>
-                            {% else %}
-                            <div class="stars">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            {% endif %}
                         </div>
                     </div>
                     <p>{{ review["comment"] }}</p>
