@@ -7,15 +7,17 @@
             <div class="pcoded-inner-content">
                 <div class="main-body">
                     <div class="page-wrapper">
-                        <div>
-                            {% with messages = get_flashed_messages() %}
-                                {% if messages %}
-                                    {% for message in messages %}
-                                        <p> {{ message }}</p>
-                                    {% endfor %}
-                                {% endif %}
-                            {% endwith %}
-                        </div>
+                        {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <div class="flash">
+                                <div class="flash-blue">
+                                {% for message in messages %}
+                                    <p> <b>{{ message }}</b> </p>
+                                {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% endwith %}
                         <div class="row">
                             <div class="col-sm-12">
                                 <div class="card">

@@ -1426,18 +1426,19 @@ def review_dish(dish_id):
     cur=mysql.connection.cursor()
     cur.execute('''SELECT * FROM dish WHERE dish_id = %s''',(dish_id,))
     dish = cur.fetchone()
-    
+    url = request.url
     form = Review()
     if form.validate_on_submit():
-        rating = current_url = request.form['stars'] # this would give a value between 1 to 5, depending on the num of stars selected
+        rating = request.form['stars'] # this would give a value between 1 to 5, depending on the num of stars selected
         comment = form.comment.data
         cur.execute("SELECT * FROM customer WHERE email=%s", (g.user,))
         customer = cur.fetchone()
-        cur.execute("""INSERT INTO reviews ( username, name, comment, rating, dish_id, dish_name) VALUES
-                (%s,%s,%s,%s, %s)""",(g.user, customer["first_name"], comment, rating, dish_id, dish["name"]))
+        cur.execute("""INSERT INTO reviews ( username, name, comment, rating, dish_name, dish_id) VALUES
+                (%s,%s,%s,%s,%s,%s)""",(g.user, customer["first_name"], comment, int(rating), dish["name"], dish_id))
         mysql.connection.commit()
         cur.close()
-        return redirect(url_for('menu'))
+        flash("Review submitted!")
+        return redirect(url)
     return render_template('customer/review_dish.html', dish=dish, form=form)
 
 @app.route('/dish/<int:dish_id>', methods=['GET','POST'])
