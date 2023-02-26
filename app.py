@@ -1435,7 +1435,11 @@ def menu():
                     GROUP BY dish_id;""")
     side = cur.fetchall()
 
-    cur.execute(" SELECT * FROM reviews where rating >= 4 and comment != '' ")
+    cur.execute("""SELECT DISTINCT(dish_id), dish_name, comment, rating
+                    FROM reviews
+                    WHERE rating >= 4 and comment != ''
+                    GROUP BY dish_id
+                    """)
     reviews=cur.fetchall()
     cur.close()
     return render_template('customer/dishes.html', reviews=reviews, dishes=dishes, starter=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side)
