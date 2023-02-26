@@ -29,9 +29,13 @@
                                                             {{ form.hidden_tag() }}
                                                             {{ form.code.label }}
                                                             {{ form.code(class="form-control", placeholder="Code") }}
-                                                            {% for error in form.code.errors %}
-                                                                {{ error }}
-                                                            {% endfor %}
+                                                            <span class="mb-0 text-muted">
+                                                                <span class="text-danger">
+                                                                {% for error in form.code.errors %}
+                                                                    {{ error }}
+                                                                {% endfor %}
+                                                                </span>
+                                                            </span>
                                                         </div>
                                                     </div>
                                                         <br>

@@ -888,11 +888,6 @@ def remove_table(table):
     mysql.connection.commit()
     cur.close()
     return redirect(url_for('remove_table_menu'))
-            
-@app.route("/break_timetable", methods=["GET","POST"])
-def break_timetable():
-    staff_breaks = [{'name':'Ben', 'time':'9:00'},{'name':'John', 'time':'13:00'},{'name':'Tim', 'time':'8:00'}]
-    return render_template("manager/break_timetable.html", staff_breaks=staff_breaks)
 
 @app.route("/manage_shift_requirements", methods=["GET","POST"])
 def manage_shift_requirements():
