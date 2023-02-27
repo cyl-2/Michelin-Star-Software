@@ -98,8 +98,8 @@ class RejectRosterRequestForm(FlaskForm):
     submit = SubmitField("Confirm")
 
 class AddDishForm(FlaskForm):
-    name = StringField('Dish Name: ', validators=[InputRequired()])
-    cost = DecimalField('Dish Price', validators=[InputRequired()])
+    name = StringField('Name: ', validators=[InputRequired()])
+    cost = DecimalField('Price', validators=[InputRequired()])
     cookTime= IntegerField('Cook Time (in minutes)', validators=[InputRequired()])
     dishType = SelectField("Category", 
                             choices = [("starter", "Starter"),
@@ -117,7 +117,7 @@ class AddDishForm(FlaskForm):
                                         ("friday", "Friday"), 
                                         ("saturday", "Saturday"), 
                                         ("sunday", "Sunday")], validators=[InputRequired()])
-    dishDescription = TextAreaField('Dish Description: ')
+    dishDescription = TextAreaField('Description: ')
     allergins=SelectMultipleField('Allergens (if any)', 
                                 choices=[('not applicable','Not applicable'),
                                 ('gluten','Gluten'),
@@ -126,8 +126,8 @@ class AddDishForm(FlaskForm):
                                 ('soya','Soya'),
                                 ('egg','Egg')], option_widget=CheckboxInput(),
                                 validators=[InputRequired()])
-    dishPic = FileField('Upload a picture of dish:', validators=[FileRequired(), FileAllowed(['jpg','png'],'Images Only!')])
-    ingredients= TextAreaField('Add ingredients necessary for this dish',default="In the format: ingredient1, ingredient2... each ingredient is separated by a comma!")
+    dishPic = FileField('Upload a picture:', validators=[FileRequired(), FileAllowed(['jpg','png'],'Images Only!')])
+    ingredients= TextAreaField('List the ingredients needed',default="In the format: ingredient1, ingredient2... each ingredient is separated by a comma!")
     submit = SubmitField('Submit')
 
     def validate_allergins(form, field):
@@ -141,8 +141,8 @@ class UserPic(FlaskForm):
 
 class cardDetails(FlaskForm):
     cardNum = IntegerField('Enter card number:', validators=[InputRequired()])
-    cardHolder = StringField('Enter card holders name:', validators=[InputRequired()])
-    cvv = IntegerField('Cvv', validators= [InputRequired()])
+    cardHolder = StringField("Enter card holder's name:", validators=[InputRequired()])
+    cvv = IntegerField('CVV', validators= [InputRequired()])
     submit = SubmitField('Enter')
 
 class submitModifications(FlaskForm):
