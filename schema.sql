@@ -73,7 +73,7 @@ CREATE TABLE customer
     customer_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     email TEXT NOT NULL,
     code TEXT,
-    access_level TEXT DEFAULT "customer" NOT NULL,
+    access_level VARCHAR(255) DEFAULT "customer" NOT NULL,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     password TEXT NOT NULL,
@@ -168,11 +168,12 @@ CREATE TABLE dish
     dish_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     name TEXT NOT NULL,
     description TEXT NOT NULL,
-    cost DECIMAL NOT NULL,
-    display TEXT DEFAULT 'all week',
+    cost FLOAT NOT NULL,
+    display TEXT NOT NULL,
     cook_time INTEGER NOT NULL,
     dishType TEXT NOT NULL,
-    allergies JSON DEFAULT NULL
+    allergies TEXT DEFAULT NULL,
+    ingredients_list TEXT NOT NULL
 );
 
 INSERT INTO dish
@@ -193,22 +194,6 @@ CREATE TABLE dish_ingredient
     ingredient_id INTEGER NOT NULL,
     dish_id INTEGER NOT NULL
 );
-
-INSERT INTO dish_ingredient
-VALUES
-  ( 1, 1),
-  ( 2, 1),
-  ( 2, 2),
-  ( 3, 2),
-  ( 4, 3),
-  ( 5, 1),
-  ( 6, 4),
-  ( 3, 5),
-  ( 9, 5),
-  ( 7, 6),
-  ( 8, 7);
-
-
 
 DROP TABLE IF EXISTS orders;
 
@@ -259,8 +244,8 @@ CREATE TABLE stats
 (
     staff_id INTEGER,
     turnover INTEGER,
-    meal_cost INTEGER NOT NULL,
-    tip INTEGER NOT NULL,
+    meal_cost FLOAT NOT NULL,
+    tip FLOAT NOT NULL,
     tables INTEGER NOT NULL
 );
 
@@ -294,17 +279,17 @@ DROP TABLE IF EXISTS user_analytics;
 CREATE TABLE user_analytics
 (
     todays_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    daily_users INTEGER,
-    new_daily_users INTEGER
+    daily_users INTEGER DEFAULT 0,
+    new_daily_users INTEGER DEFAULT 0
 );
 
 DROP TABLE IF EXISTS sales_analytics;
 CREATE TABLE sales_analytics
 (
 	the_month TEXT NOT NULL,
-    daily_sales DECIMAL,
-    monthly_sales DECIMAL,
-    yearly_sales DECIMAL
+  daily_sales FLOAT DEFAULT 0,
+  monthly_sales FLOAT DEFAULT 0,
+  yearly_sales FLOAT DEFAULT 0
 );
 
 DROP TABLE IF EXISTS reviews;
@@ -346,4 +331,35 @@ DO
 UPDATE staff
 SET code = null WHERE TIMESTAMPDIFF(SECOND, last_updated, NOW()) >= 10 ;
 
+################
+customer -> AFTER INSERT TRIGGER for user_analytics "new_daily_users"
+
+CREATE DEFINER=`root`@`localhost` TRIGGER `customer_AFTER_INSERT` AFTER INSERT ON `customer` FOR EACH ROW BEGIN
+    -- check if there is already a row in user_analytics for today's date
+    IF NOT EXISTS (SELECT new_daily_users FROM user_analytics WHERE DATE(todays_date) = CURDATE()) THEN
+        -- insert a new row with new_daily_users = 1
+        INSERT INTO user_analytics (new_daily_users) VALUES (1);
+    ELSE
+        -- update the existing row by incrementing new_daily_users by 1
+        UPDATE user_analytics
+        SET new_daily_users = new_daily_users + 1
+        WHERE DATE(todays_date) = CURDATE();
+    END IF;
+END
+
+########################
+TRIGGER FOR DAILY USERS customer AFTER UPDATE
+
+CREATE DEFINER=`root`@`localhost` TRIGGER `customer_AFTER_UPDATE` AFTER UPDATE ON `customer` FOR EACH ROW BEGIN
+
+    IF DATE(OLD.last_updated) <> CURDATE() THEN
+		IF NOT EXISTS (SELECT daily_users FROM user_analytics WHERE DATE(todays_date) = CURDATE()) THEN
+			INSERT INTO user_analytics (daily_users) VALUES (1);
+		ELSE
+			UPDATE user_analytics
+			SET daily_users = daily_users + 1
+			WHERE DATE(todays_date) = CURDATE();
+		END IF;
+    END IF;
+END
 */
