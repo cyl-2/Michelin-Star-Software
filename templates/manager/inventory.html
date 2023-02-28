@@ -14,26 +14,37 @@
                     <div class="page-wrapper">
                         <div class="row">
                             <div class="col-sm-12">
+                                {% with messages = get_flashed_messages() %}
+                                    {% if messages %}
+                                        <div class="flash">
+                                            <div class="flash-blue">
+                                            {% for message in messages %}
+                                                <p> <b>{{ message }}</b> </p>
+                                            {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    {% endwith %}
                                 <div class="card">
                                     <div class="card-header">
-                                        <h5>Inventory List</h5>
+                                        <h5>Ingedients Masterlist</h5>
                                     </div>
+                                    
                                     <div class="card-block table-border-style">
                                         <div class="table-responsive">
                                             {% if inventory %}
                                             <table class="table table-hover">
                                                 <thead>
                                                     <tr>
-                                                        <th>ID</th>
                                                         <th>Item</th>
                                                         <th>Quantity</th>
                                                         <th>Status</th>
+                                                        <th></th>
                                                     </tr>
                                                 </thead>
                                                 {% for item in inventory %}
                                                 <tbody>
                                                     <tr>
-                                                        <th scope="row"> {{ item ["ingredient_id"] }} </th>
                                                         <td> {{ item ["name"] }} </td>
                                                         <td> {{ item ["quantity"] }} </td>
                                                         {% if item["status"] == "amber" %}
@@ -43,6 +54,7 @@
                                                         {% else %}
                                                             <td><i class="fas fa-circle text-c-red f-15"></i> </td>
                                                         {% endif %}
+                                                        <td><a href="{{ url_for('delete_ingredient', id=item['ingredient_id']) }}" class="text-c-red"> Delete </a></td>
                                                     </tr>
                                                 </tbody>
                                                 {% endfor %}

@@ -59,8 +59,8 @@ def get_managerial_notifs():
 
 @app.before_request
 def logged_in():
-    g.user = "cherrylin" #session.get("username", None)
-    g.access = "managerial"#session.get("access_level", None)
+    g.user = session.get("username", None)
+    g.access = session.get("access_level", None)
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
 
@@ -1356,6 +1356,15 @@ def view_inventory():
     cur.close()
     return render_template("manager/inventory.html", inventory=inventory, title="Inventory List")
 
+@app.route("/delete_ingredient/<int:id>")
+def delete_ingredient(id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM ingredient WHERE ingredient_id = %s", (id,))
+    mysql.connection.commit()
+    cur.close()
+    flash("Ingredient deleted!")
+    return redirect(url_for('view_inventory'))
+
 # Add a new dish to the menu
 #NEED TO ADD ABILITY TO LIST INGREDIENTS NECESSARY FOR EACH DISH.
 @app.route('/addDish', methods=['GET','POST'])
@@ -1367,8 +1376,9 @@ def addDish():
         cur.execute('SELECT * from dish WHERE name=%s',(name,))
         result = cur.fetchone()
         if result is not None:
-            form.name.errors.append("This dish is already in the db")
+            form.name.errors.append("This menu item already exists")
         else:
+            display = form.display.data
             cost = form.cost.data
             cookTime = form.cookTime.data
             dishType = (form.dishType.data).lower()
@@ -1378,7 +1388,8 @@ def addDish():
             allergins= form.allergins.data
             filename = secure_filename(dishPic.filename)
             dishPic.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
-            cur.execute("INSERT INTO dish (name, cost, cook_time, dishType, description,dishPic,allergies) VALUES(%s,%s,%s,%s,%s,%s,%s);", (name,cost,cookTime,dishType,dishDescription,filename,allergins))
+            cur.execute("INSERT INTO dish (name, cost, cook_time, dishType, description,dishPic,allergies,display) VALUES(%s,%s,%s,%s,%s,%s,%s,%s);", (name,cost,cookTime,dishType,dishDescription,filename,allergins,display))
+           
             mysql.connection.commit()
             if ingredients is not None:
                 ingredients=ingredients.split(',')
