@@ -177,15 +177,15 @@ CREATE TABLE dish
 );
 
 INSERT INTO dish
-  ( name, cost, description, cook_time, allergies, dishType )
+  ( name, cost, description, cook_time, allergies, dishType, display, ingredients_list )
 VALUES
-  ('Burger and chips', 20, 30, '', 'main'),
-  ('Chicken and chips', 15, 20, '', 'main'),
-  ('Fish and chips', 25, 20, '', 'main'),
-  ('Tomato soup', 20, 30, '', 'starter'),
-  ('Chicken Salad', 15, 20, '', 'starter'),
-  ('Ice Cream', 20, 30, '', 'dessert'),
-  ('Chocolate Brownie', 15, 20, '', 'dessert');
+  ('Burger and chips', 20, "", 30, '', 'main', 'monday', ''),
+  ('Chicken and chips', 15, "",20, '', 'main', 'monday', ''),
+  ('Fish and chips', 25, "",20, '', 'main', 'monday', ''),
+  ('Tomato soup', 20, "",30, '', 'starter', 'monday', ''),
+  ('Chicken Salad', 15, "",20, '', 'starter', 'monday', ''),
+  ('Ice Cream', 20, "",30, '', 'dessert', 'monday', ''),
+  ('Chocolate Brownie', 15, "",20, '', 'dessert', 'monday', '');
 
 DROP TABLE IF EXISTS dish_ingredient;
 
@@ -200,7 +200,7 @@ DROP TABLE IF EXISTS orders;
 CREATE TABLE orders
 (
     order_id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    time INTEGER NOT NULL,
+    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     dish_id INTEGER NOT NULL,
     table_id INTEGER NOT NULL,
     notes TEXT,
@@ -237,18 +237,6 @@ CREATE TABLE bookings
     time INTEGER NOT NULL
 );
 
-
-DROP TABLE IF EXISTS stats;
-
-CREATE TABLE stats
-(
-    staff_id INTEGER,
-    turnover INTEGER,
-    meal_cost FLOAT NOT NULL,
-    tip FLOAT NOT NULL,
-    tables INTEGER NOT NULL
-);
-
 DROP TABLE IF EXISTS user_queries;
 
 CREATE TABLE user_queries
@@ -283,14 +271,41 @@ CREATE TABLE user_analytics
     new_daily_users INTEGER DEFAULT 0
 );
 
-DROP TABLE IF EXISTS sales_analytics;
-CREATE TABLE sales_analytics
+DROP TABLE IF EXISTS monthly_revenue;
+CREATE TABLE monthly_revenue
 (
 	the_month TEXT NOT NULL,
-  daily_sales FLOAT DEFAULT 0,
-  monthly_sales FLOAT DEFAULT 0,
+  monthly_sales FLOAT DEFAULT 0
+);
+
+INSERT INTO world.monthly_revenue (the_month, monthly_sales)
+VALUES
+('2022-01-01', 5300),
+('2022-02-01', 1000),
+('2022-03-01', 5500),
+('2022-04-01', 6040),
+('2022-05-01', 7000),
+('2022-06-01', 8000),
+('2022-07-01', 8288),
+('2022-08-01', 9929),
+('2022-09-01', 10020),
+('2022-10-01', 10520),
+('2022-11-01', 11220),
+('2022-12-01', 20020);
+
+DROP TABLE IF EXISTS yearly_revenue;
+CREATE TABLE yearly_revenue
+(
+	the_year TEXT NOT NULL,
   yearly_sales FLOAT DEFAULT 0
 );
+
+INSERT INTO world.yearly_revenue (the_year, yearly_sales)
+VALUES
+('2020-01-01', 213500),
+('2021-01-01', 531350),
+('2022-01-01', 554685),
+('2023-01-01', 663000);
 
 DROP TABLE IF EXISTS reviews;
 
@@ -362,4 +377,44 @@ CREATE DEFINER=`root`@`localhost` TRIGGER `customer_AFTER_UPDATE` AFTER UPDATE O
 		END IF;
     END IF;
 END
+
+##########################
+EVENT THAT WOULD CALCULATE THE YEARLY SALES ON 01/01 OF EVERY YEAR AND THEN INSERT THE VALUE INTO "yearly_revenue"
+
+DELIMITER //
+CREATE EVENT IF NOT EXISTS `yearly_revenue_calculation`
+ON SCHEDULE EVERY 1 YEAR STARTS '2022-01-01 00:00:00'
+DO
+BEGIN
+  SET @total_cost = (
+    SELECT SUM(dish.cost)
+    FROM orders
+    INNER JOIN dish ON orders.dish_id = dish.dish_id
+    WHERE YEAR(orders.time) = YEAR(CURDATE())
+  );
+  INSERT INTO yearly_revenue (the_year, yearly_sales)
+  VALUES (YEAR(CURDATE()), @total_cost);
+END//
+DELIMITER ;
+
+##########################
+EVENT THAT WOULD CALCULATE THE MONTHLY SALES ON 01/01 OF EVERY YEAR AND THEN INSERT THE VALUE INTO "monthly_revenue"
+
+DELIMITER //
+CREATE EVENT IF NOT EXISTS `monthly_revenue_calculation`
+ON SCHEDULE
+EVERY 1 MONTH 
+STARTS ('2022-01-01 00:00:00')
+DO
+BEGIN
+SET @gross_profit = (
+  SELECT SUM(dish.cost)
+  FROM orders
+  INNER JOIN dish ON orders.dish_id = dish.dish_id
+  WHERE YEAR(orders.time) = YEAR(CURDATE()) AND MONTH(orders.time) = MONTH(CURDATE())
+);
+INSERT INTO monthly_revenue (the_month, monthly_sales)
+VALUES (DATE_FORMAT(CURDATE(), '%Y-%m-01'), @gross_profit);
+END//
+DELIMITER ;
 */

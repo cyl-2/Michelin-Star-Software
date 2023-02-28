@@ -59,8 +59,8 @@ def get_managerial_notifs():
 
 @app.before_request
 def logged_in():
-    g.user = session.get("username", None)
-    g.access = session.get("access_level", None)
+    g.user = "cherrylin" #session.get("username", None)
+    g.access = "managerial"#session.get("access_level", None)
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
 
@@ -808,6 +808,7 @@ def complete_order(table):
                 for ingredients in times:
                     if times[ingredients] != 1:
                         info += ingredients+"-"+str(times[ingredients])+", "
+                        
                 cur.execute("INSERT INTO orders (time, dish_id, table_id, status, info) VALUES (%s, %s, %s, 'waiting', %s);",(data['cook_time'], data['dish_id'], table, info))
                 mysql.connection.commit()
     
@@ -1100,8 +1101,55 @@ def manager():
     
     cur.execute("SELECT * FROM user_analytics")
     user_analytics = cur.fetchone()
-    cur.execute("SELECT * FROM sales_analytics")
-    sales_analytics = cur.fetchone()
+    
+    # START of fetching gross profit data for the past year, month and day #
+    cur.execute(
+        """SELECT SUM(dish.cost) AS gross_profit
+        FROM orders
+        INNER JOIN dish ON orders.dish_id = dish.dish_id
+        WHERE orders.time BETWEEN DATE_SUB(DATE_ADD(CURDATE(), INTERVAL 1 DAY), INTERVAL 1 YEAR) 
+        AND DATE_ADD(CURDATE(), INTERVAL 1 DAY);""")
+    yearly_profit = cur.fetchone()
+    yearly_profit = yearly_profit["gross_profit"]
+
+    cur.execute(
+        """SELECT SUM(dish.cost) AS gross_profit
+        FROM orders
+        INNER JOIN dish ON orders.dish_id = dish.dish_id
+        WHERE orders.time BETWEEN DATE_SUB(DATE_ADD(CURDATE(), INTERVAL 1 DAY), INTERVAL 30 DAY) 
+        AND DATE_ADD(CURDATE(), INTERVAL 1 DAY);""")
+    monthly_profit = cur.fetchone()
+    monthly_profit = monthly_profit["gross_profit"]
+
+    cur.execute(
+        """SELECT SUM(dish.cost) AS gross_profit
+        FROM orders
+        INNER JOIN dish ON orders.dish_id = dish.dish_id
+        WHERE DATE(orders.time) = CURDATE();""")
+    daily_profit = cur.fetchone()
+    daily_profit = daily_profit["gross_profit"]
+
+    if daily_profit is None:
+        daily_profit=0
+    # END of fetching gross profit data for the past year, month and day #
+
+    # START of calculating turnover
+    cur.execute(
+        """SELECT * FROM monthly_revenue
+            WHERE the_month = DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 YEAR), '%Y-%m-01');""")
+    same_month_of_prev_year = cur.fetchone()
+    same_month_of_prev_year = same_month_of_prev_year["monthly_sales"]
+
+    cur.execute(
+        """SELECT * FROM yearly_revenue
+        WHERE the_year = DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 YEAR), '%Y-01-01');
+        """)
+    prev_year = cur.fetchone()
+    prev_year = prev_year["yearly_sales"]
+    
+    monthly_turnover = round((((monthly_profit - same_month_of_prev_year) / same_month_of_prev_year) * 100),2)
+    yearly_turnover = round((((yearly_profit - prev_year) / prev_year) * 100),2)
+    # END of calculating turnover
 
     cur.execute("SELECT count(*) FROM user_queries where date(date_received) = %s", (date,))
     query_count = cur.fetchone()
@@ -1116,7 +1164,7 @@ def manager():
     rejected_requests = cur.fetchall()
 
     cur.close()
-    return render_template("manager/dashboard.html", rejected_requests=rejected_requests,approved_requests=approved_requests, pending_requests=pending_requests, user_analytics=user_analytics, sales_analytics=sales_analytics, query_count=query_count, title="Dashboard")
+    return render_template("manager/dashboard.html", yearly_turnover=yearly_turnover, monthly_turnover=monthly_turnover, daily_profit=daily_profit, monthly_profit=monthly_profit, yearly_profit=yearly_profit, rejected_requests=rejected_requests,approved_requests=approved_requests, pending_requests=pending_requests, user_analytics=user_analytics, query_count=query_count, title="Dashboard")
 
 #@manager_only
 @app.route("/roster_approve/<int:id>")
@@ -1678,7 +1726,7 @@ def checkout():
 
 
 
-@app.route('/breaks', methods=['GET','POST'])
+@app.route('/breakTimes', methods=['GET','POST'])
 def breakTimes():
     cur = mysql.connection.cursor()
     cur.execute('SELECT * FROM staff')
