@@ -245,26 +245,24 @@
         <div class="swiper review-slider">
             <div class="swiper-wrapper">
                 
-                {% if reviews %}
-                {% for review in reviews %}
+                
                 <div class="swiper-slide slide">
                     <i class="fas fa-quote-right"></i>
                     <div class="user">
                         <div class="user-info">
-                            <h3>{{ review["name"] }}</h3>
-                            <h6>Review for: {{ review["dish_name"] }}</h>
+                            <h3>Anonymous User</h3>
+                            <h6>Review for: Pineapple Pie</h>
                             <div class="stars">
-                                {% set full_stars = review['rating'] | int %}
+                                {% set full_stars = 5 | int %}
                                 {% for i in range(full_stars) %}
                                     <i class="fas fa-star"></i>
                                 {% endfor %}
                             </div>
                         </div>
                     </div>
-                    <p>{{ review["comment"] }}</p>
+                    <p>Very nice</p>
                 </div>
-                {% endfor %}
-                {% endif %}
+                
                 
             </div>
             <div class="swiper-pagination"></div>

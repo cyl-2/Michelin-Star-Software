@@ -395,7 +395,7 @@ def confirm_code(email, table):
             random_code = cur.fetchone()
         cur.close()
 
-        if code != random_code:
+        if code != random_code["code"]:
             form.code.errors.append("Oh no, that's not the code in your email!")
         else:
             flash("Code correct! Now you can reset your password :)")
@@ -1088,8 +1088,8 @@ def notify_supplier():
     cur.close()
 
 # Manager account
-@manager_only
 @app.route("/manager")
+@manager_only
 def manager():
     if not session.get('expiry_check_executed', False):
         # Call the function to check the expiry of foods
