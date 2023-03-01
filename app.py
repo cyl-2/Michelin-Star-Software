@@ -2054,7 +2054,7 @@ def cancel_booking(booking_id):
     cur.close()
     return redirect(url_for('cancel_bookings'))
 
-@app.route('/breakTimes', methods=['GET','POST'])
+@app.route('/breaks', methods=['GET','POST'])
 def breakTimes():
     cur = mysql.connection.cursor()
     cur.execute('SELECT * FROM staff')
