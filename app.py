@@ -73,7 +73,13 @@ def login_required(view):
         return view(**kwargs)
     return wrapped_view
 
-
+def business_only(view):
+    @wraps(view)
+    def wrapped_view(**kwargs):
+        if g.access != "ordinary staff" and g.access != "managerial":
+            return render_template("error.html"), 404
+        return view(**kwargs)
+    return wrapped_view
 
 def staff_only(view):
     @wraps(view)
