@@ -1,6 +1,9 @@
 {% extends "layouts/base.html" %}
 {% block content %}
+
+
     {% if cart %}
+
 
     <!-- [ basic-table ] start -->
     <div class="col-xl-12">
@@ -13,89 +16,104 @@
                     <table class="table">
                         <thead>
                             <tr>
+                                <th></th>
                                 <th>Dish</th>
-                                <th>Increase</th>
+                                <th>Details</th>
                                 <th>Quantity</th>
-                                <th>Decrease</th>
-                                <th>Remove from cart</th>
                                 <th>Price per dish</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for dish_id in cart %}
+                            {%for item in dishes%}
+                            {%if dish_id ==item['dish_id']%}
                             <tr>
+                                <td><img src="/static/picture/{{item['dishPic']}}" class="dishPic" alt="profile image"></td>
                                 <td>{{ names[dish_id]}}</td>
-                                <td><a href="{{url_for('inc_quantity',dish_id=dish_id) }}">+</a></td>
-                                <td>{{ cart[dish_id] }}</td>
-                                <td> <a href="{{url_for('dec_quantity', dish_id=dish_id) }}"> -</a></td>
-                                <td><a href="{{url_for('remove', dish_id=dish_id)}}">Remove</a></td>
-                                <td>{{dish['cost']}}</td>
-                                <!-- We do be a gobshite i can't believe it took me like 4 hours to figure out book_id = book_id wtf is wrong with me-->
-                                </tr>
-                                <tr>
                                 <td>
-
-                                <!-- [ stiped-table ] start -->
-                                <div class="col-xl-12">
-                                    <div class="card">
-                                        <div class="card-block table-border-style">
-                                            <div class="table-responsive">
-                                                <table class="table table-striped">
-                                                    <tbody>
-                                                        {% for value in mods[dish_id]%}
-                                                        <tr>
-                                                            <td>{{value}}</td>
-                                                            <td><a href="{{url_for('remove_specific',changes=value, dish_id=dish_id)}}">Remove</a></td>
-                                                        </tr>
-                                                        {% endfor %}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- [ stiped-table ] end -->                             
+                                    <ul style="list-style-type: none; ">
+                                        {% for value in mods[dish_id]%}
+                                        <li >{{value}} &emsp;  <span class="badge badge-secondary"><a href="{{url_for('remove_specific',changes=value, dish_id=dish_id)}}" id="exit">X</a></span> </li>
+                                        {%endfor%}
+                                    </ul>
                                 </td>
-                                
+                                <td><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">+</a>  {{ cart[dish_id] }}   </td>
+                                <td><b>€{{dish['cost']}}</b> &emsp;   </li> </td>
+                                <!-- We do be a gobshite i can't believe it took me like 4 hours to figure out book_id = book_id wtf is wrong with me-->
+                                <td><span class="badge badge-secondary2"><a href="{{url_for('remove',dish_id=dish_id)}}" id="remove">X</a></span></td>
                             </tr>
-                            
+                        {%endif%}
+                        {%endfor%}
                         {% endfor %}
                         </tbody>
                     </table>
                 </div>
-            </div>
+                <p><a href="{{url_for('clearCart')}}">Clear Cart</a></p>
         </div>
     </div>
     <!-- [ basic-table ] end -->
 
-<!--[ daily sales section ] start-->
-<div class="col-md-6 col-xl-4">
-    <div class="card daily-sales">
-        <div class="card-block">
-            <h6 class="mb-4">Full Price</h6>
-            <div class="row d-flex align-items-center">
-                <div class="col-9">
-                    <h3 class="f-w-300 d-flex align-items-center m-b-0">$
-                        {{full}}</h3>
+    <div class="col-md-6 col-xl-4" style="float:right;">
+        <div class="card Monthly-sales">
+            <div class="card-block">
+                <div class="row d-flex align-items-center">
+                    <div class="col-9">
+                        <h3 class="f-w-300 d-flex align-items-center  m-b-0" style="float:right;"><b style="float:left">Total </b>
+                                €{{full}}</h3>
+                    </div>
+                </div>
+                <div style="height: 7px;">
+                    <div>
+                        <p style="float:center;"><a href="{{url_for('checkout')}}">Checkout</a></p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-<div class="col-md-6 col-xl-4">
-    <div class="card Monthly-sales">
-        <div class="card-block">
-            <h6 class="mb-4"><a href="{{url_for('checkout')}}">Checkout</a></h6>
-            <div class="row d-flex align-items-center">
+
+<!--[ daily sales section ] end-->
+        {% else %}
+
+    <!-- [ Main Content ] start -->
+    <div class="pcoded-main-container">
+        <div class="pcoded-wrapper">
+            <div class="pcoded-content">
+                <div class="pcoded-inner-content">
+                    <!-- [ breadcrumb ] start -->
+                    <div class="page-header">
+                        <div class="page-block">
+                            <div class="row align-items-center">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [ breadcrumb ] end -->
+                    <div class="main-body">
+                        <div class="page-wrapper">
+                            <!-- [ Main Content ] start -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5>Your cart is empty!</h5>
+                                        </div>
+                                        <div class="card-block">
+                                            
+                                            <img src="static/picture/emptycart.jpg" class="centrePic">
+                                            
+                                            <h4 class="centre">You have no items in your cart. Browse our menu at</h4>
+                                            <p class="centre"><a href="{{url_for('menu')}}" class="centre">Back to Menu</a></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- [ Main Content ] end -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-
-<!--[ daily sales section ] end-->
-        <p><a href="{{url_for('checkout')}}">Go to checkout</a></p>
-        {% else %}
-            <p>Your cart is empty!</p>
+    <!-- [ Main Content ] end -->
         {%endif%}
 {% endblock%}

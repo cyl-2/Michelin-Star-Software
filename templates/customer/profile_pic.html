@@ -1,20 +1,48 @@
 {% extends "layouts/base.html" %}
 {% block content %}
-    <form action='' method='POST' enctype="multipart/form-data" novalidate>
-        {{form.hidden_tag()}}
-        <br>
-        {{form.profile_pic.label}}
-        {{form.profile_pic()}}
-        <span class="mb-0 text-muted">
-            <span class="text-danger">
-                {%for error in form.profile_pic.errors%}
-                    {{error}}
-                {%endfor%}
-            </span>
-        </span>    
-        <br>
-        {{form.submit()}}
 
-    </form>
+
+<div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
+
+        <div class="pcoded-content">
+            <div class="pcoded-inner-content">
+                <div class="main-body">
+                    <div class="page-wrapper">
+                        <!-- [ Main Content ] start -->
+                        <div class="row">
+                            <div class="col-sm-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Change Profile Pic</h5>
+                                    </div>
+                                    <div class="card-block">
+
+                                        <form action="" method="post" enctype="multipart/form-data" novalidate>
+                                            {{form.hidden_tag()}}
+                                            <br>
+                                            {{form.profile_pic.label}}
+                                            {{form.profile_pic()}}
+                                            {%for error in form.profile_pic.errors%}
+                                                {{error}}
+                                            {%endfor%}
+                                            <br>
+                                            {{form.submit()}}
+
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+
+
 
 {%endblock%}

@@ -7,6 +7,7 @@ from flask_mysqldb import MySQL
 from generate_roster import Roster
 import json
 from flask_mail import Mail, Message
+import datetime
 from datetime import datetime
 import random, string, time
 from random import sample
@@ -82,7 +83,6 @@ def business_only(view):
             return render_template("error.html"), 404
         return view(**kwargs)
     return wrapped_view
-
 
 def staff_only(view):
     @wraps(view)
@@ -1599,6 +1599,8 @@ def remove_menu_item(id):
 ##############################################################################################################################################
 ##############################################################################################################################################
 
+
+#For customers to view all dish items they could order
 @app.route('/menu',methods=['GET'])
 def menu():
     if 'order_by' not in session:
@@ -1715,6 +1717,7 @@ def swap_sort():
         session['order_by'] = 'low'
     return redirect(url_for('menu'))
 
+#Detailed view of dish - allows place to leave a review and make dish modifications 
 # Customer can give a rating and comment for a dish they've purchased
 @app.route('/review_dish/<int:dish_id>',methods=['GET', 'POST'])
 #@login_required
@@ -1742,6 +1745,7 @@ def dish(dish_id):
     if str(dish_id) not in session:
         session[str(dish_id)]={}
     session['CurrentDish'] = dish_id
+    now = datetime.now()
     form = submitModifications()
     cur=mysql.connection.cursor()
     cur.execute('SELECT * FROM dish WHERE dish_id=%s',(dish_id,))
@@ -1751,6 +1755,7 @@ def dish(dish_id):
     dish_id=dish['dish_id']
     cur.execute("SELECT * FROM dish_ingredient JOIN ingredient ON dish_ingredient.ingredient_id = ingredient.ingredient_id  WHERE dish_ingredient.dish_id=%s",(dish_id,))
     result=cur.fetchall()
+
     cur.execute("SELECT comment, rating FROM reviews WHERE dish_id=%s",(dish_id,))
     comments=cur.fetchall()
     
@@ -1771,7 +1776,7 @@ def dish(dish_id):
                 session[str(dish_id)][ingredient_id] =1
             else:
                 quantity=session[str(dish_id)][ingredient_id]
-                changes+= str(ing_name) + str(quantity)
+                changes+= str(ing_name) + ":" + str(quantity) + " "
                 session[str(dish_id)][ingredient_id] =1
         cur.execute("INSERT INTO modifications(dish_id,notes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
         mysql.connection.commit()
@@ -1779,9 +1784,7 @@ def dish(dish_id):
         return redirect(url_for('add_to_cart', dish_id=dish['dish_id']))
     return render_template('customer/dish.html', dish=dish,result=result,form=form,quant=session[str(dish_id)],comments=comments)
 
-#so by default all amounts of ingredients should be 1 - should have the option to increase by 1 and decrease by 1
-#added that so that should work
-# I'M PRETTY SURE THIS WORKS BESIDES THE REDIRECT  
+#Increase the amount of an ingredient in a dish
 @app.route('/inc_quantity_ingredient/<int:ingredient_id>')
 @login_required
 def inc_quantity_ingredient(ingredient_id):
@@ -1795,6 +1798,7 @@ def inc_quantity_ingredient(ingredient_id):
     session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] +1
     return redirect(url_for('dish',dish_id=dish_id))
 
+#Decrease the amount of an ingredient in a dish
 @app.route('/dec_quantity_ingredient/<int:ingredient_id>')
 @login_required
 def dec_quantity_ingredient(ingredient_id):
@@ -1809,10 +1813,15 @@ def dec_quantity_ingredient(ingredient_id):
         session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] -1
     return redirect(url_for('dish',dish_id=dish_id))
 
+
+
+#Place for customers to view all the dishes they've added to their order
 @app.route('/cart')
 @login_required
 def cart():
     cur = mysql.connection.cursor()
+    cur.execute('select * from dish;')
+    dishes=cur.fetchall()
     dish=''
     full = 0
     if 'cart' not in session:
@@ -1837,8 +1846,9 @@ def cart():
             list.append(changes)
         modifications[dish_id] = list
         #cur.close()
-    return render_template('customer/cart.html', cart=session['cart'], mods=modifications,names=names, dish=dish, full=full)
+    return render_template('customer/cart.html', cart=session['cart'], dishes=dishes,mods=modifications,names=names, dish=dish, full=full)
 
+#Adds the default item to menu
 @app.route('/add_default_meal/<int:dish_id>')
 @login_required
 def add_default_meal(dish_id):
@@ -1853,8 +1863,8 @@ def add_default_meal(dish_id):
     result=cur.fetchall()
     for value in result:
         name=value['name']
-        changes+=str(name)+"1"
-    cur.execute("INSERT INTO modifications(dish_id,notes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
+        changes+=str(name)+":" "1 "
+    cur.execute("INSERT INTO modifications(dish_id,changes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
     mysql.connection.commit()
     return redirect(url_for('cart'))
 
@@ -1868,6 +1878,7 @@ def add_to_cart(dish_id):
     session['cart'][dish_id]= session['cart'][dish_id] + 1
     return redirect( url_for('cart') ) 
 
+#Remove a specific modification from cart based on the changes made and the dish_id
 @app.route('/remove_specific/<string:changes>/<int:dish_id>')
 def remove_specific(changes,dish_id):
     if changes=="":
@@ -1878,43 +1889,43 @@ def remove_specific(changes,dish_id):
         return redirect(url_for('cart')) 
     cur = mysql.connection.cursor()
     cur.execute("Select * FROM modifications WHERE user=%s AND changes=%s AND dish_id=%s",(g.user,changes,dish_id))
-    modificationId = cur.fetchone()['modification_id']
-    cur.execute('DELETE FROM modifications WHERE modification_id=%s',(modificationId,))
+    modificationId = cur.fetchone()['modifications_id']
+    cur.execute('DELETE FROM modifications WHERE modifications_id=%s',(modificationId,))
     mysql.connection.commit()
     if dish_id not in session['cart']:
         session['cart'][dish_id]=0
     if session['cart'][dish_id] >1:
         session['cart'][dish_id] = session['cart'][dish_id] -1
+    elif session['cart'][dish_id] ==1:
+        session['cart'].pop(dish_id)
     return redirect(url_for('cart'))
+
+
+#Completely clears cart of any orders
+@app.route('/clearCart')
+def clearCart():
+    session['cart'].clear()
+    return redirect(url_for('cart'))
+
+#Deletes all dishes with specified dish_id
 
 @app.route('/remove/<int:dish_id>')
 @login_required
 def remove(dish_id):
+    cur = mysql.connection.cursor()
     if dish_id not in session['cart']:
         session['cart'][dish_id] = 0
     for dishId in session['cart'].copy():
         if dish_id == int(dishId):
             session['cart'].pop(dishId)
+    cur.execute('DELETE FROM modifications where dish_id=%s',(dish_id,))
+    mysql.connection.commit()
     return redirect(url_for('cart'))
 
-@app.route('/inc_quantity/<int:dish_id>')
-@login_required
-def inc_quantity(dish_id):
-    cur = mysql.connection.cursor()
-    #stock_left = db.execute(''' SELECT * FROM inventory WHERE book_id=?; ''',(book_id,)).fetchone()['stock_left']
-    if dish_id not in session['cart']:
-        session['cart'][dish_id]=0
-    #if session['cart'][book_id] < stock_left:
-    session['cart'][dish_id] = session['cart'][dish_id] +1
-    return redirect(url_for('cart'))
 
-@app.route('/dec_quantity/<int:dish_id>')
-@login_required
-def dec_quantity(dish_id):
-    return redirect(url_for('cart'))
 
-#question does this need to be specific to user?? or is it already
-@app.route('/checkout', methods=['GET','POST'])##
+#Allows user to pay for items selected
+@app.route('/checkout', methods=['GET','POST'])
 def checkout():
     full =0
     form = cardDetails()
@@ -1945,6 +1956,7 @@ def checkout():
         cardNum=form.cardNum.data
         cardHolder = form.cardHolder.data
         cvv = form.cvv.data
+        tableNum=form.tableNum.data
         date = datetime.now().strftime(' %d-%m-%y')
         now = datetime.now()
         for dish_id in session['cart']:
@@ -1957,20 +1969,46 @@ def checkout():
                 changes=values['notes']
                 cur.execute('INSERT INTO transactions(username, dish_id,cost,quantity,date) VALUES(%s,%s,%s,%s,%s) ',(username, dish_id,cost,1,date))
                 mysql.connection.commit()
-                cur.execute("INSERT INTO orders(time,dish_id,notes) VALUES(%s,%s,%s)",(now,dish_id,changes))
+
+                cur.execute("INSERT INTO orders(time,dish_id,notes,table_id,status) VALUES(%s,%s,%s,%s,%s)",(now,dish_id,changes,tableNum,"ordered"))
+
                 mysql.connection.commit()
-            #cur.execute('DELETE FROM modifications WHERE user=%s',(g.user,))
         cur.execute('DELETE FROM modifications WHERE user=%s',(g.user,))
         mysql.connection.commit()    
         session['cart'].clear()
-        cur.close()##
-        return redirect(url_for('cart'))
-    return render_template('customer/checkout.html', cart=session['cart'],form=form,full=full,names=names,dish=dish, discount=discount)
+        cur.close()
+        return redirect(url_for('menu'))
+    return render_template('customer/checkout.html', cart=session['cart'],form=form,full=full,names=names,dish=dish)
 
-    #need table number to be inputed here 
+
+#Customer profile - can see info about past transactions + leave a review
+@app.route('/customer_profile')
+@login_required
+def customer_profile():
+    username = session['username']
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM dish")
+    dishes= cur.fetchall()
+    message = ''
+    image = None
+    cur.execute(" SELECT * FROM customer WHERE email=%s",(username,))
+    check= cur.fetchone()['profile_pic']
+    if check is None:
+        error = 'No profile picture yet'
+    else:  
+        image=check
+    cur.execute("SELECT * FROM transactions WHERE username=%s;",(username,))
+    transactionHistory = cur.fetchall()
+    if transactionHistory is not None:
+        message = "You've made no transactions yet"
+    cur.close()
+    #return render_template("customer/profile.html", title="My Profile")
+    return render_template('customer/customer_profile.html',image=image, transactionHistory=transactionHistory,dishes=dishes,user=g.user)
+
 
 # allows customer to book a table for a date and time
 @app.route('/booking',methods=['GET', 'POST'])
+
 @login_required
 def booking():
     form = makeBooking()
@@ -2096,6 +2134,8 @@ def cancel_booking(booking_id):
     cur.close()
     return redirect(url_for('cancel_bookings'))
 
+
+#Allows all staff to view the breaklist for each individual day
 @app.route('/breaks', methods=['GET','POST'])
 def breakTimes():
     cur = mysql.connection.cursor()
@@ -2119,16 +2159,14 @@ def breakTimes():
             if k == 0:
                 shift = workingToday[employee]
                 hoursWorking= int(shift[0]+shift[1]) - int(shift[6]+shift[7])
-                #if hoursWorking <0:
+
                 hoursWorking = hoursWorking*-1
-                    #workingToday[employee] = [shift,hoursWorking]
                 if hoursWorking >4 and hoursWorking >= 8:
                     breaks = 2
                     workingToday[employee] = [shift,breaks]
                 elif hoursWorking >4:
                     breaks=1
                     workingToday[employee] = [shift,breaks]
-                    #1 break needed
                 else: 
                     breaks =0
                     assigned +=1
@@ -2138,7 +2176,6 @@ def breakTimes():
                 proposedBreak = 0
             else:
                 start = workingToday[employee][2]
-            #start =None
             proposedBreak = 0
             for j in range(4,1,-1):
 
@@ -2155,14 +2192,7 @@ def breakTimes():
                     endBreak = start +0.45
                     workingToday[employee].append(start)
                     assigned +=1
-                    """
-                    elif i ==1:
-                        start = start + j
-                        endBreak =start+0.45
-                        workingToday[employee].append(start)
-                        assigned +=1"""
                     break
-              
         i = 2
         while assigned != len(workingToday):
             for employee in workingToday:
@@ -2172,10 +2202,8 @@ def breakTimes():
                 if k == 1:
                     start = workingToday[employee][2]
                 if (len(workingToday[employee]) <3 and k ==0) or (len(workingToday[employee]) <4 and k==1):
-                    #break hasn't been assigned 
                     for j in range(4,1,-1):
-                        if workingToday[employee][1] ==1 and len(working[employee] >3):
-                            #norrrr 
+                        if workingToday[employee][1] ==1 and len(working[employee] >3): 
                             break
                         proposedBreak = start + j
                         if proposedBreak in breaksAssigned and breaksAssigned[proposedBreak] >=i: 
@@ -2194,12 +2222,6 @@ def breakTimes():
                             workingToday[employee].append(start)
                             assigned +=1
                             break
-                            """
-                            elif i ==1:
-                                start = start + j
-                                endBreak =start+0.45
-                                workingToday[employee].append(start)
-                                assigned +=1"""
                         if k ==1:
                             proposedBreak =start+ 0.3 +j
                             if proposedBreak in breaksAssigned and breaksAssigned[proposedBreak] >=i: 
@@ -2220,6 +2242,10 @@ def breakTimes():
                                 break
             i +=1
         k +=1
+    for employee in workingToday:
+        if len(workingToday[employee]) >= 3:
+            workingToday[employee][2] = str(workingToday[employee][2]) + ":00"
+            #if len(workingToday[employee] ==5)
     return render_template("staff/breaks.html",staff=staff, workingToday=workingToday)
 
 if __name__ == '__main__':
