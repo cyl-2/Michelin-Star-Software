@@ -192,7 +192,7 @@ CREATE TABLE orders
     dish_id INTEGER NOT NULL,
     table_id INTEGER NOT NULL,
     notes TEXT,
-    status TEXT
+    status TEXT DEFAULT "not started"
 );
 
 
