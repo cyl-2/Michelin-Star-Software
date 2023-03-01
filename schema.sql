@@ -269,17 +269,29 @@ CREATE TABLE bookings
     time INTEGER NOT NULL
 );
 
+DROP TABLE IF EXISTS roster_requests;
 
-DROP TABLE IF EXISTS stats;
-
-CREATE TABLE stats
+CREATE TABLE roster_requests
 (
-    staff_id INTEGER,
-    turnover INTEGER,
-    meal_cost INTEGER NOT NULL,
-    tip INTEGER NOT NULL,
-    tables INTEGER NOT NULL
+    request_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    employee TEXT NOT NULL,
+    message TEXT,
+    response TEXT,
+    date_received TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    status VARCHAR(20) default 'Pending',
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    date DATE NOT NULL
 );
+
+DROP TABLE IF EXISTS user_analytics;
+
+CREATE TABLE user_analytics
+(
+    todays_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    daily_users INTEGER,
+    new_daily_users INTEGER
+);
+
 
 DROP TABLE IF EXISTS user_queries;
 
