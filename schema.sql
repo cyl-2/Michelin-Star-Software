@@ -282,7 +282,6 @@ CREATE TABLE roster_requests
     date_received TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     status VARCHAR(20) default 'Pending',
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-    date DATE NOT NULL
 );
 
 DROP TABLE IF EXISTS user_analytics;
@@ -326,14 +325,18 @@ VALUES
   ("benc190514@gmail.com", 3, 2, 1, null),
   ("benc190514il.com", 5, 2, 1, null);
   
-  
-  DROP TABLE IF EXISTS reviews;
+ 
+DROP TABLE IF EXISTS reviews;
+
+DROP TABLE IF EXISTS reviews;
 
 CREATE TABLE reviews
 (
     username TEXT,
+    name TEXT,
     comment TEXT,
     rating INTEGER,
+    dish_name TEXT,
     dish_id INTEGER
 );
 
