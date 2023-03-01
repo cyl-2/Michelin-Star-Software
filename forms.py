@@ -151,3 +151,16 @@ class submitModifications(FlaskForm):
 class Review(FlaskForm):
     comment = StringField('Additional Comments: ')
     submit = SubmitField('Enter')
+    
+class makeBooking(FlaskForm):
+    name = StringField("Reservation Name: ", validators=[InputRequired()])
+    date = StringField("Date (DD-MM-YY): ", validators=[InputRequired()])
+    time = IntegerField("Time (XX:00):", validators=[InputRequired(), NumberRange(0,23)])
+    
+    submit = SubmitField("Make Reservation")
+    
+class StockForm(FlaskForm):
+    ingredient=SelectMultipleField('Ingredient:',validators=[InputRequired()])
+    date = DateField("Expiry Date:", validators=[InputRequired()])
+    quantity = IntegerField("Quantity:", validators=[InputRequired() ])
+    submit = SubmitField('Submit')

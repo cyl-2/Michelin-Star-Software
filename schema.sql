@@ -1,3 +1,4 @@
+
 DROP TABLE IF EXISTS notifications;
 
 CREATE TABLE notifications
@@ -16,7 +17,8 @@ VALUES
   ( 'cherrylin20172027@gmail.com', 'Inventory Management', 'message 2'),
   ( 'cherrylin20172027@gmail.com', 'Critical','message 3'),
   ( 'cherrylincyl@gmail.com', 'Roster Request','message 4');
-
+  
+  
 DROP TABLE IF EXISTS staff;
 
 CREATE TABLE staff 
@@ -58,13 +60,13 @@ CREATE TABLE shift_requirements
 INSERT INTO shift_requirements
   ( day, opening_time, closing_time, min_workers, unavailable )
 VALUES
-  ('mon', 9, 5, 2, '[1]'),
+  ('mon', 9, 17, 2, '[1]'),
   ('tue', 0, 24, 2, '[5]'),
-  ('wed', 9, 5, 2, '[]'),
-  ('thu', 9, 5, 2, '[]'),
-  ('fri', 9, 5, 2, '[]'),
-  ('sat', 9, 5, 2, '[]'),
-  ('sun', 9, 5, 2, '[]');
+  ('wed', 9, 17, 2, '[]'),
+  ('thu', 9, 17, 2, '[]'),
+  ('fri', 9, 17, 2, '[]'),
+  ('sat', 9, 17, 2, '[]'),
+  ('sun', 9, 17, 2, '[]');
 
 DROP TABLE IF EXISTS customer;
 
@@ -77,7 +79,8 @@ CREATE TABLE customer
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     password TEXT NOT NULL,
-    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    profile_pic varchar(45)
 );
 
 DROP TABLE IF EXISTS roster;
@@ -145,7 +148,14 @@ INSERT INTO stock
 ( ingredient_id, expiry_date, quantity)
 VALUES
 (1, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
-(2, DATE_ADD(CURDATE(), INTERVAL 0 DAY),  20);
+(2, DATE_ADD(CURDATE(), INTERVAL 0 DAY),  20),
+(3, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
+(4, DATE_ADD(CURDATE(), INTERVAL 10 DAY),  0),
+(5, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
+(6, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
+(7, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
+(8, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
+(9, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10);
 
 
 /*CREATE DEFINER=`root`@`localhost` TRIGGER `lowerIngredients` AFTER INSERT ON `orders` FOR EACH ROW BEGIN
@@ -161,32 +171,44 @@ WHERE ingredient_id in (
                     WHERE di.dish_id=NEW.dish_id)
 END
 */
+
 DROP TABLE IF EXISTS dish;
 
 CREATE TABLE dish
 (   
     dish_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     name TEXT NOT NULL,
-    description TEXT NOT NULL,
-    cost FLOAT NOT NULL,
-    display TEXT NOT NULL,
-    cook_time INTEGER NOT NULL,
-    dishType TEXT NOT NULL,
-    allergies TEXT DEFAULT NULL,
-    ingredients_list TEXT NOT NULL
+    cost INTEGER NOT NULL,
+    cook_time Integer NOT NULL,
+    dishType TEXT,
+    dishPic TEXT,
+    description TEXT,
+    allergies TEXT,
+    day INTEGER DEFAULT NULL
 );
 
 INSERT INTO dish
-  ( name, cost, description, cook_time, allergies, dishType, display, ingredients_list )
+  ( name, cost, cook_time, dishType, dishPic, description, allergies )
 VALUES
-  ('Burger and chips', 20, "", 30, '', 'main', 'monday', ''),
-  ('Chicken and chips', 15, "",20, '', 'main', 'monday', ''),
-  ('Fish and chips', 25, "",20, '', 'main', 'monday', ''),
-  ('Tomato soup', 20, "",30, '', 'starter', 'monday', ''),
-  ('Chicken Salad', 15, "",20, '', 'starter', 'monday', ''),
-  ('Ice Cream', 20, "",30, '', 'dessert', 'monday', ''),
-  ('Chocolate Brownie', 15, "",20, '', 'dessert', 'monday', '');
+  ('Burger and chips', 20, 30, 'main', '1', 'burger and chips description', ''),
+  ('Chicken and chips', 15, 20, 'main', '1', 'chicken and chips description', ''),
+  ('Fish and chips', 25, 20, 'main', '1', 'fish and chips description', ''),
+  ('Tomato soup', 20, 30, 'starter', '1', 'Soup description', ''),
+  ('Chicken Salad', 15, 20, 'starter', '1', 'Chicken salad description', ''),
+  ('Ice Cream', 20, 30, 'dessert', '1', 'Ice cream description', ''),
+  ('Chocolate Brownie', 15, 20, 'dessert', '1', 'brownie description', '');
 
+INSERT INTO dish
+  ( name, cost, cook_time, dishType, dishPic, description, allergies, day )
+VALUES
+  ('Mondays Beef', 50, 10, 'special', '1', 'beef description', '', 0),
+  ('Tuedays Beef', 50, 10, 'special', '1', 'beef description', '', 1),
+  ('Wednesdays Beef', 50, 10, 'special', '1', 'beef description', '', 2),
+  ('Thursdays Beef', 50, 10, 'special', '1', 'beef description', '', 3),
+  ('Fridays Beef', 50, 10, 'special', '1', 'beef description', '', 4),
+  ('Saturdays Beef', 50, 10, 'special', '1', 'beef description', '', 5),
+  ('Sundays Beef', 50, 10, 'special', '1', 'beef description', '', 6),
+  
 DROP TABLE IF EXISTS dish_ingredient;
 
 CREATE TABLE dish_ingredient
@@ -195,16 +217,28 @@ CREATE TABLE dish_ingredient
     dish_id INTEGER NOT NULL
 );
 
+INSERT INTO dish_ingredient
+VALUES
+  ( 1, 1),
+  ( 2, 1),
+  ( 3, 2),
+  ( 4, 3),
+  ( 5, 1),
+  ( 6, 4),
+  ( 7, 6),
+  ( 8, 7),
+  ( 9, 5);
+  
 DROP TABLE IF EXISTS orders;
 
 CREATE TABLE orders
 (
     order_id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    time TEXT NOT NULL,
     dish_id INTEGER NOT NULL,
     table_id INTEGER NOT NULL,
-    notes TEXT,
-    status TEXT
+    status TEXT,
+    notes TEXT
 );
 
 
@@ -212,7 +246,7 @@ DROP TABLE IF EXISTS tables;
 
 CREATE TABLE tables
 (   
-    table_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    table_id INTEGER PRIMARY KEY,
     seats INTEGER NOT NULL,
     x TEXT NOT NULL,
     y TEXT NOT NULL
@@ -226,27 +260,16 @@ VALUES
   (3, 4, "300px", "300px"),
   (4, 4, "400px", "400px");
 
-
 DROP TABLE IF EXISTS bookings;
 
 CREATE TABLE bookings
 (
     booking_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    booker_id INTEGER,
+    table_id INTEGER,
     name TEXT NOT NULL,
     date DATE NOT NULL,
     time INTEGER NOT NULL
-);
-
-DROP TABLE IF EXISTS user_queries;
-
-CREATE TABLE user_queries
-(
-    query_id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    email TEXT NOT NULL,
-    subject TEXT NOT NULL,
-    name TEXT NOT NULL,
-    message TEXT NOT NULL,
-    date_received TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 DROP TABLE IF EXISTS roster_requests;
@@ -271,6 +294,7 @@ CREATE TABLE user_analytics
     new_daily_users INTEGER DEFAULT 0
 );
 
+
 DROP TABLE IF EXISTS monthly_revenue;
 CREATE TABLE monthly_revenue
 (
@@ -278,7 +302,7 @@ CREATE TABLE monthly_revenue
   monthly_sales FLOAT DEFAULT 0
 );
 
-INSERT INTO world.monthly_revenue (the_month, monthly_sales)
+INSERT INTO monthly_revenue (the_month, monthly_sales)
 VALUES
 ('2022-01-01', 5300),
 ('2022-02-01', 1000),
@@ -300,13 +324,46 @@ CREATE TABLE yearly_revenue
   yearly_sales FLOAT DEFAULT 0
 );
 
-INSERT INTO world.yearly_revenue (the_year, yearly_sales)
+INSERT INTO yearly_revenue (the_year, yearly_sales)
 VALUES
 ('2020-01-01', 213500),
 ('2021-01-01', 531350),
 ('2022-01-01', 554685),
 ('2023-01-01', 663000);
 
+
+DROP TABLE IF EXISTS user_queries;
+
+CREATE TABLE user_queries
+(
+    query_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    email TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    name TEXT NOT NULL,
+    message TEXT NOT NULL,
+    date_received TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+DROP TABLE IF EXISTS transactions;
+
+CREATE TABLE transactions
+(
+    username TEXT,
+    dish_id INTEGER,
+    cost INTEGER,
+    quantity INTEGER,
+    date TEXT
+);
+
+INSERT INTO transactions
+  ( username, dish_id, cost, quantity, date )
+VALUES
+  ("benc190514@gmail.com", 1, 2, 1, null), 
+  ("benc190514@gmail.com", 2, 2, 1, null), 
+  ("benc190514@gmail.com", 3, 2, 1, null),
+  ("benc190514il.com", 5, 2, 1, null);
+  
+ 
 DROP TABLE IF EXISTS reviews;
 
 CREATE TABLE reviews
@@ -316,8 +373,28 @@ CREATE TABLE reviews
     comment TEXT,
     rating INTEGER,
     dish_name TEXT,
-    dish_id INTEGER
+    dish_id INTEGER,
+    dish_name TEXT
 );
+
+INSERT INTO reviews
+  ( username, comment, rating, dish_id, dish_name)
+VALUES
+  ("benc190514@gmail.com", "good", 5, 1), 
+  ("benc190514@gmail.com", "bad", 2, 2), 
+  ("benc190514@gmail.com", "okay", 4, 3),
+  ("benc190514il.com", "AMAZING", 10, 5);
+
+DROP TABLE IF EXISTS modifications;
+
+CREATE TABLE modifications
+(
+	modifications_id INTEGER PRIMARY KEY auto_increment,
+	dish_id INTEGER,
+  changes TEXT,
+  user TEXT
+);
+
 
 /*
 ############

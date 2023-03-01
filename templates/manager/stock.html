@@ -1,0 +1,93 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Stock List {% endblock %} 
+
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
+        <div class="pcoded-content">
+            <div class="pcoded-inner-content">
+                <div class="main-body">
+                    <div class="page-wrapper">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Stock List</h5>
+                                    </div>
+                                    <div class="card-block table-border-style">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">Batch ID</th>
+                                                        <th scope="col">Name</th>
+                                                        <th scope="col">Expiry Date</th>
+                                                        <th scope="col">Quantity</th>
+                                                        <th scope="col">Pending Restock</th>
+                                                    </tr>
+                                                </thead>
+                                                {% for stock in stockList %}
+                                                <tbody>
+                                                    <tr>
+                                                        <th scope="row">{{ stock['batch_id'] }}</th>
+                                                        <td>{{ stock['name'] }}</td>
+                                                        <td>{{ stock['expiry_date'] }}</td>
+                                                        <td>{{ stock['quantity'] }}</td>
+                                                        <td>
+                                                            {% if stock['pending_restock'] == 0 %}
+                                                                <img center" src="{{ url_for('static', filename='ex.png' ) }}" style="width: 20px; padding: 0em auto;"/>
+                                                            {% else %}
+                                                            <img src="{{ url_for('static', filename='tick.png' ) }}" style="width: 20px;"/>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td></td>
+                                                    </tr>
+                                                </tbody>
+                                                {% endfor %}
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Add to Stock List</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form action="" method="post" novalidate> 
+                                            {{ form.hidden_tag() }}
+
+                                            {{ form.ingredient.label }}
+                                            {{ form.ingredient(class="mb-3 form-control") }}
+                                            {% for error in form.ingredient.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+
+                                            {{ form.date.label }}
+                                            {{ form.date(class="mb-3 form-control") }}
+                                            {% for error in form.date.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+
+                                            {{ form.quantity.label }}
+                                            {{ form.quantity(class="mb-3 form-control") }}
+                                            {% for error in form.quantity.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+
+                                            {{ form.submit(class="submit btn btn-primary") }}
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %} 

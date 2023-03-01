@@ -42,7 +42,7 @@
                                                                     <div class="table-responsive">
                                                                         <table class="table table-striped">
                                                                             <tbody>
-                                                                            {%if transactionHistory is not none %}
+                                                                            {%if transactionHistory|length > 0 %}
                                                                                 {% for dish in dishes%}
                                                                                     {% for transaction in transactionHistory %}
                                                                                     {% if dish['dish_id']== transaction['dish_id']%}
@@ -51,6 +51,7 @@
                                                                                         <td>{{transaction['cost']}}</td>
                                                                                         <td>{{transaction['date']}}</td>
                                                                                         <td>{{dish['name']}}</td>
+                                                                                        <td><a href="{{ url_for('review_dish', dish_id=dish['dish_id']) }}" class="btn">Leave a Review</a></td>
                                                                                     </tr>
                                                                                 {%endif%}
                                                                                 {% endfor%}
