@@ -75,9 +75,11 @@ CREATE TABLE customer
     customer_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     email TEXT NOT NULL,
     code TEXT,
+    access_level TEXT DEFAULT "customer" NOT NULL,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     password TEXT NOT NULL,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     profile_pic varchar(45)
 );
 
