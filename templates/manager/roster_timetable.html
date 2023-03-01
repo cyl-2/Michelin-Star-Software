@@ -1,41 +1,70 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
 
-{% block title %}
-    <title>Roster Timetable</title>
-{% endblock %}
+{% block title %} Roster Timetable {% endblock %} 
 
-{% block main_content %}
-    <h1>Roster Timetable</h1>
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<!--
     <p><a href="{{ url_for('generate_roster') }}">Generate Roster</a></p>
     <p><a href="{{ url_for('delete_from_roster') }}">Delete From Roster</a></p>
     <p><a href="{{ url_for('add_to_roster_timetable') }}">Add Slot to Roster</a></p>
-    <table>
-        <tr>
-            <th scope="col">Staff ID</th>
-            <th scope="col">Name</th>
-            <th scope="col">Monday</th>
-            <th scope="col">Tuesday</th>
-            <th scope="col">Wednesday</th>
-            <th scope="col">Thursday</th>
-            <th scope="col">Friday</th>
-            <th scope="col">Saturday</th>
-            <th scope="col">Sunday</th>
-        </tr>
-        {% for staff in roster %}
-        <tr>
-            <th scope="row">{{ staff['staff_id'] }}</th>
-            <td scope="row">{{ staff['first_name'] }}</td>
-            <td>{{ staff['mon'] }}</td>
-            <td>{{ staff['tue'] }}</td>
-            <td>{{ staff['wed'] }}</td>
-            <td>{{ staff['thu'] }}</td>
-            <td>{{ staff['fri'] }}</td>
-            <td>{{ staff['sat'] }}</td>
-            <td>{{ staff['sun'] }}</td>
-            
-        </tr>
-        {% endfor %}
-    </table>
+-->
+<div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
+        <div class="pcoded-content">
+            <div class="pcoded-inner-content">
+                <div class="main-body">
+                    <div class="page-wrapper">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Roster Timetable</h5>
+                                    </div>
+                                    <div class="card-block table-border-style">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">Staff ID</th>
+                                                        <th scope="col">Name</th>
+                                                        <th scope="col">Monday</th>
+                                                        <th scope="col">Tuesday</th>
+                                                        <th scope="col">Wednesday</th>
+                                                        <th scope="col">Thursday</th>
+                                                        <th scope="col">Friday</th>
+                                                        <th scope="col">Saturday</th>
+                                                        <th scope="col">Sunday</th>
+                                                    </tr>
+                                                </thead>
+                                                {% for staff in roster %}
+                                                <tbody>
+                                                    <tr>
+                                                        <th scope="row">{{ staff['staff_id'] }}</th>
+                                                        <td scope="row">{{ staff['first_name'] }}</td>
+                                                        <td>{{ staff['mon'] }}</td>
+                                                        <td>{{ staff['tue'] }}</td>
+                                                        <td>{{ staff['wed'] }}</td>
+                                                        <td>{{ staff['thu'] }}</td>
+                                                        <td>{{ staff['fri'] }}</td>
+                                                        <td>{{ staff['sat'] }}</td>
+                                                        <td>{{ staff['sun'] }}</td>
+                                                        
+                                                    </tr>
+                                                </tbody>
+                                                {% endfor %}
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-
-{% endblock %}
+{% endblock content %} 

@@ -1,6 +1,7 @@
-{% extends 'base.html' %}
+{% extends 'layouts/base.html' %}
 {% block content %}
 
+{%if orderlist%}
 <table>
     <tr>
         <th>Dish</th>
@@ -24,7 +25,7 @@
             {{line.cook_time}}
         </td>
         <td>
-            {{line.tableNo}}
+            {{line.table_id}}
         </td>
         <td>
             {%if line.notes%}
@@ -35,17 +36,60 @@
             {{line.status}}
         </td>
         <td>
-            {%if line.status=="unmade"%}
+            {%if line.status=="not started"%}
 
-            <a href="{{ url_for('kitchenUpdate', dish_id=line.dish_id, time=line.time) }}">Set to ongoing</a>
+            <a href="{{ url_for('kitchenUpdate', dish_id=line.dish_id, order_id=line.order_id, time=line.time) }}">Set
+                to ongoing</a>
 
             {%elif line.status=="ongoing"%}
-            <a href="{{ url_for('kitchenSentOut', dish_id=line.dish_id, time=line.time) }}">Send Out</a>
+            <a href="{{ url_for('kitchenSentOut', order_id=line.order_id, time=line.time) }}">Send Out</a>
             {%endif%}
         </td>
     </tr>
     {%endif%}
     {%endfor%}
 </table>
-
-{%endblock%}
+<table>
+    <tr>
+        <th>Dish</th>
+        <th>Time Ordered</th>
+        <th>Cook Time</th>
+        <th>Table No.</th>
+        <th>Notes</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+    {%for line in orderlist%}
+    {%if line.status=="sent out"%}
+    <tr>
+        <td>
+            {{line.name}}
+        </td>
+        <td>
+            {{line.time}}
+        </td>
+        <td>
+            {{line.cook_time}}
+        </td>
+        <td>
+            {{line.table_id}}
+        </td>
+        <td>
+            {%if line.notes%}
+            {{line.notes}}
+            {%endif%}
+        </td>
+        <td>
+            {{line.status}}
+        </td>
+    </tr>
+    {%endif%}
+    {%endfor%}
+    {%else%}
+    <p>
+        No Orders in Queue.
+    </p>
+    {%endif%}
+    <a href="{{ url_for('kitchenUndo') }}">Undo</a>
+    {%endblock%}
+{% endblock content %}
