@@ -981,6 +981,7 @@ def manage_shift_requirements():
     
     return render_template("manager/shift_requirements.html", requirements=requirements, staff=staff, week=week, form=form)
 
+# display ingredient batches ordered and expiry dates
 @app.route("/stock", methods=["GET", "POST"])
 def stock():
     cur = mysql.connection.cursor()
