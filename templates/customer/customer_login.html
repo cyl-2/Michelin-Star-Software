@@ -1,6 +1,5 @@
 {% extends "layouts/base.html" %}
 
-
 {% block content %}
 
     <div class="auth-wrapper">
@@ -52,15 +51,17 @@
 
                     <p class="mb-0 text-muted">Don’t have an account? <a href="{{ url_for('registration') }}" >Sign Up Now</a></p>
                     
-                    <div>
-                        {% with messages = get_flashed_messages() %}
-                            {% if messages %}
-                                {% for message in messages %}
-                                    <p> {{ message }}</p>
-                                {% endfor %}
-                            {% endif %}
-                        {% endwith %}
-                    </div>
+                    {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="flash">
+                            <div class="flash-blue">
+                            {% for message in messages %}
+                                <p> <b>{{ message }}</b> </p>
+                            {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% endwith %}
                 </div>
             </div>
         </div>

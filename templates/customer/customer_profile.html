@@ -1,35 +1,124 @@
-{%extends 'base.html'%}
-{% block main_content%}
-<p>Hellorrrr?</p>
-<section>
-    <h2>Overview</h2>
-    {% if image is not none%}
-        <img src="{{url_for('static',filename=image)}}">
-    {%else%}
-        {{error}}
-    {%endif%}
-    <p><a href="{{url_for('user_pic')}}">Add/Change profile pic</a></p>
-</section>
-<section>
-    <h2>Transactions</h2>
-    <table>
-        <tr>
-            <td>Stuff</td>
-        </tr>
-        {%if transactions is not none %}
-            {% for book in books%}
-                {% for transaction in transactions %}
-                {% if dish['dish_id']== transaction['dish_id']%}
-                <tr>
-                    <td>{{transaction['quantity']}}</td>
-                    <td>{{transaction['cost']}}</td>
-                    <td>{{transaction['date']}}</td>
-                    <td>{{dish['name']}}</td>
-                </tr>
-            {%endif%}
-            {% endfor%}
-            {% endfor%}
-        {%endif%}
-    </table>
-</section>
-{% endblock%}
+{% extends "layouts/base.html" %}
+{% block content %}
+
+    <!-- [ Main Content ] start -->
+    <div class="pcoded-main-container">
+        <div class="pcoded-wrapper">
+
+            <div class="pcoded-content">
+                <div class="pcoded-inner-content">
+
+                    <div class="page-header">
+                        <div class="page-block">
+                            <div class="row align-items-center">
+                                <div class="col-md-12">
+                                    <div class="page-header-title">
+                                        <h5 class="m-b-10">Profile Page</h5>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="main-body">
+                        <div class="page-wrapper">
+                            <!-- [ Main Content ] start -->
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5>Transaction History</h5>
+                                        </div>
+                                        <div class="card-block">
+                                            <div class="row"> 
+                                                
+                                                <div class="col-sm-12 mb-2">
+                                                    <div class="form-group">
+                                                                                                            <!-- [ stiped-table ] start -->
+                                                        <div class="col-xl-12">
+                                                            <div class="card">
+                                                                <div class="card-block table-border-style">
+                                                                    <div class="table-responsive">
+                                                                        <table class="table table-striped">
+                                                                            <tbody>
+                                                                            {%if transactionHistory|length > 0 %}
+                                                                                {% for dish in dishes%}
+                                                                                    {% for transaction in transactionHistory %}
+                                                                                    {% if dish['dish_id']== transaction['dish_id']%}
+                                                                                    <tr>
+                                                                                        <td>{{transaction['quantity']}}</td>
+                                                                                        <td>{{transaction['cost']}}</td>
+                                                                                        <td>{{transaction['date']}}</td>
+                                                                                        <td>{{dish['name']}}</td>
+                                                                                        <td><a href="{{ url_for('review_dish', dish_id=dish['dish_id']) }}" class="btn">Leave a Review</a></td>
+                                                                                    </tr>
+                                                                                {%endif%}
+                                                                                {% endfor%}
+                                                                                {% endfor%}
+                                                                            {%endif%}
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>  
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="card">
+                                        <div class="card-block">
+                                            <div class="d-flex align-items-center justify-content-center flex-column">
+                                                <div class="w-50 p-3">
+                                                    {% if image is not none%}
+                                                    <img src="/static/picture/{{image}}" alt="profile image"
+                                                        class="img-fluid rounded-circle">
+                                                    {%else%}
+                                                    <img src="/static/picture/20191220_192241.jpg" alt="profile image"
+                                                    class="img-fluid rounded-circle">
+                                                    {%endif%}
+                                                </div>
+                                            </div>
+
+                                            <div class="small font-weight-light mt-4 text-center text-muted">
+                                                <h4 class="font-weight-bold h6">
+                                                    You
+                                                </h4>
+                                                <p>
+                                                    {{user}}
+                                                    <br />
+                                                </p>
+                                            </div>
+                                            <div class="d-flex justify-content-center align-items-center">
+                                                <p><a href="{{url_for('user_pic')}}">Add/Change profile pic</a></p>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- [ Main Content ] end -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <!-- [ Main Content ] end -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
+
+
+
+
+
+

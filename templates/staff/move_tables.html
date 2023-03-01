@@ -1,10 +1,11 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Move Table {% endblock %} 
+{% block title %} Change Table Positions {% endblock %} 
 
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
+
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
 <script type ='text/javascript'> 
     let hOffset, vOffset = 0; 
@@ -53,17 +54,30 @@
         readyToSave(); 
     } 
 </script> 
-<div class="pcoded-wrapper">
-    <div class="pcoded-content">
-        <div class="pcoded-inner-content">
-            <div class="col-xl-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Move Tables</h5>
+<div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
+        <div class="pcoded-content">
+            <div class="pcoded-inner-content">
+                <div class="main-body">
+                    <div class="page-wrapper">
+                        <!-- [ Main Content ] start -->
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Move Tables</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <a class="btn btn-primary" href="{{ url_for('move_tables') }}" >Reset</a>
+                                        <a id="save_changes" onclick="sendData()"></a>
+                                    </div>
+                                    {% for table_index in table_positions %}
+                                        <img id='table{{ table_index }}' src="{{ url_for('static', filename='table.png' ) }}" style="position:absolute;  left: {{ table_positions[ table_index ][0] }}; top: {{ table_positions[ table_index ][1] }}; width: 90px;"/>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    {% for table_index in table_positions %}
-                        <img id='table{{ table_index }}' src="{{ url_for('static', filename='table.png' ) }}" style="position:absolute;  left: {{ table_positions[ table_index ][0] }}; top: {{ table_positions[ table_index ][1] }}; width: 90px;"/>
-                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -71,8 +85,6 @@
 </div>
 
 </section>
-<p><a href="{{ url_for('move_tables') }}" >Reset</a></p>
-<p id="save_changes" onclick="sendData()"></p>
 <script>
     let co_ords = [];
     function readyToSave(){
@@ -85,19 +97,7 @@
             co_ords.push(table.style.left);
             co_ords.push(table.style.top);
         {% endfor %}
-        document.getElementById("save_changes").innerHTML = '<a href="{{ url_for('save_tables') }}">Save Changes</a>';
+        document.getElementById("save_changes").innerHTML = '<a class="btn btn-primary" href="{{ url_for('save_tables') }}">Save Changes</a>';
     }
 
-
-    function sendData(){
-        $.ajax(
-            {
-            url:"/save_tables",
-            type:"POST",
-            contentType: "application/json",
-            data: JSON.stringify(co_ords)
-            }
-        );
-    }
-</script>
 {% endblock content %} 

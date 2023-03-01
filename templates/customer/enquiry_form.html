@@ -1,14 +1,15 @@
 {% extends "layouts/base.html" %}
 
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+
 {% block content %}
 <div class="pcoded-main-container">
     <div class="pcoded-wrapper">
-
         <div class="pcoded-content">
             <div class="pcoded-inner-content">
-                <!-- [ breadcrumb ] start -->
-
-                <!-- [ breadcrumb ] end -->
                 <div class="main-body">
                     <div class="page-wrapper">
                         <div class="row">
@@ -22,26 +23,39 @@
                                             <div class="col-md-6">
                                                 <form action="" method="post" novalidate> 
                                                     {{ form.hidden_tag() }}
+
+                                                    <span class="mb-0 text-muted">
+                                                        <span class="text-danger">
+                                                            {% for error in form.email.errors %}
+                                                                {{ error }}
+                                                            {% endfor %}
+                                                        </span>
+                                                    </span>
                                                     {{ form.email(class="form-control", placeholder="Your email address") }}
+                                                    
                                                     <br>
                                                     {{ form.name(class="form-control", placeholder="Your name") }}
                                                     <br>
                                                     {{ form.subject(class="form-control", placeholder="Subject") }}
+                                                    
                                                     <br>
                                                     {{ form.message(class="form-control", rows='10',cols='100', placeholder="Write your message here") }}
+                                                    
                                                     <br>
                                                     {{ form.submit(class="btn btn-primary shadow-2 mb-4") }}
                                                 </form>
                                             
-                                                <div>
-                                                    {% with messages = get_flashed_messages() %}
-                                                        {% if messages %}
-                                                            {% for message in messages %}
-                                                                <p> {{ message }}</p>
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                    {% endwith %}
-                                                </div>    
+                                                {% with messages = get_flashed_messages() %}
+                                                {% if messages %}
+                                                    <div class="flash">
+                                                        <div class="flash-blue">
+                                                        {% for message in messages %}
+                                                            <p> <b>{{ message }}</b> </p>
+                                                        {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                                {% endwith %}
                                             </div>
                                         </div>
                                     </div>

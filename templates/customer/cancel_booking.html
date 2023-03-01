@@ -1,13 +1,13 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Break Timetable {% endblock %} 
+{% block title %} Cancel Booking {% endblock %} 
 
 {% block stylesheets %}{% endblock stylesheets %}
 
+
 {% block content %}
 <!--
-    <p><a href="{{ url_for('generate_roster') }}">Generate Roster</a></p>
-    <p><a href="{{ url_for('delete_from_roster') }}">Delete From Roster</a></p>
+    <p><a href="{{ url_for('roster_timetable') }}">View Roster</a></p>
     <p><a href="{{ url_for('add_to_roster_timetable') }}">Add Slot to Roster</a></p>
 -->
     <div class="pcoded-wrapper">
@@ -17,38 +17,38 @@
                 <div class="col-xl-12">
                     <div class="card">
                         <div class="card-header">
-                            <h5>Break Timetable</h5>
+                            <h5>Cancel Booking</h5>
                         </div>
                         <div class="card-block table-border-style">
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
+                                            <th scope="col">Date</th>
+                                            <th scope="col">Time</th>
+                                            <th scope="col">Duration</th>
+                                            <th scope="col">Table Number</th>
                                             <th scope="col"></th>
-                                            {%  for staff in staff_breaks %}
-                                            <th scope="col">{{ staff['name'] }}</th>
-                                            {% endfor %}
                                         </tr>
                                     </thead>
+                                    {% for booking in bookings %}
                                     <tbody>
-                                        {% for j in range(24) %}
                                         <tr>
-                                            <th scope="row">{{j + 0}}:00</th>
-                                            {% for i in range(staff_breaks|length) %}
+                                            <th scope="row">{{ booking['date'] }}</th>
+                                            <td>{{ booking['time'] }}</td>
+                                            <td>2 hours</td>
+                                            <td>{{ booking['table_id'] }}</td>
                                             <td>
-                                                {% for staff in staff_breaks %}
-                                                    {% if staff["name"] ==  staff_breaks[i]["name"] %}
-                                                        {% if staff["time"] == (j+0)|string+":00" %}
-                                                            1 hour
-                                                        {% endif %}
-                                                    {% endif %}
-                                                {% endfor %}
+                                                <a class="btn btn-outline-danger" href="{{ url_for('cancel_booking', booking_id=booking['booking_id']) }}">Cancel</a>
                                             </td>
-                                            {% endfor %}
+                                            
                                         </tr>
-                                        {% endfor %}
                                     </tbody>
+                                    {% endfor %}
                                 </table>
+                                {% if bookings|length == 0 %}
+                                    <p>You have no upcoming bookings.</p>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

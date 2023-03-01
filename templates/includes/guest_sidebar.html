@@ -1,0 +1,61 @@
+<nav class="pcoded-navbar navbar-collapsed">
+    <div class="navbar-wrapper">
+        <div class="navbar-brand header-logo">
+            <a href="{{url_for('menu') }}" class="b-brand">
+                <div class="b-bg">
+                    <i class="feather icon-trending-up"></i>
+                </div>
+                <span class="b-title">Michelin Star</span>
+            </a>
+            <a class="mobile-menu" id="mobile-collapse" href="javascript:"><span></span></a>
+        </div>
+        <div class="navbar-content scroll-div">
+            <ul class="nav pcoded-inner-navbar">
+                
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Order</label>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ url_for('menu') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-search"></i></span>
+                            <span class="pcoded-mtext">Menu</span></a>
+                </li>
+                
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Create An Account Today!</label>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('registration') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-user-plus"></i></span><span class="pcoded-mtext">Register For An Account</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('customer_login') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-log-in"></i></span><span class="pcoded-mtext">Customer Login</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('staff_login') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-log-in"></i></span><span class="pcoded-mtext">Staff Login</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Customer Support</label>
+                </li>                    
+                <li data-username="Support Page" class="nav-item ">
+                    <a target="_blank" href="{{ url_for('contact_us') }}" class="nav-link">
+                        <span class="pcoded-micon">
+                            <i class="feather icon-headphones"></i>
+                        </span>
+                        <span class="pcoded-mtext">Contact Us</span>
+                    </a>
+                </li>    
+            </ul>
+        </div>
+    </div>
+</nav>

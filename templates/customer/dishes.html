@@ -1,216 +1,304 @@
 {% extends "layouts/base.html" %}
+
+{% block stylesheets %}
+
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="static/assets/css/menu.css">
+{% endblock stylesheets %}
+
+
 {% block content %}
-{% if dishes is not none%}
-<div class="dropdown drp-user">
-    <a href="javascript:" class="dropdown-toggle" data-toggle="dropdown">
-        <i class="icon feather"></i>Leave a Review
-    </a>
-    <div class="dropdown-menu dropdown-menu-right profile-notification">
-        <ul class="pro-body">
-            {% for transaction in transactions %}
-                <li>
-                    <a href="{{ url_for('review_dish', dish_id=transaction['dish_id']) }}" class="dropdown-item">
-                        {% for dish in dishes %}
-                            {% if dish['dish_id'] == transaction['dish_id'] %}
-                                {{ dish['name'] }}
-                            {% endif %}
-                        {% endfor %}
-                    </a>
-                </li>
-            {% endfor %}
+<!-- header section starts -->
+
+<header>
+    <section class="flex">
+        <div class="icons">
+            <i class="fas fa-bars" id="menu-bars"></i>
+            <i id="search-icon"></i>
+        </div>
+    </section>
+</header>
+
+<!-- header section ends-->
+
+<!-- the next few lines will have to be here  -->
+
+<form action="" id="search-form">
+    <i class="fas fa-times" id="close"></i>
+</form>
+
+<!-- home section starts  -->
+
+<div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
+<div class="container">
+    <section class="home" id="home">
+        <div class="swiper home-slider">
+            <div class="swiper-wrapper">
+                {% for meal in slider %}
+                    <div class="swiper-slide slide">
+                        <div class="content">
+                            <span>our best loved dishes</span>
+                            <h3>{{ meal['name'] }}</h3>
+                            <p>{{ meal['description'] }}</p>
+                            <a href="{{url_for('add_default_meal', dish_id=meal['dish_id'])}}" class="btn">order now</a>
+                        </div>
+                        <div class="image">
+                            <img src="static/images-menu/{{ meal['dishPic'] }}" alt="">
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+    </section>
+</div>
+
+<!-- home section ends -->
+
+<div class="tab">
+    <div class= "center">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <button class="tablinks nav-link" onclick="openCity(event, 'Starter')">Starter</button>
+            <button class="tablinks nav-link" onclick="openCity(event, 'Main')">Main</button>
+            <button class="tablinks nav-link" onclick="openCity(event, 'Dessert')">Desserts</button>
+            <button class="tablinks nav-link" onclick="openCity(event, 'Side')">Sides</button>
+            <button class="tablinks nav-link" onclick="openCity(event, 'Drinks')">Drinks</button>
+            <button class="tablinks nav-link" onclick="openCity(event, 'Special')">Special</button>
         </ul>
+        
     </div>
 </div>
-    
-        <!-- [ Hover-table ] start -->
-        <div class="col-xl-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Hover Table</h5>
-                    <span class="d-block m-t-5">use class <code>table-hover</code> inside table element</span>
-                </div>
-                <div class="card-block table-border-style">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Image</th>
-                                    <th>Dish Name</th>
-                                    <th>Cost</th>
-                                    <th>Dish info</th>
-                                    <th>Add to cart</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            {% for dish in starter%}
-                                <tr>
-                                    <th scope="row">1</th>
-                                    <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
-                                    <td>{{dish['name']}}</td>
-                                    <td>{{dish['cost']}}</td>
-                                    <td><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Go to dish</a></td>
-                                    <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
-                                </tr>
-                            {% endfor%}
-                            </tbody>
-                        </table>
+<div class="tab">
+    <a href="{{ url_for('swap_sort') }}" class="btn btn-light center" style="margin: 0em auto; background-color: gray; color: white;">
+        {% if session['order_by'] == 'low' %}
+            Sort by Price: Low -> High
+        {% else %}
+            Sort by Price: High -> Low
+        {% endif %}
+    </a>
+</div>
+
+<div id="Starter" class="tabcontent">
+    <div class="container">
+        <section class="menu" id="menu">
+            <div class="box-container">
+                {% for dish in starter%}
+                <div class="box">
+                    <div class="image">
+                        <img src="/static/picture/{{ dish['dishPic'] }}" class="dishPic">
+                        <a href="#" class="fas fa-heart"></a>
+                    </div>
+                    <div class="content">
+                        <div class="stars">
+                            {% set full_stars = dish['avg_rating'] | int %}
+                            {% set half_stars = dish['avg_rating'] % 1 == 0.5 %}
+                            {% for i in range(full_stars) %}
+                                <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% if half_stars %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% endif %}
+                            {% if dish['avg_rating'] == 0 %}
+                                <p> No review yet </p>
+                            {% endif %}
+                        </div>
+                        <h4>{{dish['name']}}</h4>
+                        <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
+                        <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
+                        <span class="price">€{{dish['cost']}}</span>
                     </div>
                 </div>
+                {%endfor%}
             </div>
-        </div>
-        <!-- [ Hover-table ] end -->
+        </section>
+    </div>
+</div>
 
-
-    <h2>Starter</h2>
-    {% if starter is not none%}
-    <table>
-        <tr>
-            <th>Name</th>
-            <th>Cost</th>
-            <th>add to cart</th>
-        </tr>
-        {% for dish in starter%}
-            <tr>
-                <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
-                <td>{{dish['name']}}</td>
-                <td>{{dish['cost']}}</td>
-                <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
-            </tr>
-        {% endfor%}
-
-        <div class="col-xl-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Hover Table</h5>
-                    <span class="d-block m-t-5">use class <code>table-hover</code> inside table element</span>
-                </div>
-                <div class="card-block table-border-style">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Username</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <th scope="row">1</th>
-                                    <td>Mark</td>
-                                    <td>Otto</td>
-                                    <td>@mdo</td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">2</th>
-                                    <td>Jacob</td>
-                                    <td>Thornton</td>
-                                    <td>@fat</td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">3</th>
-                                    <td>Larry</td>
-                                    <td>the Bird</td>
-                                    <td>@twitter</td>
-                                </tr>
-                            </tbody>
-                        </table>
+<div id="Main" class="tabcontent">
+    <div class="container">
+        <section class="menu" id="menu">
+            <div class="box-container">
+                {% for dish in mainCourse%}
+                <div class="box">
+                    <div class="image">
+                        <img src="/static/picture/{{dish['dishPic']}}" class="dishPic">
+                        <a href="#" class="fas fa-heart"></a>
+                    </div>
+                    <div class="content">
+                        <div class="stars">
+                            {% set full_stars = dish['avg_rating'] | int %}
+                            {% set half_stars = dish['avg_rating'] % 1 == 0.5 %}
+                            {% for i in range(full_stars) %}
+                                <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% if half_stars %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% endif %}
+                            {% if dish['avg_rating'] == 0 %}
+                                <p> No review yet </p>
+                            {% endif %}
+                        </div>
+                        <h3>{{dish['name']}}</h3>
+                        <p>{{dish['cost']}}</p>
+                        <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
+                        <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
+                        <span class="price">€{{dish['cost']}}</span>
                     </div>
                 </div>
+                {%endfor%}
             </div>
+        </section>
+    </div>
+</div>
+
+<div id="Side" class="tabcontent">
+    <div class="container">
+        <section class="menu" id="menu">
+            <div class="box-container">
+                {% for dish in side%}
+                <div class="box">
+                    <div class="image">
+                        <img src="/static/picture/{{dish['dishPic']}}" class="dishPic">
+                        <a href="#" class="fas fa-heart"></a>
+                    </div>
+                    <div class="content">
+                        <div class="stars">
+                            {% set full_stars = dish['avg_rating'] | int %}
+                            {% set half_stars = dish['avg_rating'] % 1 == 0.5 %}
+                            {% for i in range(full_stars) %}
+                                <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% if half_stars %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% endif %}
+                            {% if dish['avg_rating'] == 0 %}
+                                <p> No review yet </p>
+                            {% endif %}
+                        </div>
+                        <h3>{{dish['name']}}</h3>
+                        <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
+                        <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
+                        <span class="price">€{{dish['cost']}}</span>
+                    </div>
+                </div>
+                {%endfor%}
+            </div>
+        </section>
+    </div>
+</div>
+
+
+<div id="Dessert" class="tabcontent">
+    <div class="container">
+        <section class="menu" id="menu">
+            <div class="box-container">
+                {% for dish in dessert %}
+                <div class="box">
+                    <div class="image">
+                        <img src="/static/picture/{{dish['dishPic']}}" class="dishPic">
+                        <a href="#" class="fas fa-heart"></a>
+                    </div>
+                    <div class="content">
+                        <div class="stars">
+                            {% set full_stars = dish['avg_rating'] | int %}
+                            {% set half_stars = dish['avg_rating'] % 1 == 0.5 %}
+                            {% for i in range(full_stars) %}
+                                <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% if half_stars %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% endif %}
+                            {% if dish['avg_rating'] == 0 %}
+                                <p> No review yet </p>
+                            {% endif %}
+                        </div>
+                        <h3>{{dish['name']}}</h3>
+                        <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
+                        <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
+                        <span class="price">€{{dish['cost']}}</span>
+                    </div>
+                </div>
+                {%endfor%}
+            </div>
+        </section>
+    </div>
+</div>
+
+<div id="Special" class="tabcontent">
+    <div class="container">
+        <section class="menu" id="menu">
+            <div class="box-container">
+                {% for dish in special%}
+                <div class="box">
+                    <div class="image">
+                        <img src="/static/picture/{{ dish['dishPic'] }}" class="dishPic">
+                        <a href="#" class="fas fa-heart"></a>
+                    </div>
+                    <div class="content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <h3>{{dish['name']}}</h3>
+                        <p>{{dish['cost']}}</p>
+                        <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
+                        <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
+                        <span class="price">€{{dish['cost']}}</span>
+                    </div>
+                </div>
+                {%endfor%}
+            </div>
+        </section>
+    </div>
+</div>
+<!-- review section starts  -->
+
+<div class="container">
+    <section class="review" id="review">
+        <h3 class="sub-heading"> customer's review </h3>
+        <h1 class="heading"> what they say </h1>
+        <div class="swiper review-slider">
+            <div class="swiper-wrapper">
+                
+                
+                <div class="swiper-slide slide">
+                    <i class="fas fa-quote-right"></i>
+                    <div class="user">
+                        <div class="user-info">
+                            <h3>Anonymous User</h3>
+                            <h6>Review for: Pineapple Pie</h>
+                            <div class="stars">
+                                {% set full_stars = 5 | int %}
+                                {% for i in range(full_stars) %}
+                                    <i class="fas fa-star"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <p>Very nice</p>
+                </div>
+                
+                
+            </div>
+            <div class="swiper-pagination"></div>
         </div>
-        <!-- [ Hover-table ] end -->
+    </section>
+</div>
 
+</div>
+</div>
+<!-- review section ends -->
 
+{% block javascripts %}
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 
+<!-- custom js file link  -->
+<script src="static/assets/js/menu.js"></script>
+{% endblock javascripts %}
 
-    
-
-    
-    </table>
-    {%endif%}
-    <h2>Main Courses</h2>
-    {% if mainCourse is not none%}
-    <table>
-        <tr>
-            <th>Name</th>
-            <th>Cost</th>
-            <th>add to cart</th>
-        </tr>
-        {% for dish in mainCourse%}
-            <tr>
-                <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
-                <td>{{dish['name']}}</td>
-                <td>{{dish['cost']}}</td>
-                <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
-            </tr>
-        {% endfor%}
-
-    
-    </table>
-    {%endif%}
-    <h2>Dessert</h2>
-    {% if dessert is not none%}
-    <table>
-        <tr>
-            <th>Name</th>
-            <th>Cost</th>
-            <th>add to cart</th>
-        </tr>
-        {% for dish in dessert%}
-            <tr>
-                <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
-                <td>{{dish['name']}}</td>
-                <td>{{dish['cost']}}</td>
-                <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
-            </tr>
-        {% endfor%}
-
-    
-    </table>
-    {%endif%}
-    <h2>Sides</h2>
-    {% if side is not none%}
-    <table>
-        <tr>
-            <th>Name</th>
-            <th>Cost</th>
-            <th>add to cart</th>
-        </tr>
-        {% for dish in side%}
-            <tr>
-                <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
-                <td>{{dish['name']}}</td>
-                <td>{{dish['cost']}}</td>
-                <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
-            </tr>
-        {% endfor%}
-
-    
-    </table>
-    {%endif%}
-    <h2>Drinks</h2>
-    {% if drink is not none%}
-    <table>
-        <tr>
-            <th>Name</th>
-            <th>Cost</th>
-            <th>add to cart</th>
-        </tr>
-        {% for dish in drink%}
-            <tr>
-                <td><img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'></td>
-                <td>{{dish['name']}}</td>
-                <td>{{dish['cost']}}</td>
-                <td><a href="{{url_for('add_to_cart', dish_id=dish['dish_id'])}}">add to cart</a></td>
-            </tr>
-        {% endfor%}
-
-    
-    </table>
-    {%endif%}
-
-    {%endif%}
-
-{%endblock%}
+{% endblock content %}

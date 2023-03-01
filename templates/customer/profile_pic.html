@@ -5,9 +5,13 @@
         <br>
         {{form.profile_pic.label}}
         {{form.profile_pic()}}
-        {%for error in form.profile_pic.errors%}
-            {{error}}
-        {%endfor%}
+        <span class="mb-0 text-muted">
+            <span class="text-danger">
+                {%for error in form.profile_pic.errors%}
+                    {{error}}
+                {%endfor%}
+            </span>
+        </span>    
         <br>
         {{form.submit()}}
 

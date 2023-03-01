@@ -5,45 +5,54 @@
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
+<div class="pcoded-main-container">
     <div class="pcoded-wrapper">
-
         <div class="pcoded-content">
             <div class="pcoded-inner-content">
-                <div class="col-xl-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Customize {{ dish['name'] }}</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="card-block table-border-style">
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
-                                        <tr>
-                                            <th>Ingredient</th>
-                                            <th>Increase</th>
-                                            <th>Quantitiy</th>
-                                            <th>Decrease</th>
-                                        </tr>
-                                        {%for ingredient in result%}
-                                            <tr>
-                                                <td>{{ingredient['name']}}</td>
-                                                <td><a href="{{url_for('waiter_inc_quantity_ingredient',table=table, ingredient_id=ingredient['ingredient_id']) }}">+</a></td>
-                                                <td>{{quant[ingredient['ingredient_id']]}}</td>
-                                                <td><a href="{{url_for('waiter_dec_quantity_ingredient', table=table, ingredient_id=ingredient['ingredient_id']) }}">-</a></td>
-                                            </tr>
-                                        {% endfor %}
-                                    </table>
+                <div class="main-body">
+                    <div class="page-wrapper">
+                        <!-- [ Main Content ] start -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5>Customize {{ dish['name'] }}</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="card-block table-border-style">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover">
+                                                        <tr>
+                                                            <th>Ingredient</th>
+                                                            <th>Portions</th>
+                                                            <th>Change Quantitiy</th>
+                                                        </tr>
+                                                        {%for ingredient in result%}
+                                                            <tr>
+                                                                <td>{{ingredient['name']}}</td>
+                                                                <td>{{quant[ingredient['ingredient_id']]}}</td>
+                                                                <td><a href="{{url_for('waiter_dec_quantity_ingredient', table=table, ingredient_id=ingredient['ingredient_id']) }}"> 
+                                                                    <img src="{{ url_for('static', filename='minus.png' ) }}" style=" width: 30px;"/> </a> 
+                                                                    <a href="{{url_for('waiter_inc_quantity_ingredient',table=table, ingredient_id=ingredient['ingredient_id']) }}"> 
+                                                                        <img src="{{ url_for('static', filename='plus.png' ) }}" style=" width: 30px;"/> </a></td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <form action='' method="POST" enctype="multipart/form-data" novalidate>
+                                                {{form.hidden_tag()}}
+                                                {{ form.submit(class="submit btn btn-primary") }}
+                                            </form>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <form action='' method="POST" enctype="multipart/form-data" novalidate>
-                                {{form.hidden_tag()}}
-                                {{ form.submit(class="submit btn btn-primary") }}
-                            </form>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
+</div>
 {% endblock%}
