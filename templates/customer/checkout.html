@@ -55,8 +55,7 @@
                                                                                         </tr>
                                                                                         {% for dish_id in cart %}
                                                                                             <tr>
-                                                                                                <td>Hellor</td>
-                                                                                                <td>{{dish['dishPic']}}</td>
+                                                                                                <td><img src="/static/picture/{{dish['dishPic']}}" class="dishPic" alt="profile image"></td>
                                                                                                 <td>{{ names[dish_id]}}</td>
                                                                                                 <td>{{ cart[dish_id] }}</td>
                                                                                                 <td>{{dish['cost']}}</td>
@@ -91,6 +90,13 @@
                                                 
                                                 <form action='' method='POST' novalidate>
                                                     {{form.hidden_tag()}}
+                                                    <br>
+                                                    {{form.tableNum.label}}
+                                                    {{form.tableNum(class="form-control")}}
+                                                    {% for error in form.cardNum.errors%}
+                                                        {{error}}
+                                                    {%endfor%}
+                                                    <br>
                                                     {{form.cardNum.label}}
                                                     {{form.cardNum(class="form-control")}}
                                                     {% for error in form.cardNum.errors%}
@@ -108,6 +114,7 @@
                                                     {% for error in form.cvv.errors%}
                                                         {{error}}
                                                     {%endfor%}
+                                                    
                                                     <br>
                                                     {{form.submit()}}
                                                 

@@ -10778,3 +10778,43 @@ div.code-toolbar > .toolbar span:hover {
   top:-110%;
   opacity:0;
 }
+.centrePic {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+.centre{
+  text-align: center;
+}
+.yearly-sales{
+  float:right;
+}
+.spaceOut{
+  display:flex;
+  padding:4em;
+  justify-content: space-between;
+}
+.table2 td{
+  border-collapse: collapse;
+  border-top:none;
+}
+.table th{
+  border-collapse:collapse;
+  border-top:none;
+}
+#exit{
+  color: white;
+}
+#remove{
+  color:white;
+}
+
+.badge-secondary{
+  background-color: lightgrey;
+  border-radius: .5rem;
+}
+.badge-secondary2{
+  background-color: red;
+  border-radius: .5rem;
+}

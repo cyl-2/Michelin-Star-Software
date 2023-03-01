@@ -1,49 +1,7 @@
 {% extends "layouts/base.html" %}
 {% block content %}
-{% if dish is not none%}
-    <p>Test?</p>
-    <p>{{dish['name']}}</p>
-    <p>{{ dish['cost']}}</p>
-    <p>{{dish['cook_time']}}</p>
-
-    {% if dish['description'] is not none%}
-        <p>{{dish['description']}}</p>
-    {%endif%}
-
-    {% if dish['allergies'] is not none%}
-        <p>{{dish['allergies']}}</p>
-    {%endif%}
 
   
-    <table>
-        <tr>
-            <th>Ingredient</th>
-            <th>Increase quantitiy</th>
-            <th>quantitiy</th>
-            <th>Decrease Quantity</th>
-        </tr>  
-        {%for ingredient in result%}
-        <tr>
-            <td>{{ingredient['name']}}</td>
-            <td><a href="{{url_for('inc_quantity_ingredient',ingredient_id=ingredient['ingredient_id'],dish_id=dish['dish_id']) }}">+</a></td>
-            <td>{{quant[ingredient['ingredient_id']]}}</td>
-            <td><a href="{{url_for('dec_quantity_ingredient',ingredient_id=ingredient['ingredient_id']) }}">-</a></td>
-        </tr>
-
-    {% endfor %}
-    </table>
-
-    <form action='' method="POST" enctype="multipart/form-data" novalidate>
-    {{form.hidden_tag()}}
-    {{form.submit()}}
-    </form>
-      
-    
-
-
-
-{%endif%}
-
 
 <div class="pcoded-main-container">
     <div class="pcoded-wrapper">
@@ -51,10 +9,10 @@
         <div class="pcoded-content">
             <div class="pcoded-inner-content">
                 <!-- [ breadcrumb ] start -->
-                <div class="row">
+                <div>
 
 
-                    <div class="col-sm-4">
+                    <div class="col-xl-8 col-md-12 m-b-30">
                         <div class="card">
                             <div class="card-block">
                                 <div class="d-flex align-items-center justify-content-center flex-column">
@@ -69,13 +27,12 @@
                                         {{dish['name']}}
                                     </h4>
                                     <p>
-                                        {{user}}
+                                        {{dish['description']}}
                                         <br />
                                     </p>
-                                </div>
-                                <div class="d-flex justify-content-center align-items-center">
-                                    <p><a href="{{url_for('user_pic')}}">Add/Change profile pic</a></p>
-                
+                                    <p>
+                                        <b style="font-weight: bold; color:black">{{dish['allergies']}}</b>
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -85,11 +42,11 @@
 <div class="col-xl-8 col-md-12 m-b-30">
     <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item">
-            <a class="nav-link" id="home-tab" data-toggle="tab" href="#home" role="tab"
+            <a class="nav-link active show" id="home-tab" data-toggle="tab" href="#home" role="tab"
                 aria-controls="home" aria-selected="false">Dish Modification</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link active show" id="profile-tab" data-toggle="tab"
+            <a class="nav-link" id="profile-tab" data-toggle="tab"
                 href="#profile" role="tab" aria-controls="profile" aria-selected="true">Leave a Review</a>
         </li>
         <li class="nav-item">
@@ -98,24 +55,22 @@
         </li>
     </ul>
     <div class="tab-content" id="myTabContent">
-        <div class="tab-pane fade" id="home" role="tabpanel" aria-labelledby="home-tab">
-            <table class="table table-hover">
+        <div class="tab-pane fade active show" id="home" role="tabpanel" aria-labelledby="home-tab">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-block table-border-style">
+                        <div class="table-responsive">
+                            <table class="table">
                 <thead>
-                <tr>
-                    <th>User</th>
-                    <th>Activity</th>
-                    <th>Time</th>
-                    <th>Status</th>
-                    <th class="text-right"></th>
-                </tr>
-                </thead>
-                <table>
+                
                     <tr>
                         <th>Ingredient</th>
                         <th>Increase quantitiy</th>
                         <th>quantitiy</th>
                         <th>Decrease Quantity</th>
-                    </tr>  
+                    </tr> 
+                    </thead>
+                    <tbody>
                     {%for ingredient in result%}
                     <tr>
                         <td>{{ingredient['name']}}</td>
@@ -126,13 +81,22 @@
             
                 {% endfor %}
                 </table>
+                </table>
                 <form action='' method="POST" enctype="multipart/form-data" novalidate>
                     {{form.hidden_tag()}}
                     {{form.submit()}}
                     </form>
+                        </div>
+                    </div>
+                    </div>
+            </div>
+
+
+
+
 
         </div>
-        <div class="tab-pane fade active show" id="profile" role="tabpanel"
+        <div class="tab-pane fade " id="profile" role="tabpanel"
                 aria-labelledby="profile-tab">
             <table class="table table-hover">
                 <thead>

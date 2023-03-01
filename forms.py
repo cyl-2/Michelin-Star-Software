@@ -110,6 +110,7 @@ class cardDetails(FlaskForm):
     cardNum = IntegerField('Enter card number:', validators=[InputRequired()])
     cardHolder = StringField('Enter card holders name:', validators=[InputRequired()])
     cvv = IntegerField('Cvv', validators= [InputRequired()])
+    tableNum = IntegerField('Table Youre sitting at:', validators=[InputRequired()])
     submit = SubmitField('Enter')
 
 class submitModifications(FlaskForm):
