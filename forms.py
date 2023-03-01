@@ -108,15 +108,15 @@ class AddDishForm(FlaskForm):
                                         ("side", "Side"),
                                         ("drink", "Drink"),
                                         ("special", "Special")], validators=[InputRequired()])
-    display = SelectField("Display day for menu item? Menu items are displayed on all days of the week by default", 
+    day = SelectField("Display day for menu item? Menu items are displayed on all days of the week by default", 
                             choices = [("all week", "All week"),
-                                        ("monday", "Monday"),
-                                        ("tuesday", "Tuesday"),
-                                        ("wednesday", "Wednesday"), 
-                                        ("thursday", "Thursday"), 
-                                        ("friday", "Friday"), 
-                                        ("saturday", "Saturday"), 
-                                        ("sunday", "Sunday")], validators=[InputRequired()])
+                                        (0, "Monday"),
+                                        (1, "Tuesday"),
+                                        (2, "Wednesday"), 
+                                        (3, "Thursday"), 
+                                        (4, "Friday"), 
+                                        (5, "Saturday"), 
+                                        (6, "Sunday")], validators=[InputRequired()])
     dishDescription = TextAreaField('Description: ')
     allergins=SelectMultipleField('Allergens (if any)', 
                                 choices=[('not applicable','Not applicable'),
