@@ -304,7 +304,7 @@ CREATE TABLE user_queries
     subject TEXT NOT NULL,
     name TEXT NOT NULL,
     message TEXT NOT NULL,
-    date DATE NOT NULL
+    date_received TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 DROP TABLE IF EXISTS transactions;
