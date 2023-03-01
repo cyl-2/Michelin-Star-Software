@@ -33,7 +33,7 @@ CREATE TABLE staff
     bio TEXT,
     address TEXT,
     password TEXT NOT NULL,
-    last_updated TEXT NOT NULL
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 /*INSERT INTO staff
