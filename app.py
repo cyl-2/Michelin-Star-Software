@@ -1851,7 +1851,6 @@ def remove_specific(changes,dish_id):
     cur.execute('DELETE FROM modifications WHERE modifications_id=%s',(modificationId,))
     mysql.connection.commit()
     if dish_id not in session['cart']:
-        print('heelor')
         session['cart'][dish_id]=0
     if session['cart'][dish_id] >1:
         session['cart'][dish_id] = session['cart'][dish_id] -1
@@ -2204,7 +2203,6 @@ def breakTimes():
     for employee in workingToday:
         if len(workingToday[employee]) >= 3:
             workingToday[employee][2] = str(workingToday[employee][2]) + ":00"
-            print(workingToday)
             #if len(workingToday[employee] ==5)
     return render_template("staff/breaks.html",staff=staff, workingToday=workingToday)
 
