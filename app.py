@@ -1477,7 +1477,6 @@ def delete_ingredient(id):
     return redirect(url_for('view_inventory'))
 
 # Add a new dish to the menu
-#NEED TO ADD ABILITY TO LIST INGREDIENTS NECESSARY FOR EACH DISH.
 @app.route('/addDish', methods=['GET','POST'])
 def addDish():
     cur = mysql.connection.cursor()
@@ -1489,7 +1488,7 @@ def addDish():
         if result is not None:
             form.name.errors.append("This menu item already exists")
         else:
-            display = form.display.data
+            day = form.day.data
             cost = form.cost.data
             cookTime = form.cookTime.data
             dishType = (form.dishType.data).lower()
@@ -1499,7 +1498,7 @@ def addDish():
             allergins= form.allergins.data
             filename = secure_filename(dishPic.filename)
             dishPic.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
-            cur.execute("INSERT INTO dish (name, cost, cook_time, dishType, description,dishPic,allergies,display) VALUES(%s,%s,%s,%s,%s,%s,%s,%s);", (name,cost,cookTime,dishType,dishDescription,filename,allergins,display))
+            cur.execute("INSERT INTO dish (name, cost, cook_time, dishType, description,dishPic,allergies,day) VALUES(%s,%s,%s,%s,%s,%s,%s,%s);", (name,cost,cookTime,dishType,dishDescription,filename,allergins,day))
            
             mysql.connection.commit()
             if ingredients is not None:
