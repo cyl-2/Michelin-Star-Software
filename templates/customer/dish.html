@@ -1,37 +1,85 @@
 {% extends "layouts/base.html" %}
 {% block content %}
 {% if dish is not none%}
-    <p>Test?</p>
-    <p>{{dish['name']}}</p>
-    <p>{{ dish['cost']}}</p>
-    <p>{{dish['cook_time']}}</p>
 
-    {% if dish['description'] is not none%}
-        <p>{{dish['description']}}</p>
-    {%endif%}
+        <p>{{dish['name']}}</p>
+        <p>{{ dish['cost']}}</p>
+        <p>{{dish['cook_time']}}</p>
+        <img src="{{url_for('static',filename=dish['dishPic'])}}" class='imgbro'>
 
-    {% if dish['allergies'] is not none%}
-        <p>{{dish['allergies']}}</p>
-    {%endif%}
+        {% if dish['description'] is not none%}
+            <p>{{dish['description']}}</p>
+        {%endif%}
 
-  
-    <table>
-        <tr>
-            <th>Ingredient</th>
-            <th>Increase quantitiy</th>
-            <th>quantitiy</th>
-            <th>Decrease Quantity</th>
-        </tr>  
-        {%for ingredient in result%}
-        <tr>
-            <td>{{ingredient['name']}}</td>
-            <td><a href="{{url_for('inc_quantity_ingredient',ingredient_id=ingredient['ingredient_id'],dish_id=dish['dish_id']) }}">+</a></td>
-            <td>{{quant[ingredient['ingredient_id']]}}</td>
-            <td><a href="{{url_for('dec_quantity_ingredient',ingredient_id=ingredient['ingredient_id']) }}">-</a></td>
-        </tr>
-
-    {% endfor %}
-    </table>
+        {% if dish['allergies'] is not none%}
+            <p>{{dish['allergies']}}</p>
+        {%endif%}
+    
+        <div class="col-sm-12">
+            <h5 class="mt-4">General Heading for when rest of CSS is done</h5>
+            <hr>
+            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="pills-customize-tab" data-toggle="pill" href="#pills-customize" role="tab" aria-controls="pills-customize" aria-selected="true">Customize</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="pills-reviews-tab" data-toggle="pill" href="#pills-reviews" role="tab" aria-controls="pills-reviews" aria-selected="false">Reviews</a>
+                </li>
+            </ul>
+            <div class="tab-content" id="pills-tabContent">
+                <div class="tab-pane fade show active" id="pills-customize" role="tabpanel" aria-labelledby="pills-customize-tab">
+                    <table>
+                        <tr>
+                            <th>Ingredient</th>
+                            <th>Increase quantitiy</th>
+                            <th>quantitiy</th>
+                            <th>Decrease Quantity</th>
+                        </tr>  
+                        {%for ingredient in result%}
+                        <tr>
+                            <td>{{ingredient['name']}}</td>
+                            <td><a href="{{url_for('inc_quantity_ingredient',ingredient_id=ingredient['ingredient_id'],dish_id=dish['dish_id']) }}">+</a></td>
+                            <td>{{quant[ingredient['ingredient_id']]}}</td>
+                            <td><a href="{{url_for('dec_quantity_ingredient',ingredient_id=ingredient['ingredient_id']) }}">-</a></td>
+                        </tr>
+            
+                    {% endfor %}
+                    </table>
+                    <form action='' method="POST" enctype="multipart/form-data" novalidate>
+                    {{form.hidden_tag()}}
+                    {{form.submit()}}
+                    </form>
+                </div>
+                <div class="tab-pane fade" id="pills-reviews" role="tabpanel" aria-labelledby="pills-reviews-tab">
+                    <div class="col-sm-12">
+                        <div class="accordion" id="reviews">
+                            {% for i in range(comments|length) %}
+                                <div class="card">
+                                    <div class="card-header" id="heading{{i+1}}">
+                                        <h5 class="mb-0">
+                                            {% if comments[i]['comment']|length > 0 %}
+                                            <a href="#!" data-toggle="collapse" data-target="#collapse{{i+1}}" aria-expanded="false" aria-controls="collapse{{i+1}}">
+                                                {{ comments[i]['rating'] }}/10 - {{ comments[i]['comment'][:10] }}{% if comments[i]['comment']|length > 10 %}...{% endif %}
+                                            </a>
+                                            {% else %}
+                                                {{ comments[i]['rating'] }}/10
+                                            {% endif %}
+                                        </h5>
+                                    </div>
+                                    {% if comments[i]['comment']|length > 0 %}
+                                        <div id="collapse{{i+1}}" class=" card-body collapse" aria-labelledby="heading{{i+1}}" data-parent="#reviews">
+                                            <p>{{ comments[i]['rating'] }}/10</p>
+                                            
+                                            {{ comments[i]['comment'] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     <form action='' method="POST" enctype="multipart/form-data" novalidate>
     {{form.hidden_tag()}}
@@ -336,5 +384,3 @@
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}{% endblock javascripts %}
-
-

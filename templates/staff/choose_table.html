@@ -23,12 +23,31 @@
                                 <section>
                                     {% for table_index in table_positions %}
                                         <div style="position:absolute;  left: {{ table_positions[table_index][0] }}; top: {{ table_positions[table_index][1] }}; width: 90px;">
-                                            <a href="{{ url_for('take_order', table=table_index) }}">
+                                
                                                 <section>
-                                                    <img src="{{ url_for('static', filename='table.png' ) }}" style=" width: 90px;"/>
-                                                    <p class="btn btn-square btn-info">Table {{ table_index }}</p>
+                                                    {% if table_positions[table_index][2] == 'btn btn-square btn-danger' %}
+                                                    <div class="dropdown drp-user">
+                                                        <a href="javascript:" class="dropdown-toggle" data-toggle="dropdown">
+                                                            <img src="{{ url_for('static', filename='table.png' ) }}" style=" width: 90px;"/>
+                                                        </a>
+                                                        <div class="dropdown-menu dropdown-menu-right profile-notification">
+                                                            <section class="pro-body">
+                                                                <p class="dropdown-item" style="colour: black;">
+                                                                    <i class="feather icon-user"></i>
+                                                                    {{ table_positions[table_index][3] }}
+                                                                </p>
+                                                            </section>
+                                                        </div>
+                                                    </div>
+                                                    {% else %}
+                                                        <a href="{{ url_for('take_order', table=table_index) }}">
+                                                            <img src="{{ url_for('static', filename='table.png' ) }}" style=" width: 90px;"/>
+                                                        </a>
+                                                    {% endif %}
+                                                    <a href="{{ url_for('take_order', table=table_index) }}">
+                                                        <p class="{{ table_positions[table_index][2] }}">Table {{ table_index }}</p>
+                                                    </a>
                                                 </section>
-                                            </a>
                                         </div>
                                     {% endfor %}
                                 </section>
@@ -41,5 +60,4 @@
         </div>
     </div>
 </div>
-
 {% endblock content %} 
