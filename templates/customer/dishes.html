@@ -64,15 +64,18 @@
             <button class="tablinks nav-link" onclick="openCity(event, 'Side')">Sides</button>
             <button class="tablinks nav-link" onclick="openCity(event, 'Drinks')">Drinks</button>
             <button class="tablinks nav-link" onclick="openCity(event, 'Special')">Special</button>
-            <a href="{{ url_for('swap_sort') }}" class="btn btn-light">
-                {% if session['order_by'] == 'low' %}
-                    Sort by Price: Low -> High
-                {% else %}
-                    Sort by Price: High -> Low
-                {% endif %}
-            </a>
         </ul>
+        
     </div>
+</div>
+<div class="tab">
+    <a href="{{ url_for('swap_sort') }}" class="btn btn-light center" style="margin: 0em auto; background-color: gray; color: white;">
+        {% if session['order_by'] == 'low' %}
+            Sort by Price: Low -> High
+        {% else %}
+            Sort by Price: High -> Low
+        {% endif %}
+    </a>
 </div>
 
 <div id="Starter" class="tabcontent">

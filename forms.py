@@ -142,3 +142,9 @@ class makeBooking(FlaskForm):
     time = IntegerField("Time (XX:00):", validators=[InputRequired(), NumberRange(0,23)])
     
     submit = SubmitField("Make Reservation")
+    
+class StockForm(FlaskForm):
+    ingredient=SelectMultipleField('Ingredient:',validators=[InputRequired()])
+    date = DateField("Expiry Date:", validators=[InputRequired()])
+    quantity = IntegerField("Quantity:", validators=[InputRequired() ])
+    submit = SubmitField('Submit')

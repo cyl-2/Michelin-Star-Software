@@ -5,44 +5,45 @@
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
-<!--
-    <p><a href="{{ url_for('roster_timetable') }}">View Roster</a></p>
-    <p><a href="{{ url_for('delete_from_roster') }}">Delete From Roster</a></p>
--->
-
+<div class="pcoded-main-container">
     <div class="pcoded-wrapper">
-
         <div class="pcoded-content">
             <div class="pcoded-inner-content">
-                <div class="col-xl-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Make a Booking</h5>
-                        </div>
-                        <div class="card-body">
-                            <form action="" method="post" novalidate> 
-                                {{ form.hidden_tag() }}
+                <div class="main-body">
+                    <div class="page-wrapper">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Make a Booking</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form action="" method="post" novalidate> 
+                                            {{ form.hidden_tag() }}
 
-                                {{ form.name.label }}
-                                {{ form.name(class="form-control") }}
-                                {% for error in form.name.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                                <br>
-                                {{ form.date.label }}
-                                {{ form.date(class="form-control") }}
-                                {% for error in form.date.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                                <br>
-                                {{ form.time.label }}
-                                {{ form.time(class="form-control") }}
-                                {% for error in form.time.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                                <br>
-                                {{ form.submit(class="submit btn btn-primary") }}
-                            </form>
+                                            {{ form.name.label }}
+                                            {{ form.name(class="form-control") }}
+                                            {% for error in form.name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                            <br>
+                                            {{ form.date.label }}
+                                            {{ form.date(class="form-control") }}
+                                            {% for error in form.date.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                            <br>
+                                            {{ form.time.label }}
+                                            {{ form.time(class="form-control") }}
+                                            {% for error in form.time.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                            <br>
+                                            {{ form.submit(class="submit btn btn-primary") }}
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

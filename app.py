@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, g, request, make_response, flash, Markup
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm, submitModifications, AddDishForm, UserPic, cardDetails, Review, makeBooking
+from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm, submitModifications, AddDishForm, UserPic, cardDetails, Review, makeBooking, StockForm
 from functools import wraps
 from flask_mysqldb import MySQL 
 from generate_roster import Roster
@@ -106,7 +106,6 @@ def auto_login_check_staff():
     if request.cookies.get("email"):
         session.clear()
         session["username"] = request.cookies.get("email")
-        session['access']
         next_page = request.args.get("next")
         if not next_page:
             return redirect("index")
@@ -405,16 +404,16 @@ def customer_profile():
         image=check
     cur.execute("SELECT * FROM transactions WHERE username=%s;",(g.user,))
     check2 = cur.fetchall()
-    if check2 is not None:
+    if check2 is None:
         message = "You've made no transactions yet"
     else:
-        cur.execute(" SELECT * FROM dishes;")
+        cur.execute(" SELECT * FROM dish;")
         dish = cur.fetchall()
         cur.execute(" SELECT * FROM transactions WHERE username=%s ",(g.user,))
         transactionHistory = cur.fetchall()
     cur.close()
     #return render_template("customer/profile.html", title="My Profile")
-    return render_template('customer/customer_profile.html',image=image, transactionHistory=transactionHistory)
+    return render_template('customer/customer_profile.html',image=image, transactionHistory=transactionHistory, dishes=dish)
 
 
 @app.route('/user_pic', methods=['GET','POST'])
@@ -595,6 +594,7 @@ def edit_staff_profile():
         cur.close()
     return render_template("staff/edit_staff_profile.html", form=form, title="My Profile", profile=profile)
 
+# Waiter chooses a table to take an order from
 @app.route("/choose_table", methods=["GET","POST"])
 def choose_table():
     cur = mysql.connection.cursor()
@@ -614,17 +614,18 @@ def choose_table():
     cur.close()
     table_positions = {}
     for i in range(len(data)):
-        table_positions[data[i]['table_id']] = [data[i]['x'], data[i]['y'], 'btn btn-square btn-success', None]
+        table_positions[data[i]['table_id']] = [data[i]['x'], data[i]['y'], 'btn btn-outline-success', None]
         
     for booking in booking_next:
-        table_positions[booking['table_id']][2] = 'btn btn-square btn-warning'
+        table_positions[booking['table_id']][2] = 'btn btn-outline-warning'
         
     for booking in booking_current:
-        table_positions[booking['table_id']][2] = 'btn btn-square btn-danger'
+        table_positions[booking['table_id']][2] = 'btn btn-outline-danger'
         table_positions[booking['table_id']][3] = booking['name']
 
     return render_template("staff/choose_table.html", table_positions=table_positions)
 
+# offers view of the menu, ordered meals and an order list similiar to a waiters notepad
 @app.route("/<int:table>/take_order", methods=["GET","POST"])
 def take_order(table):  
     cur = mysql.connection.cursor()
@@ -669,10 +670,7 @@ def take_order(table):
         return render_template("staff/take_order.html", table=table, ordering=ordering, meals=meals, ordered=ordered, allocated=allocated)
     return render_template("staff/take_order.html", table=table, meals=meals, ordered=ordered, allocated=allocated)
 
-@app.route('/popup', methods=['GET','POST'])
-def popup():
-    return render_template("staff/popup.html")
-
+# allows waiter to customize ingredients in a meal and add it to the order
 @app.route('/<int:table>/waiter_customize_dish/<int:dish_id>', methods=['GET','POST'])
 def waiter_customize_dish(table, dish_id):
     if str(dish_id) not in session:
@@ -705,8 +703,6 @@ def waiter_customize_dish(table, dish_id):
                         ORDER BY batch_id
                         LIMIT 1''',(id['ingredient_id'],))
             value = cur.fetchone()
-            print(id['ingredient_id'])
-            print(value)
             if value['MIN(quantity)'] < min:
                 min = value['MIN(quantity)']
         if min > 0:
@@ -725,6 +721,7 @@ def waiter_customize_dish(table, dish_id):
             return redirect(url_for('add_order', table=table, meal=dish['name']))
     return render_template('staff/customize_dish.html', table=table, dish=dish,result=result,form=form,quant=session[str(dish_id)])
 
+# increases portion of an ingredient in a dish
 @app.route('/<int:table>/waiter_inc_quantity_ingredient/<int:ingredient_id>')
 #@login_required
 def waiter_inc_quantity_ingredient(table, ingredient_id):
@@ -734,6 +731,7 @@ def waiter_inc_quantity_ingredient(table, ingredient_id):
     session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] +1
     return redirect(url_for('waiter_customize_dish', table=table, dish_id=dish_id))
 
+# decreases portion of an ingredient in a dish
 @app.route('/<int:table>/waiter_dec_quantity_ingredient/<int:ingredient_id>')
 #@login_required
 def waiter_dec_quantity_ingredient(table, ingredient_id):
@@ -744,7 +742,7 @@ def waiter_dec_quantity_ingredient(table, ingredient_id):
         session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] -1
     return redirect(url_for('waiter_customize_dish',table=table, dish_id=dish_id))
 
-
+# adds meal to order if ingredients are available
 @app.route("/<int:table>/add_order/<meal>", methods=["GET","POST"])
 def add_order(table, meal):
     if 'mods' not in session:
@@ -782,7 +780,7 @@ def add_order(table, meal):
         session['mods'][table] = {}
     return redirect(url_for('take_order', table=table))
 
-# do after maybe index
+# remove a meal from the ordering list
 @app.route("/<int:table>/remove_meal/<meal>/<int:index>", methods=["GET","POST"])
 def remove_meal(table, meal, index):
     session['ordering'][table][meal].pop(index)
@@ -790,27 +788,35 @@ def remove_meal(table, meal, index):
         session['ordering'][table].pop(meal)
     return redirect(url_for("take_order", table=table))
 
-@app.route("/<int:table>/cancel_meal/<int:meal_id>", methods=["GET","POST"])
+# cancel a meal that has been sent to the kitchen
+@app.route("/<int:table>/cancel_meal/<int:meal_id>", methods=["GET","POST"])##c
 def cancel_meal(table, meal_id):
     
     cur = mysql.connection.cursor()
-     
-    cur.execute("DELETE FROM orders WHERE order_id = %s AND table_id = %s;",(meal_id, table ))
+    cur.execute(
+        """
+            UPDATE orders SET status = 'cancelled'
+            WHERE table_id = %s 
+            AND status != %s
+            AND order_id = %s
+        """,(table, 'complete', meal_id)
+    )
     mysql.connection.commit()
     cur.close()
     return redirect(url_for("take_order", table=table))
 
+# cancel all meals in the ordering section
 @app.route("/<int:table>/cancel_order", methods=["GET","POST"])
 def cancel_order(table):
     session['mods'][table] = {}
     session['ordering'][table] = {}
     return redirect(url_for("take_order", table=table))
 
-
+# send ordering list to the kitchen, displayed in orders
 @app.route("/<int:table>/complete_order", methods=["GET","POST"])
 def complete_order(table):  
     cur = mysql.connection.cursor()
-        
+    print(datetime.now().strftime("%H:%M:%S"))
     if table in session['ordering']:
         ordering = session['ordering'][table]
         for meal in ordering:
@@ -821,12 +827,13 @@ def complete_order(table):
                 for ingredients in times:
                     if times[ingredients] != 1:
                         info += ingredients+"-"+str(times[ingredients])+", "
-                cur.execute("INSERT INTO orders (time, dish_id, table_id, status, notes) VALUES (%s, %s, %s, 'waiting', %s);",(data['cook_time'], data['dish_id'], table, info))
+                cur.execute("INSERT INTO orders (time, dish_id, table_id, status, notes) VALUES (%s, %s, %s, 'waiting', %s);",(datetime.now().strftime("%H:%M:%S"), data['dish_id'], table, info))
                 mysql.connection.commit()
     
     session['ordering'][table] = {}
     return redirect(url_for('take_order', table=table))
 
+# simulates physical payement, marks orders as paid for
 @app.route("/<int:table>/take_payment", methods=["GET","POST"])
 def take_payment(table):  
     cur = mysql.connection.cursor()
@@ -840,6 +847,7 @@ def take_payment(table):
     mysql.connection.commit()
     return redirect(url_for('take_order', table=table))
 
+# drag and drop table icons 
 @app.route("/move_tables", methods=["GET","POST"])
 def move_tables():
     cur = mysql.connection.cursor()
@@ -853,6 +861,7 @@ def move_tables():
     
     return render_template("staff/move_tables.html", table_positions=table_positions)
 
+# takes new table positions from /move_tables and saves the new layout
 @app.route('/save_tables', methods=['GET','POST'])
 def save_tables():
     co_ords = request.get_json()
@@ -863,7 +872,8 @@ def save_tables():
             mysql.connection.commit()
         cur.close()
     return redirect(url_for('choose_table'))
-    
+
+# form to add a new table in the restaurant
 @app.route("/add_table", methods=["GET", "POST"])
 def add_table():
     form = TableForm()
@@ -888,6 +898,7 @@ def add_table():
             return redirect(url_for('choose_table'))
     return render_template("manager/add_table.html", form=form)
 
+# displays tables which can be deleted
 @app.route("/remove_table_menu", methods=["GET","POST"])
 def remove_table_menu():
     cur = mysql.connection.cursor()
@@ -899,6 +910,7 @@ def remove_table_menu():
         table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
     return render_template("manager/remove_table.html", table_positions=table_positions)
 
+# removes a table from the system, called from /remove_table_menu
 @app.route("/<int:table>/remove_table", methods=["GET", "POST"])
 def remove_table(table):
     cur = mysql.connection.cursor()
@@ -907,12 +919,22 @@ def remove_table(table):
     mysql.connection.commit()
     cur.close()
     return redirect(url_for('remove_table_menu'))
-            
-@app.route("/break_timetable", methods=["GET","POST"])
-def break_timetable():
-    staff_breaks = [{'name':'Ben', 'time':'9:00'},{'name':'John', 'time':'13:00'},{'name':'Tim', 'time':'8:00'}]
-    return render_template("manager/break_timetable.html", staff_breaks=staff_breaks)
 
+# waiter can reserve a table on the system for walk in customers
+@app.route('/allocate_table/<int:table>', methods=['GET','POST'])
+def allocate_table(table):
+    cur = mysql.connection.cursor()
+    current_day = datetime.now().strftime("%d")
+    current_month = datetime.now().strftime("%m")
+    current_year = datetime.now().strftime("%Y")
+    time = datetime.now().strftime("%H")
+    date = current_year+"-"+current_month+"-"+current_day
+    cur.execute('INSERT INTO bookings(booker_id,table_id,name,date,time) VALUES(%s,%s,%s,%s,%s) ',(0, table,'Walk in',date,time))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for('take_order', table=table))
+
+# form to change shift requirements eg opening hours, minimum staff levels
 @app.route("/manage_shift_requirements", methods=["GET","POST"])
 def manage_shift_requirements():
     form = RosterRequirementsForm()
@@ -958,6 +980,39 @@ def manage_shift_requirements():
         form.min_workers.data = requirements[0]['min_workers']
     
     return render_template("manager/shift_requirements.html", requirements=requirements, staff=staff, week=week, form=form)
+
+@app.route("/stock", methods=["GET", "POST"])
+def stock():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM stock JOIN ingredient ON stock.ingredient_id = ingredient.ingredient_id")
+    stock = cur.fetchall()
+    cur.execute("SELECT name FROM ingredient")
+    ingredients = cur.fetchall()
+    ingredientList = []
+    for ingredient in ingredients:
+        ingredientList.append(ingredient['name'])
+    form=StockForm()
+    form.ingredient.choices = ingredientList
+    if form.validate_on_submit():
+        ingredient_name = form.ingredient.data
+        date = form.date.data
+        quantity = form.quantity.data
+        cur.execute("SELECT ingredient_id FROM ingredient WHERE name = %s",(ingredient_name,))
+        ingredient = cur.fetchall()
+        cur.execute("""INSERT INTO stock (ingredient_id, expiry_date, quantity)
+                            VALUES (%s,%s,%s);""", (ingredient[0]['ingredient_id'], date, quantity))
+        mysql.connection.commit()
+        cur.execute("SELECT * FROM stock JOIN ingredient ON stock.ingredient_id = ingredient.ingredient_id")
+        stock = cur.fetchall()
+        cur.execute("SELECT name FROM ingredient")
+        ingredients = cur.fetchall()
+        ingredientList = []
+        for ingredient in ingredients:
+            ingredientList.append(ingredient['name'])
+        
+    return render_template("manager/stock.html", stockList=stock, ingredientList=ingredientList, form=form)
+
+    
 
 @app.route("/roster_request", methods=["GET", "POST"])
 #@staff_only
@@ -1021,6 +1076,7 @@ def contact_us():
         flash("Message sent. We will reply to you in 2-3 business days.")
     return render_template("customer/enquiry_form.html",form=form, title="Contact Us")
 
+# displays roster for staff and managers
 @app.route("/roster_timetable", methods=["GET","POST"])
 def roster_timetable():
     cur = mysql.connection.cursor()
@@ -1140,6 +1196,7 @@ def roster_reject(id):
         return redirect(url_for("manager"))
     return render_template("manager/roster_reject.html", form=form)
 
+# generates a random roster based on shift requirements
 @app.route("/generate_roster", methods=["GET","POST"])
 def generate_roster():
     cur = mysql.connection.cursor()
@@ -1163,6 +1220,7 @@ def generate_roster():
     cur.close()
     return redirect(url_for('roster_timetable'))
 
+# Roster view where individual shifts can be deleted
 @app.route("/delete_from_roster", methods=["GET","POST"])
 def delete_from_roster():
     cur = mysql.connection.cursor()
@@ -1171,6 +1229,7 @@ def delete_from_roster():
     cur.close() 
     return render_template("manager/delete_from_roster.html", roster=roster)
 
+# removes shift from roster for a staff member
 @app.route("/remove_roster_slot/<int:staff_id>/<int:day>", methods=["GET","POST"])
 def remove_roster_slot(staff_id, day):
     week = ['mon','tue','wed','thu','fri','sat','sun']
@@ -1180,6 +1239,7 @@ def remove_roster_slot(staff_id, day):
     mysql.connection.commit()
     return redirect(url_for('delete_from_roster'))
 
+# manually enter a shift into the roster
 @app.route("/add_to_roster_timetable", methods=["GET","POST"])
 def add_to_roster_timetable():
     cur = mysql.connection.cursor()
@@ -1421,6 +1481,7 @@ def swap_sort():
         session['order_by'] = 'low'
     return redirect(url_for('menu'))
 
+# Customer can give a rating and comment for a dish they've purchased
 @app.route('/review_dish/<int:dish_id>',methods=['GET', 'POST'])
 #@login_required
 def review_dish(dish_id):
@@ -1537,7 +1598,7 @@ def cart():
         mods = cur.fetchall()
         list = []
         for vals in mods:
-            changes =vals['changes']
+            changes =vals['notes']
             list.append(changes)
         modifications[dish_id] = list
         #cur.close()
@@ -1658,7 +1719,7 @@ def checkout():
                 cur.execute('SELECT * FROM dish WHERE dish_id=%s',(dish_id,))
                 currentDish=cur.fetchone()
                 cost=currentDish['cost']
-                changes=values['changes']
+                changes=values['notes']
                 cur.execute('INSERT INTO transactions(username, dish_id,cost,quantity,date) VALUES(%s,%s,%s,%s,%s) ',(username, dish_id,cost,1,date))
                 mysql.connection.commit()
                 cur.execute("INSERT INTO orders(time,dish_id,notes) VALUES(%s,%s,%s)",(now,dish_id,changes))
@@ -1673,6 +1734,7 @@ def checkout():
 
     #need table number to be inputed here 
 
+# allows customer to book a table for a date and time
 @app.route('/booking',methods=['GET', 'POST'])
 @login_required
 def booking():
@@ -1774,6 +1836,7 @@ def booking():
                 return redirect(url_for('menu'))
     return render_template('customer/booking.html', form=form)
 
+# menu where customers bookings can be cancelled
 @app.route('/cancel_bookings', methods=['GET','POST'])
 def cancel_bookings():
     cur = mysql.connection.cursor()
@@ -1789,6 +1852,7 @@ def cancel_bookings():
     bookings = cur.fetchall()
     return render_template('customer/cancel_booking.html', bookings=bookings)
 
+# cancels a customers booking
 @app.route('/cancel_booking/<int:booking_id>', methods=['GET','POST'])
 def cancel_booking(booking_id):
     cur = mysql.connection.cursor()
@@ -1796,19 +1860,6 @@ def cancel_booking(booking_id):
     mysql.connection.commit()
     cur.close()
     return redirect(url_for('cancel_bookings'))
-
-@app.route('/allocate_table/<int:table>', methods=['GET','POST'])
-def allocate_table(table):
-    cur = mysql.connection.cursor()
-    current_day = datetime.now().strftime("%d")
-    current_month = datetime.now().strftime("%m")
-    current_year = datetime.now().strftime("%Y")
-    time = datetime.now().strftime("%H")
-    date = current_year+"-"+current_month+"-"+current_day
-    cur.execute('INSERT INTO bookings(booker_id,table_id,name,date,time) VALUES(%s,%s,%s,%s,%s) ',(0, table,'Walk in',date,time))
-    mysql.connection.commit()
-    cur.close()
-    return redirect(url_for('take_order', table=table))
 
 @app.route('/breaks', methods=['GET','POST'])
 def breakTimes():
@@ -1857,7 +1908,6 @@ def breakTimes():
             for j in range(4,1,-1):
 
                 if workingToday[employee][1] ==1 and len(working[employee] >=3):
-                    #norrrr 
                     break
                 proposedBreak = start + j
                 if proposedBreak in breaksAssigned: 
