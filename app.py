@@ -15,6 +15,9 @@ import os
 import credentials
 import time
 
+from apscheduler.schedulers.background import BackgroundScheduler
+
+
 app = Flask(__name__)
 
 app.config["SECRET_KEY"] = "MY_SECRET_KEY"
@@ -474,9 +477,11 @@ def user_pic():
 ##############################################################################################################################################
 ##############################################################################################################################################
 
+#creates undolist 
 def undoList():
     session['undoList']=[]
 
+#organises and displays prioirty queue
 @app.route('/kitchen', methods=['GET','POST'])
 def kitchen():
     if 'undoList' not in session:
@@ -487,7 +492,7 @@ def kitchen():
                     FROM orders as o 
                     JOIN dish as d 
                     ON o.dish_id=d.dish_id
-                    ORDER BY o.notes='priority' DESC,
+                    ORDER BY o.notes LIKE 'priority,' DESC,
                             o.time,
                             o.time*d.cook_time DESC,
                             o.table_id,  
@@ -500,6 +505,7 @@ def kitchen():
     cur.close()
     return render_template('kitchen.html',orderlist=orderlist)
 
+#updates the status of a meal
 @app.route('/<int:dish_id>,<int:order_id>,<int:time>/kitchenUpdate', methods=['GET','POST'])
 def kitchenUpdate(dish_id,order_id, time):
     cur = mysql.connection.cursor()
@@ -511,6 +517,7 @@ def kitchenUpdate(dish_id,order_id, time):
     mysql.connection.commit()
     session['undoList'].append(order_id)
 
+#lowers ingredient stock used
     cur.execute('''SELECT i.ingredient_id
                     FROM orders as o
                     JOIN dish_ingredient as di
@@ -529,6 +536,7 @@ def kitchenUpdate(dish_id,order_id, time):
     cur.close()
     return redirect(url_for('kitchen'))
 
+#updates meal status to sent out
 @app.route('/<int:order_id>,<int:time>/kitchenDelete', methods=['GET','POST'])
 def kitchenSentOut(order_id, time):
 
@@ -544,6 +552,23 @@ def kitchenSentOut(order_id, time):
     cur.close()
     return redirect(url_for('kitchen'))
 
+#changes an order to complete and reroutes to kitchen
+@app.route('/<int:order_id>,<int:time>/kitchenComplete', methods=['GET','POST'])
+def kitchenComplete(order_id, time):
+
+    cur = mysql.connection.cursor()
+
+    cur.execute('''UPDATE orders
+                                SET status="completed"
+                                WHERE time=%s and status="sent out" 
+                                and order_id =%s
+                                LIMIT 1;''',(time, order_id))
+    mysql.connection.commit()
+    session['undoList'].append(order_id)
+    cur.close()
+    return redirect(url_for('kitchen'))
+
+#undoes previous action
 @app.route('/kitchenUndo', methods=['GET','POST'])
 def kitchenUndo():
     if session['undoList']==[]:
@@ -554,7 +579,7 @@ def kitchenUndo():
                     FROM orders
                     WHERE order_id=%s;''',(undoID,) )
     status=cur.fetchall()
-    if status=="ongoing":
+    if status[0]["status"]=="ongoing":
         cur.execute('''UPDATE orders
                                     SET status="not started"
                                     WHERE order_id =%s;''',(undoID,))  
@@ -568,20 +593,21 @@ def kitchenUndo():
                     JOIN ingredient as i
                     JOIN dish as d
                     ON i.ingredient_id=di.ingredient_id AND di.dish_id=d.dish_id AND d.dish_id=o.dish_id
-                    WHERE di.dish_id=%s''',(dish_id,))
-    ingredientDict=cur.fetchall()
-    for ingredient in ingredientDict[0]:
-        cur.execute('''UPDATE stock
-                        SET quantity=quantity+1
-                        WHERE ingredient_id=%s
-                        ORDER BY batch_id
-                        LIMIT 1''',(ingredientDict[0][ingredient],) )
-        mysql.connection.commit()
+                    WHERE di.dish_id=%s''',(dish_id["dish_id"],))
+        ingredientDict=cur.fetchall()
+        for ingredient in ingredientDict:
+            cur.execute('''UPDATE stock
+                            SET quantity=quantity+1
+                            WHERE ingredient_id=%s
+                            ORDER BY batch_id
+                            LIMIT 1''',(ingredient["ingredient_id"],) )
+            mysql.connection.commit()
     else:
         cur.execute('''UPDATE orders
                                     SET status="ongoing"
                                     WHERE order_id =%s;''',(undoID,))
     mysql.connection.commit()
+    del session['undoList'][-1]
     cur.close()
     return redirect(url_for('kitchen'))
 
@@ -1146,8 +1172,9 @@ def get_random_password():
     random.SystemRandom().shuffle(password_list)
     password = ''.join(password_list)
     return password
-    
-def notify_supplier():
+
+#checks expiry date of stock and reorders stock in short supply
+def manageStock():
     cur = mysql.connection.cursor()
     date = datetime.now().date()
 
@@ -1156,24 +1183,25 @@ def notify_supplier():
                 JOIN stock as s 
                 ON i.ingredient_id=s.ingredient_id
                 WHERE expiry_date=%s;''', (date,))
-    names=cur.fetchall()
+    name=cur.fetchall()
 
     cur.execute('''DELETE FROM stock
                 WHERE expiry_date=%s;''', (date,))
     mysql.connection.commit()
 
     message=""
-    
-    expired_foods = []
-    for item in names:
+
+    for item in name:
+    # Notify manager about expiry of stock
+      message =message + f"Your {item['name']} is expired!\n"
+      msg = Message("Expiry Notice", sender=credentials.flask_email, recipients=[g.user])   
+      msg.body = f"""{message}"""
+      mail.send(msg)
+
+    for item in name:
         cur.execute("""INSERT INTO notifications (user, title, message)
                     VALUES ("manager", "Inventory Expired Notice","Inventory items << %s >> has expired, please take action.");""", (item['name'],))
-        mysql.connection.commit()
-        # Notify manager about expiry of stock
-        message = message + f"Your {item['name']} is expired!\n"
-        msg = Message("Expiry Notice", sender=credentials.flask_email, recipients=[g.user])   
-        msg.body = f"""{message}"""
-        mail.send(msg)
+        mysql.connection.commit()  
 
     cur.execute('''SELECT *
                     FROM ingredient as i
@@ -1182,27 +1210,41 @@ def notify_supplier():
                     WHERE s.quantity<=10;''')
     emails=cur.fetchall()
 
+    cur.execute('''SELECT i.ingredient_id, i.pending_restock
+                    FROM ingredients as i
+                    JOIN stock as s
+                    ON i.ingredient_id=s.ingredient_id
+                    WHERE o.quantity>10 AND pending_stock=1;''')
+    restocked=cur.fetchall()
+
+    for ingredient in restocked:
+        cur.execute('''UPDATE ingredients
+                        SET pending_restock=0
+                        WHERE ingredient_id=%s;''', (ingredient["ingredient_id"],))
+        mysql.connection.commit()
+
     for email in emails:
-        if email["supplier_email"] is not None:
-            message = f"can we have more {email['name']} please. Same as last week!"
-            msg = Message("Order Notice", sender=credentials.flask_email, recipients=[email["supplier_email"]])   
-            msg.body = f"""{message}"""
-            mail.send(msg)
-            for item in names:
-                cur.execute("""INSERT INTO notifications (user, title, message)
-                        VALUES ("manager", "Inventory Expired Notice","An email has been sent successfully to the supplier for item << %s >>");""", (item['name'],))
-                mysql.connection.commit()
+        if email['pending_restock']==0:
+          if email["supplier_email"] is not None:
+              message = f"can we have more {email['name']} please. Same as last week!"
+              msg = Message("Order Notice", sender=credentials.flask_email, recipients=[email["supplier_email"]])   
+              msg.body = f"""{message}"""
+              mail.send(msg)
+
+              cur.execute('''UPDATE ingredients
+                          SET pending_restock=1
+                          WHERE ingredient_id=%s;''', (email["ingredient_id"],))
+              mysql.connection.commit()
     cur.close()
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=manageStock, trigger="interval", hours=24)
+scheduler.start()
 
 # Manager account
 @app.route("/manager")
 @manager_only
 def manager():
-    if not session.get('expiry_check_executed', False):
-        # Call the function to check the expiry of foods
-        notify_supplier()
-        session['expiry_check_executed'] = True
-    
     cur = mysql.connection.cursor()
     date = datetime.now().date()
     

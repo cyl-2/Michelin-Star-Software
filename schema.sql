@@ -237,8 +237,8 @@ CREATE TABLE orders
     time TEXT NOT NULL,
     dish_id INTEGER NOT NULL,
     table_id INTEGER NOT NULL,
-    status TEXT,
-    notes TEXT
+    notes TEXT,
+    status TEXT DEFAULT "not started"
 );
 
 
