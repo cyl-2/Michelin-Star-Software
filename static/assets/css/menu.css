@@ -290,11 +290,11 @@ header .flex .icons #menu-bars{
 
 .dishes .box-container .box .stars i{
     font-size: 1.7rem;
-    color:var(--green);
+    color:rgba(255, 255, 0, 0.905);
 }
 
 .dishes .box-container .box span{
-    color:var(--green);
+    color:yellow;
     font-weight: bolder;
     margin-right: 1rem;
     font-size: 2.5rem;
@@ -364,7 +364,7 @@ header .flex .icons #menu-bars{
 
 .menu .box-container{
     display: grid;
-    grid-template-columns: repeat(auto-fit, 35rem);
+    grid-template-columns: repeat(auto-fit, 27rem);
     gap:1.5rem;
     justify-content: center;
 }
@@ -377,7 +377,7 @@ header .flex .icons #menu-bars{
 }
 
 .menu .box-container .box .image{
-    height: 25rem;
+    height: 20rem;
     width: 100%;
     padding:1.5rem;
     overflow: hidden;
@@ -420,7 +420,7 @@ header .flex .icons #menu-bars{
 
 .menu .box-container .box .content .stars i{
    font-size: 1.7rem;
-   color:var(--green);
+   color:yellow;
 }
 
 .menu .box-container .box .content h3{
@@ -436,9 +436,8 @@ header .flex .icons #menu-bars{
 }
 
 .menu .box-container .box .content .price{
-    color:var(--green);
-    margin-left: 1rem;
-    font-size: 2.5rem;
+    color:black;
+    font-size: 1.7rem;
 }
 
 .review .slide{
@@ -479,7 +478,7 @@ header .flex .icons #menu-bars{
 
 .review .slide .user i{
     font-size: 1.3rem;
-    color:var(--green);
+    color:rgba(255, 255, 0, 0.905);
 }
 
 .review .slide p{

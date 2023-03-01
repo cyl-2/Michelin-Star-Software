@@ -22,9 +22,13 @@
                                                         {{ form.hidden_tag() }}
                                                         {{ form.email.label }}
                                                         {{ form.email(class="form-control", placeholder="Email Address") }}
-                                                        {% for error in form.email.errors %}
-                                                            {{ error }}
-                                                        {% endfor %}
+                                                        <span class="mb-0 text-muted">
+                                                            <span class="text-danger">
+                                                            {% for error in form.email.errors %}
+                                                                {{error}}
+                                                            {%endfor%}
+                                                            </span>
+                                                        </span>
                                                     </div>
                                                 </div>
 
@@ -32,18 +36,26 @@
                                                     <div class="form-group">
                                                         {{ form.first_name.label }}
                                                         {{ form.first_name(class="form-control", placeholder="First Name") }}
-                                                        {% for error in form.first_name.errors %}
-                                                            {{ error }}
-                                                        {% endfor %}
+                                                        <span class="mb-0 text-muted">
+                                                            <span class="text-danger">
+                                                            {% for error in form.first_name.errors %}
+                                                                {{error}}
+                                                            {%endfor%}
+                                                            </span>
+                                                        </span>
                                                     </div>
                                                 </div>                      
                                                 <div class="col-sm-6 mb-4">
                                                     <div class="form-group">
                                                         {{ form.last_name.label }}
                                                         {{ form.last_name(class="form-control", placeholder="Last Name") }}
-                                                        {% for error in form.last_name.errors %}
-                                                            {{ error }}
-                                                        {% endfor %}
+                                                        <span class="mb-0 text-muted">
+                                                            <span class="text-danger">
+                                                            {% for error in form.last_name.errors %}
+                                                                {{ error }}
+                                                            {% endfor %}
+                                                            </span>
+                                                        </span>
                                                     </div>
                                                 </div>
                                                 
@@ -51,18 +63,26 @@
                                                     <div class="form-group">
                                                         {{ form.role.label }}
                                                         {{ form.role(class="form-control", placeholder="Role") }}
-                                                        {% for error in form.role.errors %}
-                                                            {{ error }}
-                                                        {% endfor %}
+                                                        <span class="mb-0 text-muted">
+                                                            <span class="text-danger">
+                                                                {% for error in form.role.errors %}
+                                                                    {{ error }}
+                                                                {% endfor %}
+                                                            </span>
+                                                        </span>    
                                                     </div>
                                                 </div>
                                                 <div class="col-sm-12 mb-4">
                                                     <div class="form-group">
                                                         {{ form.access_level.label }}
                                                         {{ form.access_level(class="form-control", placeholder="Choose An Option") }}
-                                                        {% for error in form.access_level.errors %}
-                                                            {{ error }}
-                                                        {% endfor %}
+                                                        <span class="mb-0 text-muted">
+                                                            <span class="text-danger">
+                                                            {% for error in form.access_level.errors %}
+                                                                {{ error }}
+                                                            {% endfor %}
+                                                            </span>
+                                                        </span>
                                                     </div>
                                                     <div class="col-sm-12 mb-2">
                                                         <div class="form-group">
@@ -73,15 +93,17 @@
                                             </div>
                                         </form>
 
-                                        <div>
-                                            {% with messages = get_flashed_messages() %}
-                                                {% if messages %}
-                                                    {% for message in messages %}
-                                                        <p> {{ message }}</p>
-                                                    {% endfor %}
-                                                {% endif %}
-                                            {% endwith %}
-                                        </div>
+                                        {% with messages = get_flashed_messages() %}
+                                        {% if messages %}
+                                            <div class="flash">
+                                                <div class="flash-blue">
+                                                {% for message in messages %}
+                                                    <p> <b>{{ message }}</b> </p>
+                                                {% endfor %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        {% endwith %}
                                     </div>
                                 </div>
                             </div>

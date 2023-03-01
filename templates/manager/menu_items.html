@@ -1,0 +1,65 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Dashboard {% endblock %} 
+
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
+        <div class="pcoded-content">
+            <div class="pcoded-inner-content">
+                <div class="main-body">
+                    <div class="page-wrapper">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Existing Menu Items On Offer</h5>
+                                        <p class="text-right"> <a href="{{ url_for('addDish') }}"> Add new menu item </a> </p>
+                                    </div>
+                                    <div class="card-block table-border-style">
+                                        <div class="table-responsive">
+                                            {% if menu_items %}
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Item ID</th>
+                                                        <th>Item Name</th>
+                                                        <th>Category</th>
+                                                        <th>Allergens Information</th>
+                                                        <th>Price</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                                {% for item in menu_items %}
+                                                <tbody>
+                                                    <tr>
+                                                        <th scope="row"> {{ item ["dish_id"] }} </th>
+                                                        <td> {{ item ["name"]|capitalize }} </td>
+                                                        <td> {{ item ["dishType"]|capitalize }} </td>
+                                                        <td> {{ item ["allergies"]|capitalize }} </td>
+                                                        <td> {{ item ["cost"] }} </td>
+                                                        <td> <a href="{{ url_for('remove_menu_item', id=item['dish_id']) }}" class="text-danger">Remove</a></td>
+                                                    </tr>
+                                                </tbody>
+                                                {% endfor %}
+
+                                            {% else %}
+                                            <p> No menu items data available </p>
+                                            </table>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %} 

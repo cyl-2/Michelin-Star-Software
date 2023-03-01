@@ -1,23 +1,15 @@
-from wtforms import SubmitField, StringField, SelectField, PasswordField, TextAreaField, IntegerField, DateField, DecimalRangeField, RadioField, validators, FileField, SelectMultipleField
+from wtforms import SubmitField, StringField, SelectField, PasswordField, DecimalField, TextAreaField, IntegerField, DateField, DecimalRangeField, RadioField, validators, FileField, SelectMultipleField
 from flask_wtf import FlaskForm
 from wtforms.validators import InputRequired, EqualTo, NumberRange, Email
-from wtforms.widgets import TextArea
+from wtforms.widgets import TextArea, CheckboxInput
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 
 class TableForm(FlaskForm):
     table_number = IntegerField("Assign Table Number", validators=[InputRequired(), NumberRange(1,100)])
     seats = IntegerField("Number Of Seats", validators=[InputRequired(), NumberRange(1,25)])
-    '''
-    instead of submitting coordinates, can we not set the default coordinates to (0,0)
-    but then right after submitting this form, we can redirect to that page where we can
-    "move" the tables and "save"?
-
-    We wanna be user friendly yuh
-    '''
     x = IntegerField(validators=[InputRequired(), NumberRange(0,500)])
     y = IntegerField(validators=[InputRequired(), NumberRange(0,500)])
     submit = SubmitField("Create New Table")
-    
     
 class AddToRosterForm(FlaskForm):
     staff_id = IntegerField( validators=[InputRequired(), NumberRange(1,100)])
@@ -36,7 +28,6 @@ class RosterRequirementsForm(FlaskForm):
     min_workers = IntegerField( validators=[ NumberRange(0,24)])
     unavailable = StringField()
     submit = SubmitField("Confirm Changes")
-
 
 class RegistrationForm(FlaskForm):
     email = StringField("Email Address", [InputRequired(), validators.Length(min=6, max=100), Email(message="Please enter a valid email address!")])
@@ -84,7 +75,7 @@ class ProfileForm(FlaskForm):
 
 class NewPasswordForm(FlaskForm):
     new_password = PasswordField("New Password", validators=[InputRequired()])
-    password2 = PasswordField("Confirm new password", validators=[InputRequired("Password doesn't match"), EqualTo("new_password")])
+    password2 = PasswordField("Confirm new password", validators=[InputRequired("Passwords don't match"), EqualTo("new_password")])
     submit = SubmitField("Change password")
 
 class ResetPasswordForm(FlaskForm):
@@ -107,26 +98,51 @@ class RejectRosterRequestForm(FlaskForm):
     submit = SubmitField("Confirm")
 
 class AddDishForm(FlaskForm):
-    name = StringField('Dish Name: ', validators=[InputRequired()])
-    cost = IntegerField('Dish Price', validators=[InputRequired()])
-    cookTime= IntegerField('Cook Time', validators=[InputRequired()])
-    dishType = StringField('Dish type:',validators=[InputRequired()])
-    dishDescription = TextAreaField('Dish Description: ')
-    #allergins= TextAreaField('Add any allergins that are applicable: ')
-    allergins=SelectMultipleField('Allergins:', choices=[('gluten','Gluten'),('dairy','Dairy'),('nut','Nut'),('soya','soya'),('egg','Egg')],validators=[InputRequired()])
-    dishPic = FileField('Upload a picture of dish:',validators=[FileRequired(),FileAllowed(['jpg','png'],'Images Only!')])
-    ingredients= TextAreaField('Add ingredients necessary for this dish',default="In the format ingredient1,ingredient2, pls separte with a comma!")
+    name = StringField('Name: ', validators=[InputRequired()])
+    cost = DecimalField('Price', validators=[InputRequired()])
+    cookTime= IntegerField('Cook Time (in minutes)', validators=[InputRequired()])
+    dishType = SelectField("Category", 
+                            choices = [("starter", "Starter"),
+                                        ("main course", "Main Course"),
+                                        ("dessert", "Dessert"),
+                                        ("side", "Side"),
+                                        ("drink", "Drink"),
+                                        ("special", "Special")], validators=[InputRequired()])
+    day = SelectField("Display day for menu item? Menu items are displayed on all days of the week by default", 
+                            choices = [("all week", "All week"),
+                                        (0, "Monday"),
+                                        (1, "Tuesday"),
+                                        (2, "Wednesday"), 
+                                        (3, "Thursday"), 
+                                        (4, "Friday"), 
+                                        (5, "Saturday"), 
+                                        (6, "Sunday")], validators=[InputRequired()])
+    dishDescription = TextAreaField('Description: ')
+    allergins=SelectMultipleField('Allergens (if any)', 
+                                choices=[('not applicable','Not applicable'),
+                                ('gluten','Gluten'),
+                                ('dairy','Dairy'),
+                                ('nut','Nut'),
+                                ('soya','Soya'),
+                                ('egg','Egg')], option_widget=CheckboxInput(),
+                                validators=[InputRequired()])
+    dishPic = FileField('Upload a picture:', validators=[FileRequired(), FileAllowed(['jpg','png'],'Images Only!')])
+    ingredients= TextAreaField('List the ingredients needed',default="In the format: ingredient1, ingredient2... each ingredient is separated by a comma!")
     submit = SubmitField('Submit')
+
+    def validate_allergins(form, field):
+        if 'not applicable' in field.data and len(field.data) > 1:
+            form.allergins.errors.append('You cannot select "Not applicable" along with other options.')
+
 
 class UserPic(FlaskForm):
     profile_pic = FileField('Upload a cover', validators=[FileRequired(),FileAllowed(['jpg','png'],'Images Only!')])
     submit = SubmitField('Enter')
 
-    
 class cardDetails(FlaskForm):
     cardNum = IntegerField('Enter card number:', validators=[InputRequired()])
-    cardHolder = StringField('Enter card holders name:', validators=[InputRequired()])
-    cvv = IntegerField('Cvv', validators= [InputRequired()])
+    cardHolder = StringField("Enter card holder's name:", validators=[InputRequired()])
+    cvv = IntegerField('CVV', validators= [InputRequired()])
     submit = SubmitField('Enter')
 
 class submitModifications(FlaskForm):

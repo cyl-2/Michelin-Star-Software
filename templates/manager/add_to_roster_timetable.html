@@ -70,22 +70,34 @@
 
                                             {{ form.staff_id.label }}
                                             {{ form.staff_id(class="form-control") }}
-                                            {% for error in form.staff_id.errors %}
-                                                {{ error }}
-                                            {% endfor %}
+                                            <span class="mb-0 text-muted">
+                                                <span class="text-danger">
+                                                    {% for error in form.staff_id.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </span>
+                                            </span>
 
                                             {{ form.day.label }}
                                             {{ form.day(class="mb-3 form-control") }}
-                                            {% for error in form.day.errors %}
-                                                {{ error }}
-                                            {% endfor %}
+                                            <span class="mb-0 text-muted">
+                                                <span class="text-danger">
+                                                    {% for error in form.day.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </span>
+                                            </span>
 
                                             <div class="form-group">
                                                 {{ form.time.label }}
                                                 {{ form.time(class="form-control") }}
-                                                {% for error in form.time.errors %}
-                                                    {{ error }}
-                                                {% endfor %}
+                                                <span class="mb-0 text-muted">
+                                                    <span class="text-danger">
+                                                    {% for error in form.time.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                    </span>
+                                                </span>
                                             </div>
 
                                             {{ form.submit(class="submit btn btn-primary") }}

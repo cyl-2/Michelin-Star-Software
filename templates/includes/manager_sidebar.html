@@ -1,7 +1,7 @@
-<nav class="pcoded-navbar">
+<nav class="pcoded-navbar navbar-collapsed">
     <div class="navbar-wrapper">
         <div class="navbar-brand header-logo">
-            <a href="/" class="b-brand">
+            <a href="{{url_for('manager') }}" class="b-brand">
                 <div class="b-bg">
                     <i class="feather icon-trending-up"></i>
                 </div>
@@ -24,7 +24,7 @@
                     <label>Account</label>
                 </li>
 
-                <li class="nav-item {% if 'profile' in segment %} active {% endif %}">
+                <li class="nav-item">
                     <a href="{{ url_for('staff_profile') }}" class="nav-link">
                         <span class="pcoded-micon"><i class="feather icon-user"></i></span>
                             <span class="pcoded-mtext">Profile Page</span></a>
@@ -32,7 +32,7 @@
 
                 <li class="nav-item">
                     <a href="{{ url_for('change_password', table='staff') }}" class="nav-link">
-                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Change Password</span>
+                        <span class="pcoded-micon"><i class="feather icon-lock"></i></span><span class="pcoded-mtext">Change Password</span>
                     </a>
                 </li>
                 
@@ -45,13 +45,9 @@
                 <li class="nav-item pcoded-menu-caption">
                     <label>Menu & Restaurant Operations Tools</label>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('addDish') }}" class="nav-link">
-                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Add New Item To Menu</span>
-                    </a>
-                </li>
+                
                 <li class="nav-item pcoded-hasmenu">
-                    <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span
+                    <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-layout"></i></span><span
                             class="pcoded-mtext">Restaurant Layout</span></a>
                     <ul class="pcoded-submenu">
                         <li><a href="{{ url_for('add_table') }}">Add New Table</a></li>
@@ -61,11 +57,12 @@
 
                 <li data-username="Authentication Sign up Sign in reset password Change password Personal information profile settings map form subscribe"
                     class="nav-item pcoded-hasmenu">
-                    <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span
-                            class="pcoded-mtext">Inventory</span></a>
+                    <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-layout"></i></span><span
+                            class="pcoded-mtext">Menu Management</span></a>
                     <ul class="pcoded-submenu">
+                        <li><a href="{{ url_for('addDish') }}">Add New Item To Menu</a></li>
+                        <li><a href="{{ url_for('view_all_menu_items') }}">View All Menu Items</a></li>
                         <li><a href="{{ url_for('view_inventory') }}">View All Inventory</a></li>
-                        
                     </ul>
                 </li>
                 
@@ -73,7 +70,7 @@
                     <label>Staff Management Tools</label>
                 </li>
                  <li class="nav-item pcoded-hasmenu">
-                    <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span
+                    <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-layers"></i></span><span
                             class="pcoded-mtext">Roster</span></a>
                     <ul class="pcoded-submenu">
                         <li><a href="{{ url_for('roster_timetable') }}">View Roster Timetable</a></li>
@@ -85,9 +82,8 @@
                     </ul>
                 </li>
 
-
                 <li class="nav-item pcoded-hasmenu">
-                    <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span
+                    <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-users"></i></span><span
                             class="pcoded-mtext">Staff</span></a>
                     <ul class="pcoded-submenu">
                         <li><a href="{{ url_for('add_new_employee') }}">Register New Staff</a></li>
@@ -98,11 +94,9 @@
                 <li class="nav-item pcoded-menu-caption">
                     <label>Customer Enquiries</label>
                 </li>
-                
-                 <!-- I want view_queries here -->
 
                 <li class="nav-item"><a href="{{ url_for('view_query') }}" class="nav-link"><span
-                        class="pcoded-micon"><i class="feather icon-sidebar"></i></span><span class="pcoded-mtext">View Customer Enquires</span></a>
+                        class="pcoded-micon"><i class="feather icon-mail"></i></span><span class="pcoded-mtext">View Customer Enquires</span></a>
                 </li>
 
                 

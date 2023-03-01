@@ -22,9 +22,13 @@
                                                     {{ form.hidden_tag() }}
                                                     {{ form.response.label }}
                                                     {{ form.response() }}
-                                                    {% for error in form.response.errors %}
-                                                            {{ error }}
-                                                    {% endfor %}
+                                                    <span class="mb-0 text-muted">
+                                                        <span class="text-danger">
+                                                            {% for error in form.response.errors %}
+                                                                    {{ error }}
+                                                            {% endfor %}
+                                                        </span>
+                                                    </span>
                                                 </div>
                                                 <div class="col-sm-12 mb-2">
                                                     <div class="form-group">
@@ -33,15 +37,17 @@
                                                 </div>
                                             </div>
                                         </form>
-                                        <div>
-                                            {% with messages = get_flashed_messages() %}
-                                                {% if messages %}
-                                                    {% for message in messages %}
-                                                        <p> {{ message }}</p>
-                                                    {% endfor %}
-                                                {% endif %}
-                                            {% endwith %}
-                                        </div>
+                                        {% with messages = get_flashed_messages() %}
+                                        {% if messages %}
+                                            <div class="flash">
+                                                <div class="flash-blue">
+                                                {% for message in messages %}
+                                                    <p> <b>{{ message }}</b> </p>
+                                                {% endfor %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        {% endwith %}
                                     </div>
                                 </div>
                             </div>

@@ -21,48 +21,27 @@
                         <span class="pcoded-micon"><i class="feather icon-search"></i></span>
                             <span class="pcoded-mtext">Menu</span></a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('cart') }}" class="nav-link">
-                        <span class="pcoded-micon"><i class="feather icon-shopping-cart"></i></span>
-                            <span class="pcoded-mtext">Cart</span></a>
-                </li>
-
+                
                 <li class="nav-item pcoded-menu-caption">
-                    <label>Account</label>
+                    <label>Create An Account Today!</label>
                 </li>
-
+                
                 <li class="nav-item">
-                    <a href="{{ url_for('customer_profile') }}" class="nav-link">
-                        <span class="pcoded-micon"><i class="feather icon-user"></i></span>
-                            <span class="pcoded-mtext">Profile Page</span></a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{{ url_for('change_password', table='customer') }}" class="nav-link">
-                        <span class="pcoded-micon"><i class="feather icon-lock"></i></span><span class="pcoded-mtext">Change Password</span>
+                    <a href="{{ url_for('registration') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-user-plus"></i></span><span class="pcoded-mtext">Register For An Account</span>
                     </a>
                 </li>
                 
                 <li class="nav-item">
-                    <a href="{{ url_for('logout') }}" class="nav-link">
-                        <span class="pcoded-micon"><i class="feather icon-power"></i></span><span class="pcoded-mtext">Logout</span>
+                    <a href="{{ url_for('customer_login') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-log-in"></i></span><span class="pcoded-mtext">Customer Login</span>
                     </a>
                 </li>
                 
-                <li class="nav-item pcoded-menu-caption">
-                    <label>Review Past Orders</label>
-                </li>
-
                 <li class="nav-item">
-                    <a href="{{ url_for('index') }}" class="nav-link">
-                        <span class="pcoded-micon"><i class="feather icon-check-circle"></i></span>
-                            <span class="pcoded-mtext">View Past Transactions</span></a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{{ url_for('index') }}" class="nav-link">
-                        <span class="pcoded-micon"><i class="feather icon-star"></i></span>
-                            <span class="pcoded-mtext">Start a Review!</span></a>
+                    <a href="{{ url_for('staff_login') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-log-in"></i></span><span class="pcoded-mtext">Staff Login</span>
+                    </a>
                 </li>
                 
                 <li class="nav-item pcoded-menu-caption">
@@ -75,7 +54,7 @@
                         </span>
                         <span class="pcoded-mtext">Contact Us</span>
                     </a>
-                </li>                
+                </li>    
             </ul>
         </div>
     </div>
