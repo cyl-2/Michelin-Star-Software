@@ -68,40 +68,60 @@
 
                                             {{ form.day.label }}
                                             {{ form.day(class="mb-3 form-control") }}
-                                            {% for error in form.day.errors %}
-                                                {{ error }}
-                                            {% endfor %}
+                                            <span class="mb-0 text-muted">
+                                                <span class="text-danger">
+                                                {% for error in form.day.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                                </span>
+                                            </span>
 
                                             <div class="form-group">
                                                 {{ form.opening_time.label }}
                                                 {{ form.opening_time(class="form-control") }}
-                                                {% for error in form.opening_time.errors %}
-                                                    {{ error }}
-                                                {% endfor %}
+                                                <span class="mb-0 text-muted">
+                                                    <span class="text-danger">
+                                                        {% for error in form.opening_time.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </span>
+                                                </span>
                                             </div>
 
                                             <div class="form-group">
                                                 {{ form.closing_time.label }}
                                                 {{ form.closing_time(class="form-control") }}
-                                                {% for error in form.closing_time.errors %}
-                                                    {{ error }}
-                                                {% endfor %}
+                                                <span class="mb-0 text-muted">
+                                                    <span class="text-danger">
+                                                        {% for error in form.closing_time.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </span>
+                                                </span>
                                             </div>
 
                                             <div class="form-group">
                                                 {{ form.min_workers.label }}
                                                 {{ form.min_workers(class="form-control") }}
-                                                {% for error in form.min_workers.errors %}
-                                                    {{ error }}
-                                                {% endfor %}
+                                                <span class="mb-0 text-muted">
+                                                    <span class="text-danger">
+                                                        {% for error in form.min_workers.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </span>
+                                                </span>
                                             </div>
 
                                             <div class="form-group">
                                                 {{ form.unavailable.label }}
                                                 {{ form.unavailable(class="form-control") }}
-                                                {% for error in form.unavailable.errors %}
-                                                    {{ error }}
-                                                {% endfor %}
+                                                <span class="mb-0 text-muted">
+                                                    <span class="text-danger">
+                                                        {% for error in form.unavailable.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </span>
+                                                </span>
                                             </div>
 
                                             {{ form.submit(class="submit btn btn-primary") }}

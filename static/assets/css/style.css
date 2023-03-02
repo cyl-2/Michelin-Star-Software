@@ -141,6 +141,25 @@ strong {
   background: linear-gradient(-135deg, #899FD4 0%, #A389D4 100%);
 }
 
+.flash{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flash-blue{
+  background-color: rgb(147, 189, 252);
+  font-size:15px;
+  color:rgb(44, 43, 43);
+  text-align: center;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  width: 200px;
+  height: 48px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
 /* ==========  card css start  =========== */
 .anim-rotate {
   -webkit-animation: anim-rotate 1s linear infinite;
@@ -1350,6 +1369,10 @@ p.text-muted {
 
 .text-c-purple {
   color: #a389d4;
+}
+
+.text-c-amber {
+  color: #fbbb4d;
 }
 
 /*====== text-color css ends ======*/
@@ -10679,4 +10702,44 @@ div.code-toolbar > .toolbar span:hover {
 .dishPic {
   width:6em;
   height:6em;
+
+}
+.centrePic {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+.centre{
+  text-align: center;
+}
+.spaceOut{
+  display:flex;
+  padding:4em;
+  justify-content: space-between;
+}
+.table2 td{
+  border-collapse: collapse;
+  border-top:none;
+}
+.table th{
+  border-collapse:collapse;
+  border-top:none;
+}
+#exit{
+  color: white;
+}
+#remove{
+  color:white;
+}
+
+.badge-secondary{
+  background-color: lightgrey;
+  border-radius: .5rem;
+}
+.badge-secondary2{
+  background-color: red;
+  border-radius: .5rem;
+}
+
 }

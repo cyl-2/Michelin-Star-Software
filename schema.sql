@@ -75,7 +75,7 @@ CREATE TABLE customer
     customer_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     email TEXT NOT NULL,
     code TEXT,
-    access_level TEXT DEFAULT "customer" NOT NULL,
+    access_level VARCHAR(255) DEFAULT "customer" NOT NULL,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     password TEXT NOT NULL,
@@ -108,28 +108,33 @@ VALUES
   
 
 DROP TABLE IF EXISTS ingredient;
-
 CREATE TABLE ingredient
 (   
     ingredient_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     name TEXT NOT NULL,
-    supplier_email TEXT
+    quantity INTEGER DEFAULT 0,
+    supplier_email TEXT,
+    status TEXT
 );
 
 INSERT INTO ingredient
-  ( name )
+  ( name, quantity, status )
 VALUES
-  ('Patty'),
-  ('Chips'),
-  ('Chicken'),
-  ('Fish'), 
-  ('Buns'),
-  ('Soup'),
-  ('Ice cream'),
-  ('Brownie'),
-  ('Lettuce');
+  ('Patty', 10, 'red'),
+  ('Chips', 10, 'red'),
+  ('Chicken', 55, 'amber'),
+  ('Fish', 100, 'green'), 
+  ('Buns', 500, 'green'),
+  ('Soup', 50, 'amber'),
+  ('Ice cream', 20, 'red'),
+  ('Brownie', 10, 'red'),
+  ('Water', 0, '');
+  
+INSERT INTO ingredient ( name, supplier_email )
+VALUES
+('Lettuce', "cherrylin20172027@gmail.com");
 
- DROP TABLE IF EXISTS stock;
+DROP TABLE IF EXISTS stock;
 
 CREATE TABLE stock
 (   
@@ -204,8 +209,6 @@ VALUES
   ('Saturdays Beef', 50, 10, 'special', '1', 'beef description', '', 5),
   ('Sundays Beef', 50, 10, 'special', '1', 'beef description', '', 6),
   
-
-
 DROP TABLE IF EXISTS dish_ingredient;
 
 CREATE TABLE dish_ingredient
@@ -225,9 +228,7 @@ VALUES
   ( 7, 6),
   ( 8, 7),
   ( 9, 5);
-
-
-
+  
 DROP TABLE IF EXISTS orders;
 
 CREATE TABLE orders
@@ -236,8 +237,8 @@ CREATE TABLE orders
     time TEXT NOT NULL,
     dish_id INTEGER NOT NULL,
     table_id INTEGER NOT NULL,
-    status TEXT,
-    notes TEXT
+    notes TEXT,
+    status TEXT DEFAULT "not started"
 );
 
 
@@ -289,9 +290,46 @@ DROP TABLE IF EXISTS user_analytics;
 CREATE TABLE user_analytics
 (
     todays_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    daily_users INTEGER,
-    new_daily_users INTEGER
+    daily_users INTEGER DEFAULT 0,
+    new_daily_users INTEGER DEFAULT 0
 );
+
+
+DROP TABLE IF EXISTS monthly_revenue;
+CREATE TABLE monthly_revenue
+(
+	the_month TEXT NOT NULL,
+  monthly_sales FLOAT DEFAULT 0
+);
+
+INSERT INTO monthly_revenue (the_month, monthly_sales)
+VALUES
+('2022-01-01', 5300),
+('2022-02-01', 1000),
+('2022-03-01', 5500),
+('2022-04-01', 6040),
+('2022-05-01', 7000),
+('2022-06-01', 8000),
+('2022-07-01', 8288),
+('2022-08-01', 9929),
+('2022-09-01', 10020),
+('2022-10-01', 10520),
+('2022-11-01', 11220),
+('2022-12-01', 20020);
+
+DROP TABLE IF EXISTS yearly_revenue;
+CREATE TABLE yearly_revenue
+(
+	the_year TEXT NOT NULL,
+  yearly_sales FLOAT DEFAULT 0
+);
+
+INSERT INTO yearly_revenue (the_year, yearly_sales)
+VALUES
+('2020-01-01', 213500),
+('2021-01-01', 531350),
+('2022-01-01', 554685),
+('2023-01-01', 663000);
 
 
 DROP TABLE IF EXISTS user_queries;
@@ -328,8 +366,6 @@ VALUES
  
 DROP TABLE IF EXISTS reviews;
 
-DROP TABLE IF EXISTS reviews;
-
 CREATE TABLE reviews
 (
     username TEXT,
@@ -337,11 +373,12 @@ CREATE TABLE reviews
     comment TEXT,
     rating INTEGER,
     dish_name TEXT,
-    dish_id INTEGER
+    dish_id INTEGER,
+    dish_name TEXT
 );
 
 INSERT INTO reviews
-  ( username, comment, rating, dish_id)
+  ( username, comment, rating, dish_id, dish_name)
 VALUES
   ("benc190514@gmail.com", "good", 5, 1), 
   ("benc190514@gmail.com", "bad", 2, 2), 
@@ -357,6 +394,7 @@ CREATE TABLE modifications
   changes TEXT,
   user TEXT
 );
+
 
 /*
 ############
@@ -385,4 +423,75 @@ DO
 UPDATE staff
 SET code = null WHERE TIMESTAMPDIFF(SECOND, last_updated, NOW()) >= 10 ;
 
+################
+customer -> AFTER INSERT TRIGGER for user_analytics "new_daily_users"
+
+CREATE DEFINER=`root`@`localhost` TRIGGER `customer_AFTER_INSERT` AFTER INSERT ON `customer` FOR EACH ROW BEGIN
+    -- check if there is already a row in user_analytics for today's date
+    IF NOT EXISTS (SELECT new_daily_users FROM user_analytics WHERE DATE(todays_date) = CURDATE()) THEN
+        -- insert a new row with new_daily_users = 1
+        INSERT INTO user_analytics (new_daily_users) VALUES (1);
+    ELSE
+        -- update the existing row by incrementing new_daily_users by 1
+        UPDATE user_analytics
+        SET new_daily_users = new_daily_users + 1
+        WHERE DATE(todays_date) = CURDATE();
+    END IF;
+END
+
+########################
+TRIGGER FOR DAILY USERS customer AFTER UPDATE
+
+CREATE DEFINER=`root`@`localhost` TRIGGER `customer_AFTER_UPDATE` AFTER UPDATE ON `customer` FOR EACH ROW BEGIN
+
+    IF DATE(OLD.last_updated) <> CURDATE() THEN
+		IF NOT EXISTS (SELECT daily_users FROM user_analytics WHERE DATE(todays_date) = CURDATE()) THEN
+			INSERT INTO user_analytics (daily_users) VALUES (1);
+		ELSE
+			UPDATE user_analytics
+			SET daily_users = daily_users + 1
+			WHERE DATE(todays_date) = CURDATE();
+		END IF;
+    END IF;
+END
+
+##########################
+EVENT THAT WOULD CALCULATE THE YEARLY SALES ON 01/01 OF EVERY YEAR AND THEN INSERT THE VALUE INTO "yearly_revenue"
+
+DELIMITER //
+CREATE EVENT IF NOT EXISTS `yearly_revenue_calculation`
+ON SCHEDULE EVERY 1 YEAR STARTS '2022-01-01 00:00:00'
+DO
+BEGIN
+  SET @total_cost = (
+    SELECT SUM(dish.cost)
+    FROM orders
+    INNER JOIN dish ON orders.dish_id = dish.dish_id
+    WHERE YEAR(orders.time) = YEAR(CURDATE())
+  );
+  INSERT INTO yearly_revenue (the_year, yearly_sales)
+  VALUES (YEAR(CURDATE()), @total_cost);
+END//
+DELIMITER ;
+
+##########################
+EVENT THAT WOULD CALCULATE THE MONTHLY SALES ON 01/01 OF EVERY YEAR AND THEN INSERT THE VALUE INTO "monthly_revenue"
+
+DELIMITER //
+CREATE EVENT IF NOT EXISTS `monthly_revenue_calculation`
+ON SCHEDULE
+EVERY 1 MONTH 
+STARTS ('2022-01-01 00:00:00')
+DO
+BEGIN
+SET @gross_profit = (
+  SELECT SUM(dish.cost)
+  FROM orders
+  INNER JOIN dish ON orders.dish_id = dish.dish_id
+  WHERE YEAR(orders.time) = YEAR(CURDATE()) AND MONTH(orders.time) = MONTH(CURDATE())
+);
+INSERT INTO monthly_revenue (the_month, monthly_sales)
+VALUES (DATE_FORMAT(CURDATE(), '%Y-%m-01'), @gross_profit);
+END//
+DELIMITER ;
 */

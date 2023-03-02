@@ -7,12 +7,17 @@ from flask_mysqldb import MySQL
 from generate_roster import Roster
 import json
 from flask_mail import Mail, Message
+import datetime
 from datetime import datetime
 import random, string, time
 from random import sample
 from werkzeug.utils import secure_filename
 import os
 import credentials
+import time
+
+from apscheduler.schedulers.background import BackgroundScheduler
+
 
 app = Flask(__name__)
 
@@ -58,10 +63,8 @@ def get_managerial_notifs():
 
 @app.before_request
 def logged_in():
-    g.user = "benc190514@gmail.com" #session.get("username", None)
-    g.access = "managerial" #session.get("access_level", None)
-    #g.user = session.get("username", None)
-    #g.access = session.get("access_level", None) ##
+    g.user = session.get("username", None)
+    g.access = session.get("access_level", None)
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
 
@@ -69,7 +72,15 @@ def login_required(view):
     @wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
-            return redirect(url_for("customer_login")) #,next=request.url))
+            return render_template("error.html"), 404
+        return view(**kwargs)
+    return wrapped_view
+
+def business_only(view):
+    @wraps(view)
+    def wrapped_view(**kwargs):
+        if g.access != "ordinary staff" and g.access != "managerial":
+            return render_template("error.html"), 404
         return view(**kwargs)
     return wrapped_view
 
@@ -77,7 +88,7 @@ def staff_only(view):
     @wraps(view)
     def wrapped_view(**kwargs):
         if g.access != "ordinary staff":
-            return redirect(url_for("index")) #,next=request.url))
+            return render_template("error.html"), 404
         return view(**kwargs)
     return wrapped_view
 
@@ -85,7 +96,7 @@ def manager_only(view):
     @wraps(view)
     def wrapped_view(**kwargs):
         if g.access != "managerial":
-            return redirect(url_for("index"))
+            return render_template("error.html"), 404
         return view(**kwargs)
     return wrapped_view
 
@@ -126,11 +137,18 @@ def logout():
 
 @app.errorhandler(404)
 def page_not_found(error):
-    return render_template("error.html"),404
+    return render_template("error.html"), 404
 
 @app.route("/", methods=["GET","POST"])
 def index():
-    return render_template("home.html", title = "Home")
+    if g.access is None:
+        return redirect( url_for("menu"))
+    if g.access == "managerial":
+        return redirect( url_for("manager"))
+    if g.access == "ordinary staff":
+        return redirect( url_for("choose_table"))
+    if g.access == "customer":
+        return redirect( url_for("customer_profile"))
 
 @app.route("/clear_all_notifications", methods=["POST"])
 def clear_all_notifications():
@@ -210,8 +228,7 @@ def customer_login():
         cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM customer WHERE email = %s", (email,))
         customer = cur.fetchone()
-        cur.close()
-
+        
         if 'counter' not in session:
             session['counter'] = 0
 
@@ -222,17 +239,23 @@ def customer_login():
             session['counter'] = session.get('counter') + 1
             if session.get('counter')==3:
                 flash(Markup('Oh no, are you having trouble logging in? Click <a href="forgot_password">here</a> to reset your password.')) # reset password link need to go here
+            if session.get('counter')==5:
+                msg = Message(f"Various Login Attempts For Your Michelin Star Account", sender=credentials.flask_email, recipients=[email])
+                msg.body = f"""
+                Hello,
+                There has been an abnormal number of attempts of logins to your account.
+                If it wasn't you, please take action to reset your password now."""
+                mail.send(msg)
                 session.pop('counter', None)
         else:
             session.clear()
             session["username"] = email
+            session["access_level"] = "customer"
             
-            # cur = mysql.connection.cursor()
-            # cur.execute("SELECT last_updated FROM customer WHERE email = %s", (email,))
-            # last_login = cur.fetchone()
             ''' if the date value stored at last_login is NOT today's date (eg if today is the 2nd Feb, and the last_login date value is the 1st)
-             THEN execute this query -> cur.execute("""UPDATE customer set last_updated=CURRENT_TIMESTAMP WHERE email=%s""", (email,)) '''
-            #cur.close()
+             THEN execute this query ->  '''
+            cur.execute("""UPDATE customer set last_updated=CURRENT_TIMESTAMP WHERE email=%s""", (email,))
+            cur.close()
 
             return redirect(url_for("customer_profile"))
             '''next_page = request.args.get("next")
@@ -242,6 +265,7 @@ def customer_login():
                 response = make_response( redirect(next_page) )
             response.set_cookie("username",username,max_age=(60*60*24*7))
             return response'''
+        cur.close()
     return render_template("customer/customer_login.html", form=form, title="Login")
 
 # Login to staff account
@@ -272,8 +296,11 @@ def staff_login():
             session.clear()
             session["username"] = email
             if staff["access_level"] == "managerial":
+                session["access_level"] = "managerial"
+                session['expiry_check_executed'] = False
                 return redirect(url_for("manager"))
             elif staff["access_level"] == "ordinary staff":
+                session["access_level"] = "ordinary staff"
                 return redirect(url_for("staff_profile"))
                 '''next_page = request.args.get("next")
                 if not next_page:
@@ -345,7 +372,7 @@ def forgot_password():
                 mysql.connection.commit()
             cur.close()
 
-            # only commented because of credentials    msg = Message(f"Hello, {user['first_name']}", sender=credentials.flask_email, recipients=[user["email"]])
+            msg = Message(f"Hello, {user['first_name']}", sender=credentials.flask_email, recipients=[user["email"]])
             msg.body = f"""
             Hello,
             To reset your password, enter this code: 
@@ -371,11 +398,20 @@ def confirm_code(email, table):
             random_code = cur.fetchone()
         cur.close()
 
-        if code != random_code:
+        if code != random_code["code"]:
             form.code.errors.append("Oh no, that's not the code in your email!")
         else:
             flash("Code correct! Now you can reset your password :)")
             session["username"] = email
+            # next 8 lines have not been tested -> cyl
+            if table == "customer":
+                session["access_level"] = "customer"
+            else:
+                cur = mysql.connection.cursor()
+                cur.execute("SELECT * FROM staff WHERE email=%s;", (email,) )
+                staff = cur.fetchone()
+                session["access_level"] = staff['access_level']
+                cur.close()
             return redirect(url_for("change_password", table=table))
     return render_template("password_management/confirm_code.html", form=form, title= "Confirm code")
 
@@ -441,9 +477,11 @@ def user_pic():
 ##############################################################################################################################################
 ##############################################################################################################################################
 
+#creates undolist 
 def undoList():
     session['undoList']=[]
 
+#organises and displays prioirty queue
 @app.route('/kitchen', methods=['GET','POST'])
 def kitchen():
     if 'undoList' not in session:
@@ -454,7 +492,7 @@ def kitchen():
                     FROM orders as o 
                     JOIN dish as d 
                     ON o.dish_id=d.dish_id
-                    ORDER BY o.notes='priority' DESC,
+                    ORDER BY o.notes LIKE 'priority,' DESC,
                             o.time,
                             o.time*d.cook_time DESC,
                             o.table_id,  
@@ -467,6 +505,7 @@ def kitchen():
     cur.close()
     return render_template('kitchen.html',orderlist=orderlist)
 
+#updates the status of a meal
 @app.route('/<int:dish_id>,<int:order_id>,<int:time>/kitchenUpdate', methods=['GET','POST'])
 def kitchenUpdate(dish_id,order_id, time):
     cur = mysql.connection.cursor()
@@ -478,6 +517,7 @@ def kitchenUpdate(dish_id,order_id, time):
     mysql.connection.commit()
     session['undoList'].append(order_id)
 
+#lowers ingredient stock used
     cur.execute('''SELECT i.ingredient_id
                     FROM orders as o
                     JOIN dish_ingredient as di
@@ -496,6 +536,7 @@ def kitchenUpdate(dish_id,order_id, time):
     cur.close()
     return redirect(url_for('kitchen'))
 
+#updates meal status to sent out
 @app.route('/<int:order_id>,<int:time>/kitchenDelete', methods=['GET','POST'])
 def kitchenSentOut(order_id, time):
 
@@ -511,6 +552,23 @@ def kitchenSentOut(order_id, time):
     cur.close()
     return redirect(url_for('kitchen'))
 
+#changes an order to complete and reroutes to kitchen
+@app.route('/<int:order_id>,<int:time>/kitchenComplete', methods=['GET','POST'])
+def kitchenComplete(order_id, time):
+
+    cur = mysql.connection.cursor()
+
+    cur.execute('''UPDATE orders
+                                SET status="completed"
+                                WHERE time=%s and status="sent out" 
+                                and order_id =%s
+                                LIMIT 1;''',(time, order_id))
+    mysql.connection.commit()
+    session['undoList'].append(order_id)
+    cur.close()
+    return redirect(url_for('kitchen'))
+
+#undoes previous action
 @app.route('/kitchenUndo', methods=['GET','POST'])
 def kitchenUndo():
     if session['undoList']==[]:
@@ -521,7 +579,7 @@ def kitchenUndo():
                     FROM orders
                     WHERE order_id=%s;''',(undoID,) )
     status=cur.fetchall()
-    if status=="ongoing":
+    if status[0]["status"]=="ongoing":
         cur.execute('''UPDATE orders
                                     SET status="not started"
                                     WHERE order_id =%s;''',(undoID,))  
@@ -535,20 +593,21 @@ def kitchenUndo():
                     JOIN ingredient as i
                     JOIN dish as d
                     ON i.ingredient_id=di.ingredient_id AND di.dish_id=d.dish_id AND d.dish_id=o.dish_id
-                    WHERE di.dish_id=%s''',(dish_id,))
-    ingredientDict=cur.fetchall()
-    for ingredient in ingredientDict[0]:
-        cur.execute('''UPDATE stock
-                        SET quantity=quantity+1
-                        WHERE ingredient_id=%s
-                        ORDER BY batch_id
-                        LIMIT 1''',(ingredientDict[0][ingredient],) )
-        mysql.connection.commit()
+                    WHERE di.dish_id=%s''',(dish_id["dish_id"],))
+        ingredientDict=cur.fetchall()
+        for ingredient in ingredientDict:
+            cur.execute('''UPDATE stock
+                            SET quantity=quantity+1
+                            WHERE ingredient_id=%s
+                            ORDER BY batch_id
+                            LIMIT 1''',(ingredient["ingredient_id"],) )
+            mysql.connection.commit()
     else:
         cur.execute('''UPDATE orders
                                     SET status="ongoing"
                                     WHERE order_id =%s;''',(undoID,))
     mysql.connection.commit()
+    del session['undoList'][-1]
     cur.close()
     return redirect(url_for('kitchen'))
 
@@ -566,7 +625,7 @@ def kitchenUndo():
 ##############################################################################################################################################
 # Staff profile
 @app.route("/staff_profile", methods=["GET", "POST"])
-#@staff_only
+@staff_only
 def staff_profile():
     return render_template("staff/staff_profile.html", title="My Profile")
 
@@ -586,13 +645,14 @@ def edit_staff_profile():
                             WHERE email=%s;""", (address, bio, first_name, last_name, g.user))
         mysql.connection.commit()
         cur.close()
-        flash ("successfully updated!")
+        flash ("Successfully updated!")
     else:
         cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM staff WHERE email=%s;", (g.user,))
         profile = cur.fetchone()
         cur.close()
     return render_template("staff/edit_staff_profile.html", form=form, title="My Profile", profile=profile)
+
 
 # Waiter chooses a table to take an order from
 @app.route("/choose_table", methods=["GET","POST"])
@@ -1017,7 +1077,7 @@ def stock():
     
 
 @app.route("/roster_request", methods=["GET", "POST"])
-#@staff_only
+@staff_only
 def roster_request():
     cur = mysql.connection.cursor()
     form = RosterRequestForm()
@@ -1078,8 +1138,9 @@ def contact_us():
         flash("Message sent. We will reply to you in 2-3 business days.")
     return render_template("customer/enquiry_form.html",form=form, title="Contact Us")
 
-# displays roster for staff and managers
+# displays roster for staff and manager
 @app.route("/roster_timetable", methods=["GET","POST"])
+@business_only
 def roster_timetable():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
@@ -1113,15 +1174,13 @@ def get_random_password():
     password = ''.join(password_list)
     return password
 
-# Manager account
-#@manager_only
-@app.route("/manager")
-def manager():
+#checks expiry date of stock and reorders stock in short supply
+def manageStock():
     cur = mysql.connection.cursor()
     date = datetime.now().date()
-    
+
     cur.execute('''SELECT i.name 
-                FROM ingredients as i 
+                FROM ingredient as i 
                 JOIN stock as s 
                 ON i.ingredient_id=s.ingredient_id
                 WHERE expiry_date=%s;''', (date,))
@@ -1132,31 +1191,115 @@ def manager():
     mysql.connection.commit()
 
     message=""
+
     for item in name:
     # Notify manager about expiry of stock
-        message =message + f"Your {item['name']} is expired!\n"
-    msg = Message("Expiry Notice", sender=credentials.flask_email, recipients=[g.user])   
-    msg.body = f"""{message}"""
-    mail.send(msg)
+      message =message + f"Your {item['name']} is expired!\n"
+      msg = Message("Expiry Notice", sender=credentials.flask_email, recipients=[g.user])   
+      msg.body = f"""{message}"""
+      mail.send(msg)
 
-    cur.execute('''SELECT i.name, i.supplier_email, 
+    for item in name:
+        cur.execute("""INSERT INTO notifications (user, title, message)
+                    VALUES ("manager", "Inventory Expired Notice","Inventory items << %s >> has expired, please take action.");""", (item['name'],))
+        mysql.connection.commit()  
+
+    cur.execute('''SELECT *
+                    FROM ingredient as i
+                    JOIN stock as s
+                    ON i.ingredient_id=s.ingredient_id
+                    WHERE s.quantity<=10;''')
+    emails=cur.fetchall()
+
+    cur.execute('''SELECT i.ingredient_id, i.pending_restock
                     FROM ingredients as i
                     JOIN stock as s
                     ON i.ingredient_id=s.ingredient_id
-                    WHERE o.quantity<=10;''')
-    emails=cur.fetchall()
+                    WHERE o.quantity>10 AND pending_stock=1;''')
+    restocked=cur.fetchall()
+
+    for ingredient in restocked:
+        cur.execute('''UPDATE ingredients
+                        SET pending_restock=0
+                        WHERE ingredient_id=%s;''', (ingredient["ingredient_id"],))
+        mysql.connection.commit()
 
     for email in emails:
+        if email['pending_restock']==0:
+          if email["supplier_email"] is not None:
+              message = f"can we have more {email['name']} please. Same as last week!"
+              msg = Message("Order Notice", sender=credentials.flask_email, recipients=[email["supplier_email"]])   
+              msg.body = f"""{message}"""
+              mail.send(msg)
 
-        message = f"can we have more {email['i.name']} please. Same as last week!"
-        msg = Message("Order Notice", sender=credentials.flask_email, recipients=[email["i.suplier_email"]])   
-        msg.body = f"""{message}"""
-        mail.send(msg)
+              cur.execute('''UPDATE ingredients
+                          SET pending_restock=1
+                          WHERE ingredient_id=%s;''', (email["ingredient_id"],))
+              mysql.connection.commit()
+    cur.close()
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=manageStock, trigger="interval", hours=24)
+scheduler.start()
+
+# Manager account
+@app.route("/manager")
+@manager_only
+def manager():
+    cur = mysql.connection.cursor()
+    date = datetime.now().date()
     
     cur.execute("SELECT * FROM user_analytics")
     user_analytics = cur.fetchone()
-    cur.execute("SELECT * FROM sales_analytics")
-    sales_analytics = cur.fetchone()
+    
+    # START of fetching gross profit data for the past year, month and day #
+    cur.execute(
+        """SELECT SUM(dish.cost) AS gross_profit
+        FROM orders
+        INNER JOIN dish ON orders.dish_id = dish.dish_id
+        WHERE orders.time BETWEEN DATE_SUB(DATE_ADD(CURDATE(), INTERVAL 1 DAY), INTERVAL 1 YEAR) 
+        AND DATE_ADD(CURDATE(), INTERVAL 1 DAY);""")
+    yearly_profit = cur.fetchone()
+    yearly_profit = yearly_profit["gross_profit"]
+
+    cur.execute(
+        """SELECT SUM(dish.cost) AS gross_profit
+        FROM orders
+        INNER JOIN dish ON orders.dish_id = dish.dish_id
+        WHERE orders.time BETWEEN DATE_SUB(DATE_ADD(CURDATE(), INTERVAL 1 DAY), INTERVAL 30 DAY) 
+        AND DATE_ADD(CURDATE(), INTERVAL 1 DAY);""")
+    monthly_profit = cur.fetchone()
+    monthly_profit = monthly_profit["gross_profit"]
+
+    cur.execute(
+        """SELECT SUM(dish.cost) AS gross_profit
+        FROM orders
+        INNER JOIN dish ON orders.dish_id = dish.dish_id
+        WHERE DATE(orders.time) = CURDATE();""")
+    daily_profit = cur.fetchone()
+    daily_profit = daily_profit["gross_profit"]
+
+    if daily_profit is None:
+        daily_profit=0
+    # END of fetching gross profit data for the past year, month and day #
+
+    # START of calculating turnover
+    cur.execute(
+        """SELECT * FROM monthly_revenue
+            WHERE the_month = DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 YEAR), '%Y-%m-01');""")
+    same_month_of_prev_year = cur.fetchone()
+    same_month_of_prev_year = same_month_of_prev_year["monthly_sales"]
+
+    cur.execute(
+        """SELECT * FROM yearly_revenue
+        WHERE the_year = DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 YEAR), '%Y-01-01');
+        """)
+    prev_year = cur.fetchone()
+    prev_year = prev_year["yearly_sales"]
+    
+    monthly_turnover = round((((monthly_profit - same_month_of_prev_year) / same_month_of_prev_year) * 100),2)
+    yearly_turnover = round((((yearly_profit - prev_year) / prev_year) * 100),2)
+    # END of calculating turnover
 
     cur.execute("SELECT count(*) FROM user_queries where date(date_received) = %s", (date,))
     query_count = cur.fetchone()
@@ -1171,7 +1314,7 @@ def manager():
     rejected_requests = cur.fetchall()
 
     cur.close()
-    return render_template("manager/dashboard.html", rejected_requests=rejected_requests,approved_requests=approved_requests, pending_requests=pending_requests, user_analytics=user_analytics, sales_analytics=sales_analytics, query_count=query_count, title="Dashboard")
+    return render_template("manager/dashboard.html", yearly_turnover=yearly_turnover, monthly_turnover=monthly_turnover, daily_profit=daily_profit, monthly_profit=monthly_profit, yearly_profit=yearly_profit, rejected_requests=rejected_requests,approved_requests=approved_requests, pending_requests=pending_requests, user_analytics=user_analytics, query_count=query_count, title="Dashboard")
 
 #@manager_only
 @app.route("/roster_approve/<int:id>")
@@ -1180,8 +1323,8 @@ def roster_approve(id):
     status = "Approved"
     cur.execute("""UPDATE roster_requests SET status=%s, last_updated=CURRENT_TIMESTAMP WHERE request_id= %s;""", (status, id))
     mysql.connection.commit()
-    flash("Approved")
     cur.close()
+    flash("Approved")
     return redirect(url_for("manager"))
 
 #@manager_only
@@ -1257,7 +1400,7 @@ def add_to_roster_timetable():
             cur.execute("UPDATE roster SET "+day+" = %s WHERE staff_id = %s;",(time, staff_id,))
             mysql.connection.commit()
         else:
-            form.staff_id.errors = "Staff ID does not exists"
+            form.staff_id.errors = "Staff ID does not exist"
     cur.execute("SELECT * FROM roster JOIN staff ON roster.staff_id = staff.staff_id ORDER BY staff.staff_id;")
     roster = cur.fetchall() 
     cur.close()
@@ -1272,6 +1415,16 @@ def view_all_employees():
     employees = cur.fetchall()
     cur.close()
     return render_template("manager/employees.html", employees=employees, title="Employee Data")
+
+# Remove existing employee
+@app.route("/remove_employee/<int:id>")
+#@manager_only
+def remove_employee(id):
+    cur = mysql.connection.cursor()
+    cur.execute("""DELETE FROM staff WHERE staff_id=%s""", (id,))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for("view_all_employees"))
 
 # Add new employee
 @app.route("/add_new_employee", methods=["GET", "POST"])
@@ -1302,16 +1455,6 @@ def add_new_employee():
         return redirect(url_for("view_all_employees"))
     return render_template("manager/add_new_staff.html", form=form, title="Add New Employee")   
 
-# Remove existing employee
-@app.route("/remove_employee/<int:id>")
-#@manager_only
-def remove_employee(id):
-    cur = mysql.connection.cursor()
-    cur.execute("""DELETE FROM staff WHERE staff_id=%s""", (id,))
-    mysql.connection.commit()
-    cur.close()
-    return redirect(url_for("view_all_employees"))  
-
 # View queries from users
 #@manager_only
 @app.route("/view_query")
@@ -1330,8 +1473,8 @@ def delete_query(id):
     cur.execute("DELETE FROM user_queries WHERE query_id=%s", (id,))
     cur.fetchone()
     mysql.connection.commit()
-    flash ("Deleted!")
     cur.close()
+    flash ("Deleted!")
     return redirect(url_for("view_query"))
 
 # Manager can reply to user queries
@@ -1367,10 +1510,16 @@ def view_inventory():
     cur.close()
     return render_template("manager/inventory.html", inventory=inventory, title="Inventory List")
 
+@app.route("/delete_ingredient/<int:id>")
+def delete_ingredient(id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM ingredient WHERE ingredient_id = %s", (id,))
+    mysql.connection.commit()
+    cur.close()
+    flash("Ingredient deleted!")
+    return redirect(url_for('view_inventory'))
+
 # Add a new dish to the menu
-#manager only
-#should add instead of a text box for dishtype like a drop down with only a couple of options
-#NEED TO ADD ABILITY TO LIST INGREDIENTS NECESSARY FOR EACH DISH.
 @app.route('/addDish', methods=['GET','POST'])
 def addDish():
     cur = mysql.connection.cursor()
@@ -1380,8 +1529,9 @@ def addDish():
         cur.execute('SELECT * from dish WHERE name=%s',(name,))
         result = cur.fetchone()
         if result is not None:
-            form.name.errors.append("This dish is already in the db")
+            form.name.errors.append("This menu item already exists")
         else:
+            day = form.day.data
             cost = form.cost.data
             cookTime = form.cookTime.data
             dishType = (form.dishType.data).lower()
@@ -1391,7 +1541,8 @@ def addDish():
             allergins= form.allergins.data
             filename = secure_filename(dishPic.filename)
             dishPic.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
-            cur.execute("INSERT INTO dish (name, cost, cook_time, dishType, description,dishPic,allergies) VALUES(%s,%s,%s,%s,%s,%s,%s);", (name,cost,cookTime,dishType,dishDescription,filename,allergins))
+            cur.execute("INSERT INTO dish (name, cost, cook_time, dishType, description,dishPic,allergies,day) VALUES(%s,%s,%s,%s,%s,%s,%s,%s);", (name,cost,cookTime,dishType,dishDescription,filename,allergins,day))
+           
             mysql.connection.commit()
             if ingredients is not None:
                 ingredients=ingredients.split(',')
@@ -1413,9 +1564,31 @@ def addDish():
                         ingredient_id=cur.fetchone()['ingredient_id']
                         cur.execute("INSERT INTO dish_ingredient(ingredient_id,dish_id) VALUES (%s,%s)",(ingredient_id,dish_id))
                         mysql.connection.commit()
-            #cur.close()
-            return redirect(url_for('menu'))
+            cur.close()
+            flash("Successfully added new menu item!")
+            return redirect(url_for('addDish'))
     return render_template('manager/addDish.html', form=form)
+
+# View and manage all existing menu items
+#@manager_only
+@app.route("/view_all_menu_items")
+#@manager_only
+def view_all_menu_items():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM dish")
+    menu_items = cur.fetchall()
+    cur.close()
+    return render_template("manager/menu_items.html", menu_items=menu_items, title="Menu Items Data")
+
+# Remove existing employee
+@app.route("/remove_menu_item/<int:id>")
+#@manager_only
+def remove_menu_item(id):
+    cur = mysql.connection.cursor()
+    cur.execute("""DELETE FROM dish WHERE dish_id=%s""", (id,))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for("view_all_menu_items"))
 
 ##############################################################################################################################################
 ##############################################################################################################################################
@@ -1427,36 +1600,99 @@ def addDish():
 ##############################################################################################################################################
 ##############################################################################################################################################
 
+
+#For customers to view all dish items they could order
 @app.route('/menu',methods=['GET'])
 def menu():
     if 'order_by' not in session:
         session['order_by'] = 'low'
     cur=mysql.connection.cursor()
     cur.execute('''SELECT * FROM dish ORDERBY; ''')
-    dishes =cur.fetchall()
+    dishes = cur.fetchall()
+    
     #want to order this so that we display by dishtype
+    
     if session['order_by'] == 'low':
-        cur.execute(" SELECT * FROM dish WHERE dishType='starter' ORDER BY cost")
-        starters =cur.fetchall()
-        cur.execute(" SELECT * FROM dish WHERE dishType='main' ORDER BY cost")
-        mainCourse = cur.fetchall()
-        cur.execute(" SELECT * FROM dish WHERE dishType='dessert' ORDER BY cost")
-        dessert= cur.fetchall()
-        cur.execute(" SELECT * FROM dish WHERE dishType='drink' ORDER BY cost")
-        drink= cur.fetchall()
-        cur.execute(" SELECT * FROM dish WHERE dishType='side' ORDER BY cost")
-        side = cur.fetchall()
+      cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+                      FROM dish AS d
+                      LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
+                      WHERE d.dishType='starter'
+                      GROUP BY dish_id
+                      ORDER BY cost;""")
+      starters = cur.fetchall()
+      cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+                      FROM dish AS d
+                      LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
+                      WHERE d.dishType='main'
+                      GROUP BY dish_id
+                      ORDER BY cost;""")
+      mainCourse = cur.fetchall()
+      cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+                      FROM dish AS d
+                      LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
+                      WHERE d.dishType='dessert'
+                      GROUP BY dish_id
+                      ORDER BY cost;""")
+      dessert = cur.fetchall()
+      cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+                      FROM dish AS d
+                      LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
+                      WHERE d.dishType='drink'
+                      GROUP BY dish_id
+                      ORDER BY cost;""")
+      drink = cur.fetchall()
+      cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+                      FROM dish AS d
+                      LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
+                      WHERE d.dishType='side'
+                      GROUP BY dish_id
+                      ORDER BY cost;""")
+      side = cur.fetchall()
+    
     else:
-        cur.execute(" SELECT * FROM dish WHERE dishType='starter' ORDER BY cost DESC")
-        starters =cur.fetchall()
-        cur.execute(" SELECT * FROM dish WHERE dishType='main' ORDER BY cost DESC")
+      cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+                        FROM dish AS d
+                        LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
+                        WHERE d.dishType='starter'
+                        GROUP BY dish_id
+                        ORDER BY cost DESC;""")
+        starters = cur.fetchall()
+        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+                        FROM dish AS d
+                        LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
+                        WHERE d.dishType='main'
+                        GROUP BY dish_id
+                        ORDER BY cost DESC;""")
         mainCourse = cur.fetchall()
-        cur.execute(" SELECT * FROM dish WHERE dishType='dessert' ORDER BY cost DESC")
-        dessert= cur.fetchall()
-        cur.execute(" SELECT * FROM dish WHERE dishType='drink' ORDER BY cost DESC")
-        drink= cur.fetchall()
-        cur.execute(" SELECT * FROM dish WHERE dishType='side' ORDER BY cost DESC")
+        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+                        FROM dish AS d
+                        LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
+                        WHERE d.dishType='dessert'
+                        GROUP BY dish_id
+                        ORDER BY cost DESC;""")
+        dessert = cur.fetchall()
+        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+                        FROM dish AS d
+                        LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
+                        WHERE d.dishType='drink'
+                        GROUP BY dish_id
+                        ORDER BY cost DESC;""")
+        drink = cur.fetchall()
+        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+                        FROM dish AS d
+                        LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
+                        WHERE d.dishType='side'
+                        GROUP BY dish_id
+                        ORDER BY cost DESC;""")
         side = cur.fetchall()
+      
+
+    cur.execute("""SELECT DISTINCT(dish_id), dish_name, comment, rating
+                    FROM reviews
+                    WHERE rating >= 4 and comment != ''
+                    GROUP BY dish_id
+                    """)
+    reviews=cur.fetchall()
     
     cur.execute("SELECT dish_id FROM reviews ORDER BY rating DESC LIMIT 3")
     slider_ids = cur.fetchall()
@@ -1471,7 +1707,6 @@ def menu():
     special = cur.fetchall()
     
     cur.execute(" SELECT * FROM reviews where rating >= 4 and comment != '' ")
-    reviews=cur.fetchall()
     cur.close()
     return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side, reviews=reviews, special=special, slider=slider, session=session)
 
@@ -1483,6 +1718,7 @@ def swap_sort():
         session['order_by'] = 'low'
     return redirect(url_for('menu'))
 
+#Detailed view of dish - allows place to leave a review and make dish modifications 
 # Customer can give a rating and comment for a dish they've purchased
 @app.route('/review_dish/<int:dish_id>',methods=['GET', 'POST'])
 #@login_required
@@ -1490,18 +1726,19 @@ def review_dish(dish_id):
     cur=mysql.connection.cursor()
     cur.execute('''SELECT * FROM dish WHERE dish_id = %s''',(dish_id,))
     dish = cur.fetchone()
-    
+    url = request.url # current webpage
     form = Review()
     if form.validate_on_submit():
-        rating = current_url = request.form['stars'] # this would give a value between 1 to 5, depending on the num of stars selected
+        rating = request.form['stars'] # this would give a value between 1 to 5, depending on the num of stars selected
         comment = form.comment.data
         cur.execute("SELECT * FROM customer WHERE email=%s", (g.user,))
         customer = cur.fetchone()
-        cur.execute("""INSERT INTO reviews ( username, name, comment, rating, dish_id, dish_name) VALUES
-                (%s,%s,%s,%s, %s)""",(g.user, customer["first_name"], comment, rating, dish_id, dish["name"]))
+        cur.execute("""INSERT INTO reviews ( username, name, comment, rating, dish_name, dish_id) VALUES
+                (%s,%s,%s,%s,%s,%s)""",(g.user, customer["first_name"], comment, int(rating), dish["name"], dish_id))
         mysql.connection.commit()
         cur.close()
-        return redirect(url_for('menu'))
+        flash("Review submitted!")
+        return redirect(url)
     return render_template('customer/review_dish.html', dish=dish, form=form)
 
 @app.route('/dish/<int:dish_id>', methods=['GET','POST'])
@@ -1509,6 +1746,7 @@ def dish(dish_id):
     if str(dish_id) not in session:
         session[str(dish_id)]={}
     session['CurrentDish'] = dish_id
+    now = datetime.now()
     form = submitModifications()
     cur=mysql.connection.cursor()
     cur.execute('SELECT * FROM dish WHERE dish_id=%s',(dish_id,))
@@ -1518,6 +1756,7 @@ def dish(dish_id):
     dish_id=dish['dish_id']
     cur.execute("SELECT * FROM dish_ingredient JOIN ingredient ON dish_ingredient.ingredient_id = ingredient.ingredient_id  WHERE dish_ingredient.dish_id=%s",(dish_id,))
     result=cur.fetchall()
+
     cur.execute("SELECT comment, rating FROM reviews WHERE dish_id=%s",(dish_id,))
     comments=cur.fetchall()
     
@@ -1538,7 +1777,7 @@ def dish(dish_id):
                 session[str(dish_id)][ingredient_id] =1
             else:
                 quantity=session[str(dish_id)][ingredient_id]
-                changes+= str(ing_name) + str(quantity)
+                changes+= str(ing_name) + ":" + str(quantity) + " "
                 session[str(dish_id)][ingredient_id] =1
         cur.execute("INSERT INTO modifications(dish_id,notes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
         mysql.connection.commit()
@@ -1546,9 +1785,7 @@ def dish(dish_id):
         return redirect(url_for('add_to_cart', dish_id=dish['dish_id']))
     return render_template('customer/dish.html', dish=dish,result=result,form=form,quant=session[str(dish_id)],comments=comments)
 
-#so by default all amounts of ingredients should be 1 - should have the option to increase by 1 and decrease by 1
-#added that so that should work
-# I'M PRETTY SURE THIS WORKS BESIDES THE REDIRECT  
+#Increase the amount of an ingredient in a dish
 @app.route('/inc_quantity_ingredient/<int:ingredient_id>')
 @login_required
 def inc_quantity_ingredient(ingredient_id):
@@ -1562,6 +1799,7 @@ def inc_quantity_ingredient(ingredient_id):
     session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] +1
     return redirect(url_for('dish',dish_id=dish_id))
 
+#Decrease the amount of an ingredient in a dish
 @app.route('/dec_quantity_ingredient/<int:ingredient_id>')
 @login_required
 def dec_quantity_ingredient(ingredient_id):
@@ -1576,10 +1814,15 @@ def dec_quantity_ingredient(ingredient_id):
         session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] -1
     return redirect(url_for('dish',dish_id=dish_id))
 
+
+
+#Place for customers to view all the dishes they've added to their order
 @app.route('/cart')
 @login_required
 def cart():
     cur = mysql.connection.cursor()
+    cur.execute('select * from dish;')
+    dishes=cur.fetchall()
     dish=''
     full = 0
     if 'cart' not in session:
@@ -1604,8 +1847,9 @@ def cart():
             list.append(changes)
         modifications[dish_id] = list
         #cur.close()
-    return render_template('customer/cart.html', cart=session['cart'], mods=modifications,names=names, dish=dish, full=full)
+    return render_template('customer/cart.html', cart=session['cart'], dishes=dishes,mods=modifications,names=names, dish=dish, full=full)
 
+#Adds the default item to menu
 @app.route('/add_default_meal/<int:dish_id>')
 @login_required
 def add_default_meal(dish_id):
@@ -1620,8 +1864,8 @@ def add_default_meal(dish_id):
     result=cur.fetchall()
     for value in result:
         name=value['name']
-        changes+=str(name)+"1"
-    cur.execute("INSERT INTO modifications(dish_id,notes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
+        changes+=str(name)+":" "1 "
+    cur.execute("INSERT INTO modifications(dish_id,changes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
     mysql.connection.commit()
     return redirect(url_for('cart'))
 
@@ -1635,6 +1879,7 @@ def add_to_cart(dish_id):
     session['cart'][dish_id]= session['cart'][dish_id] + 1
     return redirect( url_for('cart') ) 
 
+#Remove a specific modification from cart based on the changes made and the dish_id
 @app.route('/remove_specific/<string:changes>/<int:dish_id>')
 def remove_specific(changes,dish_id):
     if changes=="":
@@ -1645,43 +1890,43 @@ def remove_specific(changes,dish_id):
         return redirect(url_for('cart')) 
     cur = mysql.connection.cursor()
     cur.execute("Select * FROM modifications WHERE user=%s AND changes=%s AND dish_id=%s",(g.user,changes,dish_id))
-    modificationId = cur.fetchone()['modification_id']
-    cur.execute('DELETE FROM modifications WHERE modification_id=%s',(modificationId,))
+    modificationId = cur.fetchone()['modifications_id']
+    cur.execute('DELETE FROM modifications WHERE modifications_id=%s',(modificationId,))
     mysql.connection.commit()
     if dish_id not in session['cart']:
         session['cart'][dish_id]=0
     if session['cart'][dish_id] >1:
         session['cart'][dish_id] = session['cart'][dish_id] -1
+    elif session['cart'][dish_id] ==1:
+        session['cart'].pop(dish_id)
     return redirect(url_for('cart'))
+
+
+#Completely clears cart of any orders
+@app.route('/clearCart')
+def clearCart():
+    session['cart'].clear()
+    return redirect(url_for('cart'))
+
+#Deletes all dishes with specified dish_id
 
 @app.route('/remove/<int:dish_id>')
 @login_required
 def remove(dish_id):
+    cur = mysql.connection.cursor()
     if dish_id not in session['cart']:
         session['cart'][dish_id] = 0
     for dishId in session['cart'].copy():
         if dish_id == int(dishId):
             session['cart'].pop(dishId)
+    cur.execute('DELETE FROM modifications where dish_id=%s',(dish_id,))
+    mysql.connection.commit()
     return redirect(url_for('cart'))
 
-@app.route('/inc_quantity/<int:dish_id>')
-@login_required
-def inc_quantity(dish_id):
-    cur = mysql.connection.cursor()
-    #stock_left = db.execute(''' SELECT * FROM inventory WHERE book_id=?; ''',(book_id,)).fetchone()['stock_left']
-    if dish_id not in session['cart']:
-        session['cart'][dish_id]=0
-    #if session['cart'][book_id] < stock_left:
-    session['cart'][dish_id] = session['cart'][dish_id] +1
-    return redirect(url_for('cart'))
 
-@app.route('/dec_quantity/<int:dish_id>')
-@login_required
-def dec_quantity(dish_id):
-    return redirect(url_for('cart'))
 
-#question does this need to be specific to user?? or is it already
-@app.route('/checkout', methods=['GET','POST'])##
+#Allows user to pay for items selected
+@app.route('/checkout', methods=['GET','POST'])
 def checkout():
     full =0
     form = cardDetails()
@@ -1712,6 +1957,7 @@ def checkout():
         cardNum=form.cardNum.data
         cardHolder = form.cardHolder.data
         cvv = form.cvv.data
+        tableNum=form.tableNum.data
         date = datetime.now().strftime(' %d-%m-%y')
         now = datetime.now()
         for dish_id in session['cart']:
@@ -1724,20 +1970,46 @@ def checkout():
                 changes=values['notes']
                 cur.execute('INSERT INTO transactions(username, dish_id,cost,quantity,date) VALUES(%s,%s,%s,%s,%s) ',(username, dish_id,cost,1,date))
                 mysql.connection.commit()
-                cur.execute("INSERT INTO orders(time,dish_id,notes) VALUES(%s,%s,%s)",(now,dish_id,changes))
+
+                cur.execute("INSERT INTO orders(time,dish_id,notes,table_id,status) VALUES(%s,%s,%s,%s,%s)",(now,dish_id,changes,tableNum,"ordered"))
+
                 mysql.connection.commit()
-            #cur.execute('DELETE FROM modifications WHERE user=%s',(g.user,))
         cur.execute('DELETE FROM modifications WHERE user=%s',(g.user,))
         mysql.connection.commit()    
         session['cart'].clear()
-        cur.close()##
-        return redirect(url_for('cart'))
-    return render_template('customer/checkout.html', cart=session['cart'],form=form,full=full,names=names,dish=dish, discount=discount)
+        cur.close()
+        return redirect(url_for('menu'))
+    return render_template('customer/checkout.html', cart=session['cart'],form=form,full=full,names=names,dish=dish)
 
-    #need table number to be inputed here 
+
+#Customer profile - can see info about past transactions + leave a review
+@app.route('/customer_profile')
+@login_required
+def customer_profile():
+    username = session['username']
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM dish")
+    dishes= cur.fetchall()
+    message = ''
+    image = None
+    cur.execute(" SELECT * FROM customer WHERE email=%s",(username,))
+    check= cur.fetchone()['profile_pic']
+    if check is None:
+        error = 'No profile picture yet'
+    else:  
+        image=check
+    cur.execute("SELECT * FROM transactions WHERE username=%s;",(username,))
+    transactionHistory = cur.fetchall()
+    if transactionHistory is not None:
+        message = "You've made no transactions yet"
+    cur.close()
+    #return render_template("customer/profile.html", title="My Profile")
+    return render_template('customer/customer_profile.html',image=image, transactionHistory=transactionHistory,dishes=dishes,user=g.user)
+
 
 # allows customer to book a table for a date and time
 @app.route('/booking',methods=['GET', 'POST'])
+
 @login_required
 def booking():
     form = makeBooking()
@@ -1863,6 +2135,8 @@ def cancel_booking(booking_id):
     cur.close()
     return redirect(url_for('cancel_bookings'))
 
+
+#Allows all staff to view the breaklist for each individual day
 @app.route('/breaks', methods=['GET','POST'])
 def breakTimes():
     cur = mysql.connection.cursor()
@@ -1886,16 +2160,14 @@ def breakTimes():
             if k == 0:
                 shift = workingToday[employee]
                 hoursWorking= int(shift[0]+shift[1]) - int(shift[6]+shift[7])
-                #if hoursWorking <0:
+
                 hoursWorking = hoursWorking*-1
-                    #workingToday[employee] = [shift,hoursWorking]
                 if hoursWorking >4 and hoursWorking >= 8:
                     breaks = 2
                     workingToday[employee] = [shift,breaks]
                 elif hoursWorking >4:
                     breaks=1
                     workingToday[employee] = [shift,breaks]
-                    #1 break needed
                 else: 
                     breaks =0
                     assigned +=1
@@ -1905,7 +2177,6 @@ def breakTimes():
                 proposedBreak = 0
             else:
                 start = workingToday[employee][2]
-            #start =None
             proposedBreak = 0
             for j in range(4,1,-1):
 
@@ -1922,14 +2193,7 @@ def breakTimes():
                     endBreak = start +0.45
                     workingToday[employee].append(start)
                     assigned +=1
-                    """
-                    elif i ==1:
-                        start = start + j
-                        endBreak =start+0.45
-                        workingToday[employee].append(start)
-                        assigned +=1"""
                     break
-              
         i = 2
         while assigned != len(workingToday):
             for employee in workingToday:
@@ -1939,10 +2203,8 @@ def breakTimes():
                 if k == 1:
                     start = workingToday[employee][2]
                 if (len(workingToday[employee]) <3 and k ==0) or (len(workingToday[employee]) <4 and k==1):
-                    #break hasn't been assigned 
                     for j in range(4,1,-1):
-                        if workingToday[employee][1] ==1 and len(working[employee] >3):
-                            #norrrr 
+                        if workingToday[employee][1] ==1 and len(working[employee] >3): 
                             break
                         proposedBreak = start + j
                         if proposedBreak in breaksAssigned and breaksAssigned[proposedBreak] >=i: 
@@ -1961,12 +2223,6 @@ def breakTimes():
                             workingToday[employee].append(start)
                             assigned +=1
                             break
-                            """
-                            elif i ==1:
-                                start = start + j
-                                endBreak =start+0.45
-                                workingToday[employee].append(start)
-                                assigned +=1"""
                         if k ==1:
                             proposedBreak =start+ 0.3 +j
                             if proposedBreak in breaksAssigned and breaksAssigned[proposedBreak] >=i: 
@@ -1987,6 +2243,10 @@ def breakTimes():
                                 break
             i +=1
         k +=1
+    for employee in workingToday:
+        if len(workingToday[employee]) >= 3:
+            workingToday[employee][2] = str(workingToday[employee][2]) + ":00"
+            #if len(workingToday[employee] ==5)
     return render_template("staff/breaks.html",staff=staff, workingToday=workingToday)
 
 if __name__ == '__main__':

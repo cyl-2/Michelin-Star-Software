@@ -1,9 +1,95 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Staff Profile {% endblock %} 
-
-{% block stylesheets %}{% endblock stylesheets %}
-
 {% block content %}
+
+<div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
+        <div class="pcoded-content">
+            <div class="pcoded-inner-content">
+                <div class="main-body">
+                    <div class="page-wrapper">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Update Personal Profile</h5>
+                                    </div>
+                                    <div class="card-block">
+
+                                        <form action="" method="post" novalidate>
+                                            <div class="row">
+                                                {% if profile %}
+                                                <div class="col-sm-12 mb-4">
+                                                    <div class="form-group">
+                                                        {{ form.hidden_tag() }}
+                                                        {{ form.email.label }}
+                                                        {{ form.email(value=profile['email'], class="form-control", placeholder="Email Address") }}
+                                                        {% for error in form.email.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-sm-6 mb-4">
+                                                    <div class="form-group">
+                                                        {{ form.first_name.label }}
+                                                        {{ form.first_name(value=profile['first_name'], class="form-control", placeholder="First Name") }}
+                                                        {% for error in form.first_name.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>                      
+                                                <div class="col-sm-6 mb-4">
+                                                    <div class="form-group">
+                                                        {{ form.last_name.label }}
+                                                        {{ form.last_name(value=profile['last_name'], class="form-control", placeholder="Last Name") }}
+                                                        {% for error in form.last_name.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-sm-12 mb-4">
+                                                    <div class="form-group">
+                                                        {{ form.address.label }}
+                                                        {{ form.address(value=profile['address'], class="form-control", placeholder="Address") }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-12 mb-4">
+                                                    <div class="form-group">
+                                                        {{ form.bio.label }}
+                                                        <textarea name="bio" class="form-control", placeholder="Bio">{{ profile['bio'] }}</textarea>
+                                                    </div>
+                                                    <div class="col-sm-12 mb-2">
+                                                        <div class="form-group">
+                                                            {{ form.submit(class="btn btn-primary") }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </form>
+
+                                        {% with messages = get_flashed_messages() %}
+                                        {% if messages %}
+                                            <div class="flash">
+                                                <div class="flash-blue">
+                                                {% for message in messages %}
+                                                    <p> <b>{{ message }}</b> </p>
+                                                {% endfor %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock content %}

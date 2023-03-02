@@ -30,6 +30,8 @@
 
 <!-- home section starts  -->
 
+<div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
 <div class="container">
     <section class="home" id="home">
         <div class="swiper home-slider">
@@ -65,7 +67,7 @@
             <button class="tablinks nav-link" onclick="openCity(event, 'Drinks')">Drinks</button>
             <button class="tablinks nav-link" onclick="openCity(event, 'Special')">Special</button>
         </ul>
-        
+
     </div>
 </div>
 <div class="tab">
@@ -90,14 +92,19 @@
                     </div>
                     <div class="content">
                         <div class="stars">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
+                            {% set full_stars = dish['avg_rating'] | int %}
+                            {% set half_stars = dish['avg_rating'] % 1 == 0.5 %}
+                            {% for i in range(full_stars) %}
+                                <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% if half_stars %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% endif %}
+                            {% if dish['avg_rating'] == 0 %}
+                                <p> No review yet </p>
+                            {% endif %}
                         </div>
-                        <h3>{{dish['name']}}</h3>
-                        <p>{{dish['cost']}}</p>
+                        <h4>{{dish['name']}}</h4>
                         <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
                         <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
                         <span class="price">€{{dish['cost']}}</span>
@@ -121,11 +128,17 @@
                     </div>
                     <div class="content">
                         <div class="stars">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
+                            {% set full_stars = dish['avg_rating'] | int %}
+                            {% set half_stars = dish['avg_rating'] % 1 == 0.5 %}
+                            {% for i in range(full_stars) %}
+                                <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% if half_stars %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% endif %}
+                            {% if dish['avg_rating'] == 0 %}
+                                <p> No review yet </p>
+                            {% endif %}
                         </div>
                         <h3>{{dish['name']}}</h3>
                         <p>{{dish['cost']}}</p>
@@ -152,11 +165,17 @@
                     </div>
                     <div class="content">
                         <div class="stars">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
+                            {% set full_stars = dish['avg_rating'] | int %}
+                            {% set half_stars = dish['avg_rating'] % 1 == 0.5 %}
+                            {% for i in range(full_stars) %}
+                                <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% if half_stars %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% endif %}
+                            {% if dish['avg_rating'] == 0 %}
+                                <p> No review yet </p>
+                            {% endif %}
                         </div>
                         <h3>{{dish['name']}}</h3>
                         <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
@@ -171,6 +190,7 @@
 </div>
 
 
+
 <div id="Dessert" class="tabcontent">
     <div class="container">
         <section class="menu" id="menu">
@@ -183,11 +203,17 @@
                     </div>
                     <div class="content">
                         <div class="stars">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
+                            {% set full_stars = dish['avg_rating'] | int %}
+                            {% set half_stars = dish['avg_rating'] % 1 == 0.5 %}
+                            {% for i in range(full_stars) %}
+                                <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% if half_stars %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% endif %}
+                            {% if dish['avg_rating'] == 0 %}
+                                <p> No review yet </p>
+                            {% endif %}
                         </div>
                         <h3>{{dish['name']}}</h3>
                         <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
@@ -240,41 +266,32 @@
         <div class="swiper review-slider">
             <div class="swiper-wrapper">
                 
-                {% if reviews %}
-                {% for review in reviews %}
+                
                 <div class="swiper-slide slide">
                     <i class="fas fa-quote-right"></i>
                     <div class="user">
                         <div class="user-info">
-                            <h3>{{ review["name"] }}</h3>
-                            <h6>Review for: {{ review["dish_name"] }}</h>
-                            {% if review["rating"] == 4 %}
+                            <h3>Anonymous User</h3>
+                            <h6>Review for: Pineapple Pie</h>
                             <div class="stars">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
+                                {% set full_stars = 5 | int %}
+                                {% for i in range(full_stars) %}
+                                    <i class="fas fa-star"></i>
+                                {% endfor %}
                             </div>
-                            {% else %}
-                            <div class="stars">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            {% endif %}
                         </div>
                     </div>
-                    <p>{{ review["comment"] }}</p>
+                    <p>Very nice</p>
                 </div>
-                {% endfor %}
-                {% endif %}
+                
                 
             </div>
             <div class="swiper-pagination"></div>
         </div>
     </section>
+</div>
+
+</div>
 </div>
 <!-- review section ends -->
 

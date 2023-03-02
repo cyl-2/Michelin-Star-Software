@@ -16,12 +16,8 @@
                     </div>
                 </div>
 
-
-
-
                 <div class="main-body">
                     <div class="page-wrapper">
-                        <!-- [ Main Content ] start -->
                         <div class="row">
                             <div class="col-sm-8">
                                 <div class="card">
@@ -30,12 +26,8 @@
                                     </div>
                                     <div class="card-block">
                                         <div class="row"> 
-                                            
                                             <div class="col-sm-12 mb-2">
                                                 <div class="form-group">
-
-
-                                                <!-- [ stiped-table ] start -->
                                                 <div class="col-xl-12">
                                                     <div class="card">
                                                         <div class="card-block table-border-style">
@@ -48,18 +40,18 @@
                                                                             <th><b>45 minute break</b></th>
                                                                             <th><b>30 minute break</b></th>
                                                                         </tr>
-                                                                        {% for employee in staff%}
-                                                                        {%for today in workingToday%}
-                                                                            {% if today == employee['staff_id']%}
-                                                                        <tr>
-                                                                            <td>{{employee['first_name']}}</td>
-                                                                            <td>{{workingToday[today][0]}}</td>
-                                                                            <td>{{workingToday[today][2]}}</td>
-                                                                            <td>{{workingToday[today][3]}}</td>
-                                                                        </tr>   
-                                                                        {%endif%}                                                
-                                                                        {%endfor%}
 
+                                                                        {% for employee in staff %}
+                                                                            {% for today in workingToday %}
+                                                                                    {% if today == employee['staff_id']%}
+                                                                                    <tr>
+                                                                                        <td>{{employee['first_name']}}</td>
+                                                                                        <td>{{workingToday[today][0]}}</td>
+                                                                                        <td>{{workingToday[today][2]}}</td>
+                                                                                        <td>{{workingToday[today][3]}}</td>
+                                                                                    </tr>   
+                                                                                {% endif %}                                                
+                                                                            {% endfor %}
                                                                         {% endfor %}
                                                                     </tbody>
                                                                 </table>
@@ -67,11 +59,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <!-- [ stiped-table ] end -->   
-
-
-                                            </div>  
-                                                                
+                                            </div>       
                                         </div>
                                     </div>
                                 </div>
