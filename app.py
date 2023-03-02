@@ -282,7 +282,7 @@ def customer_login():
             session['counter'] = 0
 
         if customer is None:
-            form.email.errors.append("Email doesn't exist, please check your spelling")
+            form.email.errors.append("Email or password is incorrect")
         elif not check_password_hash(customer["password"], password):
             form.password.errors.append("Incorrect password")
             session['counter'] = session.get('counter') + 1
@@ -334,12 +334,12 @@ def staff_login():
             session['counter'] = 0
 
         if staff is None:
-            form.email.errors.append("Email doesn't exist, please check your spelling")
+            form.email.errors.append("Email or password is incorrect")
         elif not check_password_hash(staff["password"], password):
             form.password.errors.append("Incorrect password")
             session['counter'] = session.get('counter') + 1
             if session.get('counter')==3:
-                flash(Markup('Oh no, are you having trouble logging in? Click <a href="forgot_password">here</a> to reset your password.'))
+                flash(Markup('Oh no, are you having trouble logging in? Click <a href="forgot_password">HERE</a> to reset your password.'))
                 session.pop('counter', None)
         else:
             session.clear()
@@ -1183,7 +1183,7 @@ def manager():
     daily_profit = daily_profit["gross_profit"]
 
     if daily_profit is None:
-        daily_profit=0
+        daily_profit=0.00
     # =================  END of fetching gross profit data for the past year, month and day ================= 
 
     # ================= START of calculating turnover ================= 
@@ -1200,8 +1200,8 @@ def manager():
     prev_year = cur.fetchone()
     prev_year = prev_year["yearly_sales"]
     
-    monthly_turnover = round((((monthly_profit - same_month_of_prev_year) / same_month_of_prev_year) * 100),2)
-    yearly_turnover = round((((yearly_profit - prev_year) / prev_year) * 100),2)
+    monthly_turnover = round((((float(monthly_profit) - float(same_month_of_prev_year)) / float(same_month_of_prev_year)) * 100.0),2)
+    yearly_turnover = round((((float(yearly_profit) - float(prev_year)) / float(prev_year)) * 100.0),2)
     # ================= END of calculating turnover ================= 
 
     cur.execute("SELECT count(*) FROM user_queries where date(date_received) = %s", (date,))
@@ -1215,6 +1215,10 @@ def manager():
 
     cur.execute("SELECT * FROM roster_requests WHERE status = 'Rejected' ORDER BY last_updated DESC")
     rejected_requests = cur.fetchall()
+
+    daily_profit = '{:,.2f}'.format(float(daily_profit))
+    monthly_profit = '{:,.2f}'.format(float(monthly_profit))
+    yearly_profit = '{:,.2f}'.format(float(yearly_profit))
 
     cur.close()
     return render_template("manager/dashboard.html", yearly_turnover=yearly_turnover, monthly_turnover=monthly_turnover, daily_profit=daily_profit, monthly_profit=monthly_profit, yearly_profit=yearly_profit, rejected_requests=rejected_requests,approved_requests=approved_requests, pending_requests=pending_requests, user_analytics=user_analytics, query_count=query_count, title="Dashboard")
@@ -1830,7 +1834,7 @@ def menu():
                         ORDER BY cost DESC;""")
         side = cur.fetchall()
       
-
+    cur.execute("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));")
     cur.execute("""SELECT DISTINCT(dish_id), dish_name, comment, rating
                     FROM reviews
                     WHERE rating >= 4 and comment != ''

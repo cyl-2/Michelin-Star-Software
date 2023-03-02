@@ -373,17 +373,16 @@ CREATE TABLE reviews
     comment TEXT,
     rating INTEGER,
     dish_name TEXT,
-    dish_id INTEGER,
-    dish_name TEXT
+    dish_id INTEGER
 );
 
 INSERT INTO reviews
   ( username, comment, rating, dish_id, dish_name)
 VALUES
-  ("benc190514@gmail.com", "good", 5, 1), 
-  ("benc190514@gmail.com", "bad", 2, 2), 
-  ("benc190514@gmail.com", "okay", 4, 3),
-  ("benc190514il.com", "AMAZING", 10, 5);
+  ("benc190514@gmail.com", "good", 5, 1, "potato"), 
+  ("benc190514@gmail.com", "bad", 2, 2, "potato"), 
+  ("benc190514@gmail.com", "okay", 4, 3, "potato"),
+  ("benc190514il.com", "AMAZING", 10, 5,"potato");
 
 DROP TABLE IF EXISTS modifications;
 
