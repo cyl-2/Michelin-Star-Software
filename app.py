@@ -63,8 +63,8 @@ def get_managerial_notifs():
 
 @app.before_request
 def logged_in():
-    g.user = session.get("username", None)
-    g.access = session.get("access_level", None)
+    g.user = "cherrylincyl@gmail.com"#session.get("username", None)
+    g.access = "managerial"#session.get("access_level", None)
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
 
@@ -473,7 +473,7 @@ def confirm_code(email, table):
 ##############################################################################################################################################
 ##############################################################################################################################################
 ##############################################################################################################################################
-
+'''
 @app.route('/customer_profile')
 @login_required
 def customer_profile():
@@ -499,7 +499,7 @@ def customer_profile():
     cur.close()
     #return render_template("customer/profile.html", title="My Profile")
     return render_template('customer/customer_profile.html',image=image, transactionHistory=transactionHistory, dishes=dish)
-
+'''
 #Customer profile - can see info about past transactions + leave a review
 @app.route('/customer_profile')
 @login_required
