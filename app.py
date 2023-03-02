@@ -553,16 +553,15 @@ def user_pic():
 ##############################################################################################################################################
 ##############################################################################################################################################
 # Staff profile
-@app.route("/staff_profile", methods=["GET", "POST"])
-@staff_only
-def staff_profile():
-    return render_template("staff/staff_profile.html", title="My Profile")
-
 @app.route("/edit_staff_profile", methods=["GET", "POST"])
-#@staff_only
+@business_only
 def edit_staff_profile():
     form = ProfileForm()
     profile=None
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM staff WHERE email = %s", (g.user,))
+    staff = cur.fetchone()
+    cur.close()
     if form.validate_on_submit():
         bio = form.bio.data
         address = form.address.data
@@ -580,7 +579,7 @@ def edit_staff_profile():
         cur.execute("SELECT * FROM staff WHERE email=%s;", (g.user,))
         profile = cur.fetchone()
         cur.close()
-    return render_template("staff/edit_staff_profile.html", form=form, title="My Profile", profile=profile)
+    return render_template("staff/edit_staff_profile.html", staff=staff, form=form, title="My Profile", profile=profile)
 
 #creates undolist 
 def undoList():
