@@ -1613,44 +1613,44 @@ def menu():
     #want to order this so that we display by dishtype
     
     if session['order_by'] == 'low':
-      cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                       FROM dish AS d
                       LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                       WHERE d.dishType='starter'
                       GROUP BY dish_id
                       ORDER BY cost;""")
-      starters = cur.fetchall()
-      cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        starters = cur.fetchall()
+        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                       FROM dish AS d
                       LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                       WHERE d.dishType='main'
                       GROUP BY dish_id
                       ORDER BY cost;""")
-      mainCourse = cur.fetchall()
-      cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        mainCourse = cur.fetchall()
+        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                       FROM dish AS d
                       LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                       WHERE d.dishType='dessert'
                       GROUP BY dish_id
                       ORDER BY cost;""")
-      dessert = cur.fetchall()
-      cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        dessert = cur.fetchall()
+        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                       FROM dish AS d
                       LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                       WHERE d.dishType='drink'
                       GROUP BY dish_id
                       ORDER BY cost;""")
-      drink = cur.fetchall()
-      cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        drink = cur.fetchall()
+        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                       FROM dish AS d
                       LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                       WHERE d.dishType='side'
                       GROUP BY dish_id
                       ORDER BY cost;""")
-      side = cur.fetchall()
+        side = cur.fetchall()
     
     else:
-      cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                         FROM dish AS d
                         LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                         WHERE d.dishType='starter'
