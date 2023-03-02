@@ -203,8 +203,13 @@ def clear_all_notifications():
     current_url = request.form['current_url']
 
     cur = mysql.connection.cursor()
-    notifications = cur.execute("DELETE FROM notifications WHERE user = %s", (g.user,))
+    cur.execute("DELETE FROM notifications WHERE user = %s", (g.user,))
     mysql.connection.commit()
+
+    if g.access == "managerial":
+        cur.execute('DELETE FROM notifications WHERE user = "manager" ')
+        mysql.connection.commit()
+
     cur.close()
     return redirect(current_url)
 
@@ -1019,7 +1024,7 @@ def allocate_table(table):
     return redirect(url_for('take_order', table=table))
 
 @app.route("/roster_request", methods=["GET", "POST"])
-@staff_only
+#@staff_only
 def roster_request():
     cur = mysql.connection.cursor()
     form = RosterRequestForm()
