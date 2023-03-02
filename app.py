@@ -908,6 +908,7 @@ def remove_table_menu():
     table_positions = {}
     for i in range(len(data)):
         table_positions[data[i]['table_id']] = (data[i]['x'], data[i]['y'])
+    print(table_positions)
     return render_template("manager/remove_table.html", table_positions=table_positions)
 
 # removes a table from the system, called from /remove_table_menu
