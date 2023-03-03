@@ -71,7 +71,7 @@ def get_staff_notifs():
 @app.before_request
 def logged_in():
     g.user = session.get("username", None)
-    g.access = session.get("access_level", None)
+    g.access = "customer" #session.get("access_level", None)
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
     g.notifications_staff = get_staff_notifs()
@@ -128,7 +128,8 @@ def page_not_found(error):
 @app.route("/", methods=["GET","POST"])
 def index():
     if g.access is None:
-        return redirect( url_for("menu"))
+        flash("Please login to access this feature")
+        return redirect( url_for("customer_login"))
     if g.access == "managerial":
         return redirect( url_for("manager"))
     if g.access == "ordinary staff":
@@ -554,7 +555,7 @@ def edit_staff_profile():
 def undoList():
     session['undoList']=[]
 
-#organises and displays prioirty queue
+#organises and displays priority queue
 @app.route('/kitchen', methods=['GET','POST'])
 def kitchen():
     if 'undoList' not in session:
@@ -576,7 +577,7 @@ def kitchen():
                             d.dishType='dessert';''')
     orderlist=cur.fetchall()
     cur.close()
-    return render_template('kitchen.html',orderlist=orderlist)
+    return render_template('staff/kitchen.html',orderlist=orderlist)
 
 #updates the status of a meal
 @app.route('/<int:dish_id>,<int:order_id>,<int:time>/kitchenUpdate', methods=['GET','POST'])
