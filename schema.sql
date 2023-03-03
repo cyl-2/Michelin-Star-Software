@@ -13,8 +13,8 @@ CREATE TABLE notifications
 INSERT INTO notifications
   ( user, title, message)
 VALUES
-  ( 'cherrylin20172027@gmail.com', 'From Sara', 'super duper duper duper long long long long long long long long long long message 1'),
-  ( 'cherrylin20172027@gmail.com', 'Inventory Management', 'message 2'),
+  ( "manager", "New Customer Enquiry","Enquiry regarding 'Opening hours'"),
+  ( "some_staff_email", "Roster Request Approved!","Your manager has approved your request!"),
   ( 'cherrylin20172027@gmail.com', 'Critical','message 3'),
   ( 'cherrylincyl@gmail.com', 'Roster Request','message 4');
   
@@ -277,7 +277,8 @@ DROP TABLE IF EXISTS roster_requests;
 CREATE TABLE roster_requests
 (
     request_id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    employee TEXT NOT NULL,
+    employee_email TEXT NOT NULL,
+    employee_name TEXT NOT NULL,
     message TEXT,
     response TEXT,
     date_received TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,

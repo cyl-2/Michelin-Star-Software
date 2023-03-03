@@ -62,7 +62,16 @@
                     <ul class="pcoded-submenu">
                         <li><a href="{{ url_for('addDish') }}">Add New Item To Menu</a></li>
                         <li><a href="{{ url_for('view_all_menu_items') }}">View All Menu Items</a></li>
-                        <li><a href="{{ url_for('view_inventory') }}">View All Inventory</a></li>
+                    </ul>
+                </li>
+
+                <li data-username="Authentication Sign up Sign in reset password Change password Personal information profile settings map form subscribe"
+                    class="nav-item pcoded-hasmenu">
+                    <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-layout"></i></span><span
+                            class="pcoded-mtext">Inventory Management</span></a>
+                    <ul class="pcoded-submenu">
+                        <li><a href="{{ url_for('stock') }}">View All Inventory</a></li>
+                        <li><a href="{{ url_for('view_inventory') }}">View All Ingredients </a></li>
                     </ul>
                 </li>
                 
