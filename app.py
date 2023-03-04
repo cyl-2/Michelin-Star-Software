@@ -71,7 +71,7 @@ def get_staff_notifs():
 @app.before_request
 def logged_in():
     g.user = session.get("username", None)
-    g.access = "customer" #session.get("access_level", None)
+    g.access = session.get("access_level", None)
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
     g.notifications_staff = get_staff_notifs()
@@ -358,6 +358,12 @@ def change_password(table):
             session.clear()
             flash("Successfully changed password! Please login now.")
             
+            msg = Message("Michelin Star Password Change Notification", sender=email, recipients=[credentials.flask_email])   
+            msg.body = f"""
+            Your password has been changed. If this wasn't done by you, please take action now.
+            """
+            mail.send(msg)
+
             if table == 'staff':
                 return redirect(url_for("staff_login"))
             else:
@@ -551,11 +557,11 @@ def edit_staff_profile():
         cur.close()
     return render_template("staff/edit_staff_profile.html", staff=staff, form=form, title="My Profile", profile=profile)
 
-#creates undolist 
+# creates undolist 
 def undoList():
     session['undoList']=[]
 
-#organises and displays priority queue
+# organises and displays priority queue
 @app.route('/kitchen', methods=['GET','POST'])
 def kitchen():
     if 'undoList' not in session:
@@ -579,7 +585,7 @@ def kitchen():
     cur.close()
     return render_template('staff/kitchen.html',orderlist=orderlist)
 
-#updates the status of a meal
+# updates the status of a meal
 @app.route('/<int:dish_id>,<int:order_id>,<int:time>/kitchenUpdate', methods=['GET','POST'])
 def kitchenUpdate(dish_id,order_id, time):
     cur = mysql.connection.cursor()
@@ -1544,7 +1550,7 @@ def view_all_menu_items():
     cur.close()
     return render_template("manager/menu_items.html", menu_items=menu_items, title="Menu Items Data")
 
-# Remove existing employee
+# Remove menu items
 @app.route("/remove_menu_item/<int:id>")
 #@manager_only
 def remove_menu_item(id):
@@ -2132,6 +2138,9 @@ def checkout():
         cur.execute('DELETE FROM modifications WHERE user=%s',(g.user,))
         mysql.connection.commit()    
         session['cart'].clear()
+        cur.execute("""INSERT INTO notifications (user, title, message)
+                        VALUES (%s, "Order Confirmed!","Your order is in preparation, thank you!");""", (g.user,))
+        mysql.connection.commit()
         cur.close()
         return redirect(url_for('menu'))
     return render_template('customer/checkout.html', cart=session['cart'],form=form,full=full,names=names,dish=dish)
@@ -2280,6 +2289,7 @@ def cancel_booking(booking_id):
                         VALUES (%s, "Reservation Cancelled","Your reservation booking ID %s has been cancelled");""", (g.user, booking_id))
     mysql.connection.commit()
     cur.close()
+
     return redirect(url_for('cancel_bookings'))
 
 if __name__ == '__main__':
