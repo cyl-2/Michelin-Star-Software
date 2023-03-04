@@ -184,7 +184,7 @@ CREATE TABLE dish
     dishPic TEXT,
     description TEXT,
     allergies TEXT,
-    day INTEGER DEFAULT NULL
+    day INTEGER DEFAULT 10
 );
 
 INSERT INTO dish

@@ -60,22 +60,17 @@
             <div class="pcoded-inner-content">
                 <div class="main-body">
                     <div class="page-wrapper">
-                        <!-- [ Main Content ] start -->
+                        <h4 class="col-xl-12">Move Tables</h4>
+                        <hr>
                         <div class="row">
-                            <div class="col-sm-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5>Move Tables</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <a class="btn btn-primary" href="{{ url_for('move_tables') }}" >Reset</a>
-                                        <a id="save_changes" onclick="sendData()"></a>
-                                    </div>
-                                    {% for table_index in table_positions %}
-                                        <img id='table{{ table_index }}' src="{{ url_for('static', filename='table.png' ) }}" style="position:absolute;  left: {{ table_positions[ table_index ][0] }}; top: {{ table_positions[ table_index ][1] }}; width: 90px;"/>
-                                    {% endfor %}
-                                </div>
+                            <div class="card-body">
+                                <a class="btn btn-primary" href="{{ url_for('move_tables') }}" >Reset</a>
+                                <a id="save_changes" onclick="sendData()"></a>
                             </div>
+                            {% for table_index in table_positions %}
+                                <img id='table{{ table_index }}' src="{{ url_for('static', filename='table.png' ) }}" style="position:absolute;  left: {{ table_positions[ table_index ][0] }}; top: {{ table_positions[ table_index ][1] }}; width: 90px;"/>
+                            {% endfor %}
+                                
                         </div>
                     </div>
                 </div>

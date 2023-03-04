@@ -70,8 +70,8 @@ def get_staff_notifs():
 
 @app.before_request
 def logged_in():
-    g.user = session.get("username", None)
-    g.access = session.get("access_level", None)
+    g.user = "120377796@umail.ucc.ie" #session.get("username", None)
+    g.access = "ordinary staff" #session.get("access_level", None)
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
     g.notifications_staff = get_staff_notifs()
@@ -1267,6 +1267,8 @@ def generate_roster():
                         VALUES ("staff", "New Weekly Schedule Released","Go check out the new weekly schedule!");""")
     mysql.connection.commit()
     cur.close()
+    flash("Roster successfully generated! Below is your new weekly schedule.")
+    flash(Markup('Not happy with the results? Click <a href="generate_roster">here</a> to generate the roster again!'))
     return redirect(url_for('roster_timetable'))
 
 # Roster view where individual shifts can be deleted
@@ -1354,7 +1356,7 @@ def manage_shift_requirements():
                 form.unavailable.errors.append("Values should be space separated ID's")
                 unavailable = '[]'
         cur.execute("""UPDATE shift_requirements SET opening_time = %s, closing_time = %s, min_workers = %s, unavailable = %s
-                        WHERE day = %s;""", ( opening_time, closing_time, min_workers, unavailable, day))
+                        WHERE day = %s;""", (opening_time, closing_time, min_workers, unavailable, day))
         mysql.connection.commit()
         cur.execute("SELECT * FROM shift_requirements;")
         requirements = cur.fetchall()
@@ -1404,8 +1406,7 @@ def add_new_employee():
         cur.execute("""INSERT INTO staff (email, role, access_level, first_name, last_name, password, last_updated)
                             VALUES (%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP);""", (email, role, access_level, first_name, last_name, generate_password_hash(password)))
         mysql.connection.commit()
-        cur.close()
-
+        
         # Notify employee's email about their new account
         message = "Please sign into your account with your email and password:" + password
         msg = Message("Welcome on board! We're happy you joined us.", sender=credentials.flask_email, recipients=[email])   
@@ -1415,9 +1416,9 @@ def add_new_employee():
         cur.execute("""INSERT INTO notifications (user, title, message)
                         VALUES (%s, "Welcome!","We're happy to have you onboard with us!");""", (email,))
         mysql.connection.commit()
-        
+        cur.close()
         flash ("New employee successfully added!")
-        return redirect(url_for("view_all_employees"))
+        return redirect(url_for("add_new_employee"))
     return render_template("manager/add_new_staff.html", form=form, title="Add New Employee")   
 
 # View queries from users
@@ -1585,7 +1586,8 @@ def add_table():
                         VALUES ("staff", "New Table Has Been Added To The GUI","New table number <%s> is now active!");""", (table_number,))
             mysql.connection.commit()
             cur.close()
-            return redirect(url_for('choose_table'))
+            flash("Table successfully added!")
+            return redirect(url_for('add_table'))
     return render_template("manager/add_table.html", form=form)
 
 # displays tables which can be deleted

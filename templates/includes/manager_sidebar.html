@@ -51,7 +51,8 @@
                             class="pcoded-mtext">Restaurant Layout</span></a>
                     <ul class="pcoded-submenu">
                         <li><a href="{{ url_for('add_table') }}">Add New Table</a></li>
-                        <li><a href="{{ url_for('move_tables') }}">Modify Existing Tables</a></li>
+                        <li><a href="{{ url_for('remove_table_menu') }}">Delete Existing Table</a></li>
+                        <li><a href="{{ url_for('move_tables') }}">Move Table</a></li>
                     </ul>
                 </li>
 
@@ -78,16 +79,28 @@
                 <li class="nav-item pcoded-menu-caption">
                     <label>Staff Management Tools</label>
                 </li>
-                 <li class="nav-item pcoded-hasmenu">
+                <li class="nav-item"><a href="{{ url_for('roster_timetable') }}" class="nav-link"><span
+                    class="pcoded-micon"><i class="feather icon-calendar"></i></span><span class="pcoded-mtext">View Roster Timetable</span></a>
+                </li>
+
+                <li class="nav-item"><a href="{{ url_for('breakTimes') }}" class="nav-link"><span
+                    class="pcoded-micon"><i class="feather icon-calendar"></i></span><span class="pcoded-mtext">View Break Timetable</span></a>
+                </li>
+                <li class="nav-item pcoded-hasmenu">
                     <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-layers"></i></span><span
-                            class="pcoded-mtext">Roster</span></a>
+                            class="pcoded-mtext">Auto Roster Management</span></a>
                     <ul class="pcoded-submenu">
-                        <li><a href="{{ url_for('roster_timetable') }}">View Roster Timetable</a></li>
-                        <li><a href="{{ url_for('breakTimes') }}">View Break Timetable</a></li>
-                        <li><a href="{{ url_for('generate_roster') }}">Create Roster</a></li>
-                        <li><a href="{{ url_for('add_to_roster_timetable') }}">Modify Roster</a></li>
-                        <li><a href="{{ url_for('delete_from_roster') }}">Remove Individual Shifts</a></li>
+                        <li><a href="{{ url_for('generate_roster') }}">Generate Random Roster</a></li>
                         <li><a href="{{ url_for('manage_shift_requirements') }}">Add New Shift Requirements</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item pcoded-hasmenu">
+                    <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-layers"></i></span><span
+                            class="pcoded-mtext">Manual Roster Management</span></a>
+                    <ul class="pcoded-submenu">
+                        <li><a href="{{ url_for('add_to_roster_timetable') }}">Add Individual Shifts</a></li>
+                        <li><a href="{{ url_for('delete_from_roster') }}">Remove Individual Shifts</a></li>
                     </ul>
                 </li>
 
