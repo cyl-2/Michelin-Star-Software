@@ -148,10 +148,10 @@ $ pip install -r requirements.txt
 7 T1='customer'
 8 T2='staff'
 9 config = {
-10    'host': "localhost",
-11    'user': "root",
-12    'password': "Cherry0417!",
-13    'database': "test",
+10    'host': "your_host" ,
+11    'user': "your_username",
+12    'password': "your_password",
+13    'database': "your_schema",
 14    'auth_plugin':'mysql_native_password'
 15 }
 ```

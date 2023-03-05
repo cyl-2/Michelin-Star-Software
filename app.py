@@ -80,7 +80,8 @@ def all_logged_in_users(view):
     @wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
-            return render_template("error.html"), 404
+            flash("Please login to access this feature")
+            return redirect( url_for("customer_login"))
         return view(**kwargs)
     return wrapped_view
 
