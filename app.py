@@ -100,6 +100,7 @@ def business_only(view):
         return view(**kwargs)
     return wrapped_view
 
+
 def staff_only(view):
     @wraps(view)
     def wrapped_view(**kwargs):
@@ -455,6 +456,8 @@ def confirm_code(email, table):
 ##############################################################################################################################################
 ##############################################################################################################################################
 ##############################################################################################################################################
+
+
 '''
 @app.route('/customer_profile')
 @customer_only
@@ -1924,7 +1927,8 @@ def dish(dish_id):
     dish_id=dish['dish_id']
     cur.execute("SELECT * FROM dish_ingredient JOIN ingredient ON dish_ingredient.ingredient_id = ingredient.ingredient_id  WHERE dish_ingredient.dish_id=%s",(dish_id,))
     result=cur.fetchall()
-
+    cur.execute("SELECT * FROM reviews WHERE dish_id=%s",(dish_id,))
+    reviews = cur.fetchall()
     cur.execute("SELECT comment, rating FROM reviews WHERE dish_id=%s",(dish_id,))
     comments=cur.fetchall()
     
@@ -1951,7 +1955,7 @@ def dish(dish_id):
         mysql.connection.commit()
         session['CurrentDish'] = None
         return redirect(url_for('add_to_cart', dish_id=dish['dish_id']))
-    return render_template('customer/dish.html', dish=dish,result=result,form=form,quant=session[str(dish_id)],comments=comments)
+    return render_template('customer/dish.html', dish=dish,result=result,form=form,quant=session[str(dish_id)],comments=comments,reviews=reviews)
 
 # Increase the amount of an ingredient in a dish
 @app.route('/inc_quantity_ingredient/<int:ingredient_id>')
@@ -2031,7 +2035,7 @@ def add_default_meal(dish_id):
     for value in result:
         name=value['name']
         changes+=str(name)+":" "1 "
-    cur.execute("INSERT INTO modifications(dish_id,changes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
+    cur.execute("INSERT INTO modifications(dish_id,notes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
     mysql.connection.commit()
     #cur.close()
     return redirect(url_for('cart'))
@@ -2293,6 +2297,120 @@ def cancel_booking(booking_id):
     cur.close()
 
     return redirect(url_for('cancel_bookings'))
+
+
+#Allows all staff to view the breaklist for each individual day
+@app.route('/breaks', methods=['GET','POST'])
+def breakTimes():
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT * FROM staff')
+    staff = cur.fetchall()
+    cur.execute("SELECT * FROM roster")
+    roster = cur.fetchall()
+    now = datetime.now()
+    day = (now.strftime("%a")).lower()
+    breaksAssigned = {}
+    workingToday = {}
+    for working in roster:
+        if working[day] != '':
+            shift = working[day]
+            workingToday[working['staff_id']] =shift
+    numWorkers = len(workingToday)
+    k= 0
+    while k <2:
+        assigned = 0
+        for employee in workingToday:
+            if k == 0:
+                shift = workingToday[employee]
+                hoursWorking= int(shift[0]+shift[1]) - int(shift[6]+shift[7])
+
+                hoursWorking = hoursWorking*-1
+                if hoursWorking >4 and hoursWorking >= 8:
+                    breaks = 2
+                    workingToday[employee] = [shift,breaks]
+                elif hoursWorking >4:
+                    breaks=1
+                    workingToday[employee] = [shift,breaks]
+                else: 
+                    breaks =0
+                    assigned +=1
+                    workingToday.append("-")
+                start = int(shift[0]+shift[1])
+                endShift = int(shift[6] + shift[7])
+                proposedBreak = 0
+            else:
+                start = workingToday[employee][2]
+            proposedBreak = 0
+            for j in range(4,1,-1):
+
+                if workingToday[employee][1] ==1 and len(working[employee] >=3):
+                    break
+                proposedBreak = start + j
+                if proposedBreak in breaksAssigned: 
+                    proposedBreak = 0
+                elif proposedBreak  >= endShift or (proposedBreak) >= endShift -1:
+                    proposedBreak =0
+                else:
+                    breaksAssigned[proposedBreak] =1
+                    start = start +j
+                    endBreak = start +0.45
+                    workingToday[employee].append(start)
+                    assigned +=1
+                    break
+        i = 2
+        while assigned != len(workingToday):
+            for employee in workingToday:
+                shift = workingToday[employee][0]
+                start = int(shift[0]+shift[1])
+                endShift = int(shift[6] + shift[7])
+                if k == 1:
+                    start = workingToday[employee][2]
+                if (len(workingToday[employee]) <3 and k ==0) or (len(workingToday[employee]) <4 and k==1):
+                    for j in range(4,1,-1):
+                        if workingToday[employee][1] ==1 and len(working[employee] >3): 
+                            break
+                        proposedBreak = start + j
+                        if proposedBreak in breaksAssigned and breaksAssigned[proposedBreak] >=i: 
+                            proposedBreak = 0
+                        elif proposedBreak  >= endShift or (proposedBreak) >= endShift -1:
+                            proposedBreak =0
+                        elif proposedBreak == start:
+                            proposedBreak = 0
+                        else:
+                            if proposedBreak not in breaksAssigned:
+                                breaksAssigned[proposedBreak] = 1
+                            else:
+                                breaksAssigned[proposedBreak] +=1
+                            start = start +j
+                            endBreak = start +0.45
+                            workingToday[employee].append(start)
+                            assigned +=1
+                            break
+                        if k ==1:
+                            proposedBreak =start+ 0.3 +j
+                            if proposedBreak in breaksAssigned and breaksAssigned[proposedBreak] >=i: 
+                                proposedBreak = 0
+                            elif proposedBreak  >= endShift or (proposedBreak) >= endShift -1:
+                                proposedBreak =0
+                            elif proposedBreak == start:
+                                proposedBreak = 0
+                            else:
+                                if proposedBreak not in breaksAssigned:
+                                    breaksAssigned[proposedBreak] = 1
+                                else:
+                                    breaksAssigned[proposedBreak] +=1
+                                start = proposedBreak
+                                endBreak = start +0.45
+                                workingToday[employee].append(start)
+                                assigned +=1
+                                break
+            i +=1
+        k +=1
+    for employee in workingToday:
+        if len(workingToday[employee]) >= 3:
+            workingToday[employee][2] = str(workingToday[employee][2]) + ":00"
+            #if len(workingToday[employee] ==5)
+    return render_template("staff/breaks.html",staff=staff, workingToday=workingToday)
 
 if __name__ == '__main__':
     app.run(debug=True)
