@@ -458,54 +458,28 @@ def confirm_code(email, table):
 ##############################################################################################################################################
 ##############################################################################################################################################
 
-
-'''
+#Customer profile - can see info about past transactions + leave a review
 @app.route('/customer_profile')
-@customer_only
+@login_required
 def customer_profile():
-    cur = mysql.connection.cursor()
-    message = ''
-    transactionHistory=''
-    image = None
-    cur.execute(" SELECT * FROM customer WHERE email=%s",(g.user,))
-    check= cur.fetchone()['profile_pic']
-    if check is None:
-        error = 'No profile picture yet'
-    else:  
-        image=check
-    cur.execute("SELECT * FROM transactions WHERE username=%s;",(g.user,))
-    check2 = cur.fetchall()
-    if check2 is None:
-        message = "You've made no transactions yet"
-    else:
-        cur.execute(" SELECT * FROM dish;")
-        dish = cur.fetchall()
-        cur.execute(" SELECT * FROM transactions WHERE username=%s ",(g.user,))
-        transactionHistory = cur.fetchall()
-    cur.close()
-    #return render_template("customer/profile.html", title="My Profile")
-    return render_template('customer/customer_profile.html',image=image, transactionHistory=transactionHistory, dishes=dish)
-'''
-# Customer profile - ability to view info about past transactions + leave a review
-@app.route('/customer_profile')
-@customer_only
-def customer_profile():
+    username = session['username']
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM dish")
     dishes= cur.fetchall()
     message = ''
     image = None
-    cur.execute(" SELECT * FROM customer WHERE email=%s",(g.user,))
+    cur.execute(" SELECT * FROM customer WHERE email=%s",(username,))
     check= cur.fetchone()['profile_pic']
     if check is None:
         error = 'No profile picture yet'
     else:  
         image=check
-    cur.execute("SELECT * FROM transactions WHERE username=%s;",(g.user,))
+    cur.execute("SELECT * FROM transactions WHERE username=%s;",(username,))
     transactionHistory = cur.fetchall()
     if transactionHistory is not None:
         message = "You've made no transactions yet"
     cur.close()
+    #return render_template("customer/profile.html", title="My Profile")
     return render_template('customer/customer_profile.html',image=image, transactionHistory=transactionHistory,dishes=dishes,user=g.user)
 
 @app.route('/user_pic', methods=['GET','POST'])
