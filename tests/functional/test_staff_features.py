@@ -43,7 +43,7 @@ class TestStaffFeatures(MockDB, BaseTestCase):
         response = client.get('/move_tables')
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Change Table Positions", response.data)
+        self.assertIn(b"Move Tables", response.data)
         self.assert_template_used('staff/move_tables.html')
     
     def test_roster_request_page_loads_successfully(self):
@@ -64,9 +64,6 @@ class TestStaffFeatures(MockDB, BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Enter a message', response.data)
     
-    '''def test_take_order_page_returns_success(self):
-        response = client.get('/1/take_order')
-
-        #self.assertEqual(response.status_code, 200)
-        #self.assertIn(b"Order", response.data)
-        self.assert_template_used('staff/take_order.html')'''
+    def test_profile_page_returns_error_if_not_logged_in(self):
+        response = client.get('/edit_staff_profile')
+        self.assertEqual(response.status_code, 404)

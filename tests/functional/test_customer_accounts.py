@@ -54,6 +54,6 @@ class TestCustomerFeatures(MockDB, BaseTestCase):
         response = client.post('/customer_login', data=Person3, follow_redirects=True)
         self.assertIn(b'This field is required', response.data)
     
-    def test_profile_page_redirects_if_not_logged_in(self):
+    def test_profile_page_returns_error_if_not_logged_in(self):
         response = client.get('/customer_profile')
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 404)

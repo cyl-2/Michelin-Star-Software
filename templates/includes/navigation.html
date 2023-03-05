@@ -66,8 +66,40 @@
                             {% endif %}
                         </ul>
 
+                        {% if g.access == "ordinary staff" %}
+
+                        <ul class="noti-body">
+                            <li class="n-title">
+                                <p class="m-b-0">MANAGERIAL</p>
+                            </li>
+                            {% if g.notifications_staff %}
+                
+                            {% for notif in g.notifications_staff %}
+                            <li class="notification">
+                                <div class="media">
+                                    <form action="{{ url_for('clear_one_notification', id=notif['notif_id']) }}" method="post">
+                                        <input type="hidden" name="current_url" value="{{ request.url }}">
+                                        <p><button class="btn-x" type="submit"> 
+                                            <span><i class="icon feather icon-x-circle"></i> </span>
+                                        </button> </p>
+                                    </form>
+                                    <div class="media-body">
+                                        <p><strong>{{ notif ["title"] }}</strong><span class="n-time text-muted  m-r-15"><i
+                                                class="icon feather icon-clock m-r-10"></i>{{ notif ["received"] }}</span> </p>
+                                        <p>{{ notif ["message"] }}</p>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </li>
+                            {% else %}
+                            <li class="notification">
+                                <p> No notifications </p>
+                            </li>
+                            {% endif %}
+                        </ul>
+                        {% endif %}
+
                         {% if g.access == "managerial" %}
-                        
 
                         <ul class="noti-body">
                             <li class="n-title">
