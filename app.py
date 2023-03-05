@@ -1468,7 +1468,7 @@ def view_inventory():
     form = Supplier()
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM ingredient;")
-    inventory = cur.fetchall()##c
+    inventory = cur.fetchall()
     cur.close()
     return render_template("manager/inventory.html",form=form, inventory=inventory, title="Inventory List")
 
