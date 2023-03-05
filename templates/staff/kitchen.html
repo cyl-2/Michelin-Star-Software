@@ -10,171 +10,167 @@
                     <div class="page-wrapper">
                         <div class="row">
                             <div class="col-sm-12">
-                                        <a style="margin-left: 90%" class=" btn btn-primary" title="btn btn-primary"
-                                            href="{{ url_for('kitchenUndo') }}">Undo</a>
-                                        {%if orderlist%}
-                                        <div class="col-xl-12">
-                                            <div class="card">
-                                                <div class="card-header">
-                                                    <h5>Current Orders</h5>
-                                                    <!--<span class="d-block m-t-5">use class <code>table-striped</code> inside table element</span>/-->
-                                                </div>
-                                                <div class="card-block table-border-style">
-                                                    <div class="table-responsive">
+                                <a style="margin-left: 90%" class=" btn btn-primary" title="btn btn-primary"
+                                    href="{{ url_for('kitchenUndo') }}">Undo</a>
+                                {%if orderlist%}
+                                <div class="col-xl-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5>Current Orders</h5>
+                                        </div>
+                                        <div class="card-block table-border-style">
+                                            <div class="table-responsive">
 
-                                                        <table class="table table-striped">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>Dish</th>
-                                                                    <th>Time Ordered</th>
-                                                                    <th>Cook Time</th>
-                                                                    <th>Table No.</th>
-                                                                    <th>Notes</th>
-                                                                    <th>Status</th>
-                                                                    <th>Actions</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                {%for line in orderlist%}
-                                                                {%if line.status!="sent out" and line.status!="completed" and line.status!="cancelled"%}
-                                                                <tr>
-                                                                    <td style="color:black">
-                                                                        <b>{{line.name}}</b>
-                                                                    </td>
-                                                                    <td>
-                                                                        {{line.time}}
-                                                                    </td>
-                                                                    <td>
-                                                                        {{line.cook_time}}
-                                                                    </td>
-                                                                    <td>
-                                                                        {{line.table_id}}
-                                                                    </td>
-                                                                    <td style="color:black">
-                                                                        {%if line.notes%}
-                                                                        {{line.notes}}
-                                                                        {%endif%}
-                                                                    </td>
-                                                                    <td>
-                                                                        {{line.status}}
-                                                                    </td>
-                                                                    <td>
-                                                                        {%if line.status=="not started"%}
-
-                                                                        <a class="btn btn-light" title="btn btn-light"
-                                                                            href="{{ url_for('kitchenUpdate', dish_id=line.dish_id, order_id=line.order_id, time=line.time) }}">Set
-                                                                            to ongoing</a>
-
-                                                                        {%elif line.status=="ongoing"%}
-                                                                        <a style="padding-left:39px;padding-right:39px" class="btn btn-dark"
-                                                                            title="btn btn-dark"
-                                                                            href="{{ url_for('kitchenSentOut', order_id=line.order_id, time=line.time) }}">
-                                                                            Sent Out</a>
-                                                                        {%endif%}
-                                                                    </td>
-                                                                </tr>
-                                                                {%elif line.status!="sent out" and line.status!="completed" and line.status=="cancelled"%}
-                                                                <tr style="color: crimson;">
-                                                                    <td>
-                                                                        {{line.name}}
-                                                                    </td>
-                                                                    <td>
-                                                                        {{line.time}}
-                                                                    </td>
-                                                                    <td>
-                                                                        {{line.cook_time}}
-                                                                    </td>
-                                                                    <td>
-                                                                        {{line.table_id}}
-                                                                    </td>
-                                                                    <td>
-                                                                        {%if line.notes%}
-                                                                        {{line.notes}}
-                                                                        {%endif%}
-                                                                    </td>
-                                                                    <td>
-                                                                        {{line.status}}
-                                                                    </td>
-                                                                    <td>
-                                                                        Order cancelled
-                                                                    </td>
-                                                                </tr>
+                                                <table class="table table-striped">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Dish</th>
+                                                            <th>Time Ordered</th>
+                                                            <th>Cook Time</th>
+                                                            <th>Table No.</th>
+                                                            <th>Notes</th>
+                                                            <th>Status</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {%for line in orderlist%}
+                                                        {%if line.status!="sent out" and line.status!="completed" and line.status!="cancelled"%}
+                                                        <tr>
+                                                            <td style="color:black">
+                                                                <b>{{line.name}}</b>
+                                                            </td>
+                                                            <td>
+                                                                {{line.time}}
+                                                            </td>
+                                                            <td>
+                                                                {{line.cook_time}}
+                                                            </td>
+                                                            <td>
+                                                                {{line.table_id}}
+                                                            </td>
+                                                            <td style="color:black">
+                                                                {%if line.notes%}
+                                                                {{line.notes}}
                                                                 {%endif%}
-                                                                {%endfor%}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                {{line.status}}
+                                                            </td>
+                                                            <td>
+                                                                {%if line.status=="not started"%}
+
+                                                                <a class="btn btn-light" title="btn btn-light"
+                                                                    href="{{ url_for('kitchenUpdate', dish_id=line.dish_id, order_id=line.order_id, time=line.time) }}">Set
+                                                                    to ongoing</a>
+
+                                                                {%elif line.status=="ongoing"%}
+                                                                <a style="padding-left:39px;padding-right:39px" class="btn btn-dark"
+                                                                    title="btn btn-dark"
+                                                                    href="{{ url_for('kitchenSentOut', order_id=line.order_id, time=line.time) }}">
+                                                                    Sent Out</a>
+                                                                {%endif%}
+                                                            </td>
+                                                        </tr>
+                                                        {%elif line.status!="sent out" and line.status!="completed" and line.status=="cancelled"%}
+                                                        <tr style="color: crimson;">
+                                                            <td>
+                                                                {{line.name}}
+                                                            </td>
+                                                            <td>
+                                                                {{line.time}}
+                                                            </td>
+                                                            <td>
+                                                                {{line.cook_time}}
+                                                            </td>
+                                                            <td>
+                                                                {{line.table_id}}
+                                                            </td>
+                                                            <td>
+                                                                {%if line.notes%}
+                                                                {{line.notes}}
+                                                                {%endif%}
+                                                            </td>
+                                                            <td>
+                                                                {{line.status}}
+                                                            </td>
+                                                            <td>
+                                                                Order cancelled
+                                                            </td>
+                                                        </tr>
+                                                        {%endif%}
+                                                        {%endfor%}
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
-
-                                        <div class="col-xl-12">
-                                            <div class="card">
-                                                <div class="card-header">
-                                                    <h5>Orders Under Heat Lamp</h5>
-
-                                                </div>
-                                                <div class="card-block table-border-style">
-                                                    <div class="table-responsive">
-
-                                                        <table class="table table-striped">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>Dish</th>
-                                                                    <th>Time Ordered</th>
-                                                                    <th>Cook Time</th>
-                                                                    <th>Table No.</th>
-                                                                    <th>Notes</th>
-                                                                    <th>Actions</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                {%for line in orderlist%}
-                                                                {%if line.status=="sent out"%}
-                                                                <tr>
-                                                                    <td style="color:black">
-                                                                        <b>{{line.name}}</b>
-                                                                    </td>
-                                                                    <td>
-                                                                        {{line.time}}
-                                                                    </td>
-                                                                    <td>
-                                                                        {{line.cook_time}}
-                                                                    </td>
-                                                                    <td>
-                                                                        {{line.table_id}}
-                                                                    </td>
-                                                                    <td>
-                                                                        {%if line.notes%}
-                                                                        {{line.notes}}
-                                                                        {%endif%}
-                                                                    </td>
-                                                                    <td>
-                                                                        {{line.status}}
-                                                                    </td>
-                                                                    <td>
-                                                                        <a style="padding-left:39px;padding-right:39px" class="btn btn-success"
-                                                                            title="btn btn-success"
-                                                                            href="{{ url_for('kitchenComplete', order_id=line.order_id, time=line.time) }}">Completed
-                                                                        </a>
-                                                                    </td>
-                                                                </tr>
-                                                                {%endif%}
-                                                                {%endfor%}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!-- [ stiped-table ] end -->
-                                        {%else%}
-                                        <p>
-                                            No Orders in Queue.
-                                        </p>
-                                        {%endif%}
                                     </div>
                                 </div>
+
+                                <div class="col-xl-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5>Orders Under Heat Lamp</h5>
+
+                                        </div>
+                                        <div class="card-block table-border-style">
+                                            <div class="table-responsive">
+
+                                                <table class="table table-striped">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Dish</th>
+                                                            <th>Time Ordered</th>
+                                                            <th>Cook Time</th>
+                                                            <th>Table No.</th>
+                                                            <th>Notes</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {%for line in orderlist%}
+                                                        {%if line.status=="sent out"%}
+                                                        <tr>
+                                                            <td style="color:black">
+                                                                <b>{{line.name}}</b>
+                                                            </td>
+                                                            <td>
+                                                                {{line.time}}
+                                                            </td>
+                                                            <td>
+                                                                {{line.cook_time}}
+                                                            </td>
+                                                            <td>
+                                                                {{line.table_id}}
+                                                            </td>
+                                                            <td>
+                                                                {%if line.notes%}
+                                                                {{line.notes}}
+                                                                {%endif%}
+                                                            </td>
+                                                            <td>
+                                                                {{line.status}}
+                                                            </td>
+                                                            <td>
+                                                                <a style="padding-left:39px;padding-right:39px" class="btn btn-success"
+                                                                    title="btn btn-success"
+                                                                    href="{{ url_for('kitchenComplete', order_id=line.order_id, time=line.time) }}">Completed
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                        {%endif%}
+                                                        {%endfor%}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {%else%}
+                                <p>
+                                    No Orders in Queue.
+                                </p>
+                                {%endif%}
                             </div>
                         </div>
                     </div>
