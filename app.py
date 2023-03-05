@@ -1017,40 +1017,6 @@ def roster_request():
         flash ("Request successfully sent!")
     return render_template("staff/roster_request.html", form=form,title="Roster Request")
 
-
-# display ingredient batches ordered and expiry dates
-@app.route("/stock", methods=["GET", "POST"])
-def stock():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM stock JOIN ingredient ON stock.ingredient_id = ingredient.ingredient_id")
-    stock = cur.fetchall()
-    cur.execute("SELECT name FROM ingredient")
-    ingredients = cur.fetchall()
-    ingredientList = []
-    for ingredient in ingredients:
-        ingredientList.append(ingredient['name'])
-    form=StockForm()
-    form.ingredient.choices = ingredientList
-    if form.validate_on_submit():
-        ingredient_name = form.ingredient.data
-        date = form.date.data
-        quantity = form.quantity.data
-        cur.execute("SELECT ingredient_id FROM ingredient WHERE name = %s",(ingredient_name,))
-        ingredient = cur.fetchall()
-        cur.execute("""INSERT INTO stock (ingredient_id, stock_delivery_status, quantity)
-                            VALUES (%s,%s,%s);""", (ingredient[0]['ingredient_id'], date, quantity))
-        mysql.connection.commit()
-        cur.execute("SELECT * FROM stock JOIN ingredient ON stock.ingredient_id = ingredient.ingredient_id")
-        stock = cur.fetchall()
-        cur.execute("SELECT name FROM ingredient")
-        ingredients = cur.fetchall()
-        ingredientList = []
-        for ingredient in ingredients:
-            ingredientList.append(ingredient['name'])
-        
-    return render_template("manager/stock.html", stockList=stock, ingredientList=ingredientList, form=form)
-        
-
 # displays roster for staff and manager
 @app.route("/roster_timetable", methods=["GET","POST"])
 @business_only
@@ -1676,7 +1642,7 @@ def stock():
         quantity = form.quantity.data
         cur.execute("SELECT ingredient_id FROM ingredient WHERE name = %s",(ingredient_name,))
         ingredient = cur.fetchall()
-        cur.execute("""INSERT INTO stock (ingredient_id, expiry_date, quantity)
+        cur.execute("""INSERT INTO stock (ingredient_id, stock_delivery_status, quantity)
                             VALUES (%s,%s,%s);""", (ingredient[0]['ingredient_id'], date, quantity))
         mysql.connection.commit()
         cur.execute("SELECT * FROM stock JOIN ingredient ON stock.ingredient_id = ingredient.ingredient_id")
@@ -1686,6 +1652,7 @@ def stock():
         ingredientList = []
         for ingredient in ingredients:
             ingredientList.append(ingredient['name'])
+
     return render_template("manager/stock.html", stockList=stock, ingredientList=ingredientList, form=form)
 
 #Allows all staff to view the breaklist for each individual day
