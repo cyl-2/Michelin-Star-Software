@@ -39,6 +39,7 @@
                                                         <th>Item</th>
                                                         <th>Quantity</th>
                                                         <th>Status</th>
+                                                        <th>Supplier Email</th>
                                                         <th></th>
                                                     </tr>
                                                 </thead>
@@ -54,6 +55,30 @@
                                                         {% else %}
                                                             <td><i class="fas fa-circle text-c-red f-15"></i> </td>
                                                         {% endif %}
+                                                        <td>
+                                                            {% if item["supplier_email"] == '' %}
+                                                            <form action="http://localhost:5000/add_supplier/{{ item['ingredient_id'] }}" method="post" enctype="multipart/form-data" novalidate>
+                                                                <div class="form-group">
+                                                                    {{form.hidden_tag()}}
+                                                                    {{form.email(class="form-control", value="")}}
+                                                                    <span class="mb-0 text-muted">
+                                                                        <span class="text-danger">
+                                                                            {% for error in form.email.errors %}
+                                                                                {{ error }}
+                                                                            {% endfor %}
+                                                                        </span>
+                                                                    </span>
+                                                                    
+                                                                </div>
+                                                                <!--
+                                                                    {{form.hidden_tag()}}
+                                                                {{form.id(value= item['ingredient_id'] )}}
+                                                                -->
+                                                            </form>
+                                                            {% else %}
+                                                            {{ item['supplier_email'] }}
+                                                            {% endif %}
+                                                        </td>
                                                         <td><a href="{{ url_for('delete_ingredient', id=item['ingredient_id']) }}" class="text-c-red"> Delete </a></td>
                                                     </tr>
                                                 </tbody>

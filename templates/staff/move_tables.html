@@ -51,7 +51,7 @@
         
         document.removeEventListener('mousemove', dragTable, false); 
         document.removeEventListener('mouseup', stopDrag, false);
-        readyToSave(); 
+        readyToSave();
     } 
 </script> 
 <div class="pcoded-main-container">
@@ -84,7 +84,6 @@
     let co_ords = [];
     function readyToSave(){
         var table;
-        
         let link;
         co_ords = []
         {% for table_index in table_positions %}
@@ -95,4 +94,15 @@
         document.getElementById("save_changes").innerHTML = '<a class="btn btn-primary" href="{{ url_for('save_tables') }}">Save Changes</a>';
     }
 
+    function sendData(){
+        $.ajax(
+            {
+            url:"/save_tables",
+            type:"POST",
+            contentType: "application/json",
+            data: JSON.stringify(co_ords)
+            }
+        );
+    }
+</script>
 {% endblock content %} 

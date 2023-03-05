@@ -1,11 +1,13 @@
+
+        
 <nav class="pcoded-navbar navbar-collapsed">
     <div class="navbar-wrapper">
         <div class="navbar-brand header-logo">
             <a href="{{url_for('menu') }}" class="b-brand">
-                <div class="b-bg">
-                    <i class="feather icon-trending-up"></i>
-                </div>
-                <span class="b-title">Michelin Star</span>
+                    <div class="b-bg">
+                        
+                    </div>
+                    <span class="b-title">Michelin Star</span>
             </a>
             <a class="mobile-menu" id="mobile-collapse" href="javascript:"><span></span></a>
         </div>
@@ -64,3 +66,7 @@
         </div>
     </div>
 </nav>
+
+<img src="{{ url_for('static', filename='logo.png' ) }}" width="50px" style="opacity: 1; z-index: 1400; position: sticky; top: 13px; left: 12px"/>  
+
+   

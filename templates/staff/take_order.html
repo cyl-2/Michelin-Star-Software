@@ -74,7 +74,7 @@
                                                         {% if meal['dishType'] == 'starter' %}
                                                             <tr>
                                                                 <td>{{ meal['name'] }}</td>
-                                                                <td>€{{ meal['cost'] }}.00</td>
+                                                                <td>€{{ meal['cost'] }}0</td>
                                                                 <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}" class="btn btn-outline-info">Add</a></td>
                                                                 <td><a href="{{ url_for('waiter_customize_dish', table=table, dish_id=meal['dish_id']) }}">Customize Ingredients</a></td>
                                                             </tr>
@@ -92,7 +92,7 @@
                                                         {% if meal['dishType'] == 'main' %}
                                                         <tr>
                                                             <td>{{ meal['name'] }}</td>
-                                                            <td>€{{ meal['cost'] }}.00</td>
+                                                            <td>€{{ meal['cost'] }}0</td>
                                                             <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}" class="btn btn-outline-info">Add</a></td>
                                                             <td><a href="{{ url_for('waiter_customize_dish', table=table, dish_id=meal['dish_id']) }}">Customize Ingredients</a></td>
                                                         </tr>
@@ -110,7 +110,7 @@
                                                         {% if meal['dishType'] == 'dessert' %}
                                                         <tr>
                                                             <td>{{ meal['name'] }}</td>
-                                                            <td>€{{ meal['cost'] }}.00</td>
+                                                            <td>€{{ meal['cost'] }}0</td>
                                                             <td><a href="{{ url_for('add_order', table=table, meal=meal['name']) }}" class="btn btn-outline-info">Add</a></td>
                                                             <td><a href="{{ url_for('waiter_customize_dish', table=table, dish_id=meal['dish_id']) }}">Customize Ingredients</a></td>
                                                         </tr>
@@ -138,15 +138,20 @@
                                                         <th>Status</th>
                                                         <th>Requests</th>
                                                         <th></th>
+                                                        <th></th>
                                                     </tr>
                                                     {% for meal in ordered %}
                                                         <tr>
                                                             <td>{{ meal['name'] }}</td>
                                                             <td>{{ meal['status'] }}</td>
-                                                            <td>{{ meal['info'] }}</td>
+                                                            <td>{{ meal['notes'] }}</td>
+                                                            <td>
+                                                                    {% if 'Prioritise' not in meal['notes'] %}
+                                                                        <a href="{{ url_for('prioritise', table=table, meal_id=meal['order_id']) }}" class="btn btn-outline-info">Prioritise</a> 
+                                                                    {% endif %}
+                                                            </td>
                                                             <td>
                                                                 <a href="{{ url_for('cancel_meal', table=table, meal_id=meal['order_id']) }}" class="btn btn-outline-danger">Cancel</a> 
-                                                                
                                                             </td>
                                                         </tr>
                                                     {% endfor %}
@@ -174,4 +179,6 @@
         </div>
     </div>
 </div>
+
+   
 {% endblock content %} 

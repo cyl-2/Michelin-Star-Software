@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, g, request, make_response, flash, Markup
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm, submitModifications, AddDishForm, UserPic, cardDetails, Review, makeBooking, StockForm
+from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm, submitModifications, AddDishForm, UserPic, cardDetails, Review, makeBooking, StockForm, Supplier
 from functools import wraps
 from flask_mysqldb import MySQL 
 from generate_roster import Roster
@@ -697,7 +697,7 @@ def choose_table():
     cur.close()
     table_positions = {}
     for i in range(len(data)):
-        table_positions[data[i]['table_id']] = [data[i]['x'], data[i]['y'], 'btn btn-outline-success', None]
+        table_positions[data[i]['table_id']] = [data[i]['x'], data[i]['y'], 'btn btn-outline-success', None, None]
         
     for booking in booking_next:
         table_positions[booking['table_id']][2] = 'btn btn-outline-warning'
@@ -705,6 +705,7 @@ def choose_table():
     for booking in booking_current:
         table_positions[booking['table_id']][2] = 'btn btn-outline-danger'
         table_positions[booking['table_id']][3] = booking['name']
+        table_positions[booking['table_id']][4] = booking['time']
 
     return render_template("staff/choose_table.html", table_positions=table_positions)
 
@@ -892,6 +893,24 @@ def cancel_meal(table, meal_id):
     cur.close()
     return redirect(url_for("take_order", table=table))
 
+# prioritise a meal that has been sent to the kitchen
+@app.route("/<int:table>/prioritise/<int:meal_id>", methods=["GET","POST"])
+def prioritise(table, meal_id):
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT notes FROM orders WHERE table_id = %s AND order_id = %s',(table, meal_id))
+    notes = cur.fetchone()['notes']
+    notes += " Prioritise"
+    cur.execute(
+        """
+            UPDATE orders SET notes = %s
+            WHERE table_id = %s 
+            AND order_id = %s
+        """,(notes, table, meal_id)
+    )
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for("take_order", table=table))
+
 # cancel all meals in the ordering section
 @app.route("/<int:table>/cancel_order", methods=["GET","POST"])
 def cancel_order(table):
@@ -903,7 +922,6 @@ def cancel_order(table):
 @app.route("/<int:table>/complete_order", methods=["GET","POST"])
 def complete_order(table):  
     cur = mysql.connection.cursor()
-    print(datetime.now().strftime("%H:%M:%S"))
     if table in session['ordering']:
         ordering = session['ordering'][table]
         for meal in ordering:
@@ -914,7 +932,7 @@ def complete_order(table):
                 for ingredients in times:
                     if times[ingredients] != 1:
                         info += ingredients+"-"+str(times[ingredients])+", "
-                cur.execute("INSERT INTO orders (time, dish_id, table_id, status, notes) VALUES (%s, %s, %s, 'waiting', %s);",(datetime.now().strftime("%H:%M:%S"), data['dish_id'], table, info))
+                cur.execute("INSERT INTO orders (time, dish_id, table_id, status, notes) VALUES (%s, %s, %s, 'unmade', %s);",(datetime.now().strftime("%H:%M:%S"), data['dish_id'], table, info))
                 mysql.connection.commit()
     
     session['ordering'][table] = {}
@@ -991,7 +1009,6 @@ def roster_request():
         cur.execute("""INSERT INTO roster_requests (employee_email, employee_name, message)
                             VALUES (%s,%s,%s);""", (g.user, employee_name, message))
         mysql.connection.commit()
-
         cur.execute("""INSERT INTO notifications (user, title, message)
                     VALUES ("manager", "New Roster Request","From %s");""", (employee,))
         mysql.connection.commit()
@@ -1045,11 +1062,11 @@ def manageStock():
                 FROM ingredient as i 
                 JOIN stock as s 
                 ON i.ingredient_id=s.ingredient_id
-                WHERE expiry_date=%s;''', (date,))
+                WHERE stock_delivery_status=%s;''', (date,))
     name=cur.fetchall()
 
     cur.execute('''DELETE FROM stock
-                WHERE expiry_date=%s;''', (date,))
+                WHERE stock_delivery_status=%s;''', (date,))
     mysql.connection.commit()
 
     message=""
@@ -1446,13 +1463,26 @@ def reply_email(id):
 
 # Delete queries from users
 #@manager_only
-@app.route("/view_inventory")
+@app.route("/view_inventory", methods=["GET", "POST"])
 def view_inventory():
+    form = Supplier()
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM ingredient;")
     inventory = cur.fetchall()
     cur.close()
-    return render_template("manager/inventory.html", inventory=inventory, title="Inventory List")
+    return render_template("manager/inventory.html",form=form, inventory=inventory, title="Inventory List")
+
+#@manager_only
+@app.route("/add_supplier/<int:id>", methods=["GET", "POST"])
+def add_supplier(id):
+    form = Supplier()
+    if form.validate_on_submit():
+        data = form.email.data
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE ingredient SET supplier_email = %s WHERE ingredient_id = %s;",(data, id))
+        mysql.connection.commit()
+        cur.close()
+    return redirect(url_for('view_inventory'))
 
 @app.route("/delete_ingredient/<int:id>")
 def delete_ingredient(id):
@@ -1612,7 +1642,7 @@ def stock():
         quantity = form.quantity.data
         cur.execute("SELECT ingredient_id FROM ingredient WHERE name = %s",(ingredient_name,))
         ingredient = cur.fetchall()
-        cur.execute("""INSERT INTO stock (ingredient_id, expiry_date, quantity)
+        cur.execute("""INSERT INTO stock (ingredient_id, stock_delivery_status, quantity)
                             VALUES (%s,%s,%s);""", (ingredient[0]['ingredient_id'], date, quantity))
         mysql.connection.commit()
         cur.execute("SELECT * FROM stock JOIN ingredient ON stock.ingredient_id = ingredient.ingredient_id")
@@ -1622,6 +1652,7 @@ def stock():
         ingredientList = []
         for ingredient in ingredients:
             ingredientList.append(ingredient['name'])
+
     return render_template("manager/stock.html", stockList=stock, ingredientList=ingredientList, form=form)
 
 #Allows all staff to view the breaklist for each individual day
