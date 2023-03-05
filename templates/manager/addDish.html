@@ -85,11 +85,11 @@
                                                 </div>
                                                 <div class="col-sm-6 mb-4">
                                                     <div class="form-group">
-                                                        {{form.display.label}}
-                                                        {{form.display(class="form-control")}}
+                                                        {{form.day.label}}
+                                                        {{form.day(class="form-control")}}
                                                         <span class="mb-0 text-muted">
                                                             <span class="text-danger">
-                                                            {% for error in form.display.errors %}
+                                                            {% for error in form.day.errors %}
                                                                 {{error}}
                                                             {%endfor%}
                                                             </span>

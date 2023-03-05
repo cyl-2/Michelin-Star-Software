@@ -33,16 +33,22 @@ Session(app)
 mail= Mail(app)
 app.config['MAIL_SERVER']='smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = credentials.flask_email
-app.config['MAIL_PASSWORD'] = credentials.flask_email_password
+#app.config['MAIL_USERNAME'] = credentials.flask_email
+#app.config['MAIL_PASSWORD'] = credentials.flask_email_password
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
-app.config['MYSQL_USER'] = credentials.user
-app.config['MYSQL_PASSWORD'] = credentials.password
-app.config['MYSQL_HOST'] = credentials.host
-app.config['MYSQL_DB'] = credentials.db
+app.config['MYSQL_USER'] = 'er12' # someone's deets
+app.config['MYSQL_PASSWORD'] = 'meiph' # someone's deets
+app.config['MYSQL_HOST'] = 'cs1.ucc.ie'
+app.config['MYSQL_DB'] = 'cs2208_er12' # someone's deets
+app.config['MYSQL_CURSORCLASS']= 'DictCursor'
+
+#app.config['MYSQL_USER'] = credentials.user
+#app.config['MYSQL_PASSWORD'] = credentials.password
+#app.config['MYSQL_HOST'] = credentials.host
+#app.config['MYSQL_DB'] = credentials.db
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
@@ -83,6 +89,7 @@ def business_only(view):
             return render_template("error.html"), 404
         return view(**kwargs)
     return wrapped_view
+
 
 def staff_only(view):
     @wraps(view)
@@ -425,31 +432,7 @@ def confirm_code(email, table):
 ##############################################################################################################################################
 ##############################################################################################################################################
 
-@app.route('/customer_profile')
-@login_required
-def customer_profile():
-    cur = mysql.connection.cursor()
-    message = ''
-    transactionHistory=''
-    image = None
-    cur.execute(" SELECT * FROM customer WHERE email=%s",(g.user,))
-    check= cur.fetchone()['profile_pic']
-    if check is None:
-        error = 'No profile picture yet'
-    else:  
-        image=check
-    cur.execute("SELECT * FROM transactions WHERE username=%s;",(g.user,))
-    check2 = cur.fetchall()
-    if check2 is None:
-        message = "You've made no transactions yet"
-    else:
-        cur.execute(" SELECT * FROM dish;")
-        dish = cur.fetchall()
-        cur.execute(" SELECT * FROM transactions WHERE username=%s ",(g.user,))
-        transactionHistory = cur.fetchall()
-    cur.close()
-    #return render_template("customer/profile.html", title="My Profile")
-    return render_template('customer/customer_profile.html',image=image, transactionHistory=transactionHistory, dishes=dish)
+
 
 
 @app.route('/user_pic', methods=['GET','POST'])
@@ -1649,7 +1632,7 @@ def menu():
       side = cur.fetchall()
     
     else:
-      cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                         FROM dish AS d
                         LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                         WHERE d.dishType='starter'
@@ -1685,7 +1668,7 @@ def menu():
                         ORDER BY cost DESC;""")
         side = cur.fetchall()
       
-
+    cur.execute("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));")
     cur.execute("""SELECT DISTINCT(dish_id), dish_name, comment, rating
                     FROM reviews
                     WHERE rating >= 4 and comment != ''
@@ -1707,7 +1690,7 @@ def menu():
     
     cur.execute(" SELECT * FROM reviews where rating >= 4 and comment != '' ")
     cur.close()
-    return render_template('customer/dishes.html', dishes=dishes, starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side, reviews=reviews, special=special, slider=slider, session=session)
+    return render_template('customer/dishes.html', starters=starters, mainCourse=mainCourse,dessert=dessert, drink=drink,side=side, reviews=reviews, special=special, slider=slider, session=session)
 
 @app.route('/swap_sort',methods=['GET', 'POST'])
 def swap_sort():
@@ -1755,7 +1738,8 @@ def dish(dish_id):
     dish_id=dish['dish_id']
     cur.execute("SELECT * FROM dish_ingredient JOIN ingredient ON dish_ingredient.ingredient_id = ingredient.ingredient_id  WHERE dish_ingredient.dish_id=%s",(dish_id,))
     result=cur.fetchall()
-
+    cur.execute("SELECT * FROM reviews WHERE dish_id=%s",(dish_id,))
+    reviews = cur.fetchall()
     cur.execute("SELECT comment, rating FROM reviews WHERE dish_id=%s",(dish_id,))
     comments=cur.fetchall()
     
@@ -1782,7 +1766,7 @@ def dish(dish_id):
         mysql.connection.commit()
         session['CurrentDish'] = None
         return redirect(url_for('add_to_cart', dish_id=dish['dish_id']))
-    return render_template('customer/dish.html', dish=dish,result=result,form=form,quant=session[str(dish_id)],comments=comments)
+    return render_template('customer/dish.html', dish=dish,result=result,form=form,quant=session[str(dish_id)],comments=comments,reviews=reviews)
 
 #Increase the amount of an ingredient in a dish
 @app.route('/inc_quantity_ingredient/<int:ingredient_id>')
@@ -1864,7 +1848,7 @@ def add_default_meal(dish_id):
     for value in result:
         name=value['name']
         changes+=str(name)+":" "1 "
-    cur.execute("INSERT INTO modifications(dish_id,changes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
+    cur.execute("INSERT INTO modifications(dish_id,notes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
     mysql.connection.commit()
     return redirect(url_for('cart'))
 
@@ -2242,10 +2226,19 @@ def breakTimes():
                                 break
             i +=1
         k +=1
+    print(workingToday)
     for employee in workingToday:
         if len(workingToday[employee]) >= 3:
             workingToday[employee][2] = str(workingToday[employee][2]) + ":00"
-            #if len(workingToday[employee] ==5)
+
+            if len(workingToday[employee]) ==4:
+                #print(workingToday)
+                string =str(workingToday[employee][3])
+                print(string)
+                if len(string)>2:
+                    workingToday[employee][3] = (str(workingToday[employee][3]))[0]  +(str(workingToday[employee][3]))[1] + ":" + (str(workingToday[employee][3]))[3] + "0"
+                else:
+                    workingToday[employee][3] = str(workingToday[employee][3]) + ":00"
     return render_template("staff/breaks.html",staff=staff, workingToday=workingToday)
 
 if __name__ == '__main__':

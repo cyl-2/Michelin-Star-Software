@@ -23,8 +23,6 @@ body.dark {
     color: #2C394B; }
   body.dark .pcoded-header .dropdown .profile-notification .pro-head {
     background-color: #082032; }
-  body.dark .pcoded-header .dropdown.drp-user.show:before {
-    color: #082032 !important; }
   body.dark .pcoded-header .dropdown .dropdown-menu li:hover a {
     color: white; }
   body.dark .pcoded-header .dropdown .profile-notification .pro-body li a {
@@ -83,10 +81,7 @@ body.dark {
   body.dark .tab-content {
     background-color: #2C394B;
     color: white !important; }
-  body.dark .pcoded-header {
-    background-color: #082032; }
-  body.dark .pcoded-header > .collapse:not(.show) {
-    background-color: #2C394B; }
+
   body.dark .pcoded-header .main-search.open .input-group .search-close {
     background-color: transparent; }
 
