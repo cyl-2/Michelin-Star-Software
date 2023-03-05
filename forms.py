@@ -165,3 +165,7 @@ class StockForm(FlaskForm):
     date = DateField("Expiry Date:", validators=[InputRequired()])
     quantity = IntegerField("Quantity:", validators=[InputRequired() ])
     submit = SubmitField('Submit')
+
+class Supplier(FlaskForm):
+    email = StringField()
+    id = IntegerField()

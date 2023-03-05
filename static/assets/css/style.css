@@ -1592,7 +1592,6 @@ p.text-muted {
           align-items: center;
 }
 .b-brand .b-bg {
-  background: linear-gradient(-135deg, #1de9b6 0%, #1dc4e9 100%);
   border-radius: 10px;
   width: 35px;
   height: 35px;
@@ -10742,4 +10741,3 @@ div.code-toolbar > .toolbar span:hover {
   border-radius: .5rem;
 }
 
-}
