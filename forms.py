@@ -109,7 +109,7 @@ class AddDishForm(FlaskForm):
                                         ("drink", "Drink"),
                                         ("special", "Special")], validators=[InputRequired()])
     day = SelectField("Display day for menu item? Menu items are displayed on all days of the week by default", 
-                            choices = [("all week", "All week"),
+                            choices = [(10, "All week"),
                                         (0, "Monday"),
                                         (1, "Tuesday"),
                                         (2, "Wednesday"), 

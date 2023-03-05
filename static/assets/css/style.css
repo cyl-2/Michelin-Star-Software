@@ -2122,7 +2122,7 @@ p.text-muted {
 }
 
 .navbar-brand {
-  background: #3f4d67;
+  background: #1c1d1f;
 }
 
 .pcoded-header:before,
@@ -2143,7 +2143,7 @@ p.text-muted {
   width: 264px;
   height: 100vh;
   top: 0;
-  background: #3f4d67;
+  background: #1f2124;
   color: #a9b7d0;
 }
 .pcoded-navbar ul {
@@ -10741,3 +10741,12 @@ div.code-toolbar > .toolbar span:hover {
   border-radius: .5rem;
 }
 
+<<<<<<< HEAD
+=======
+.box {
+  padding: 10px;
+  border: 1px solid #f1f3f3;
+  margin: 0; 
+  border-radius: 25px;
+}
+>>>>>>> 961c2ffa445d04b839dc3f25aea9be2c5fc506a9

@@ -610,7 +610,6 @@ header .flex .icons #menu-bars{
 /* Style the tab */
 .tab {
 overflow: hidden;
-background-color: #ffffff;
 
 height: 60px;
 position: relative;
