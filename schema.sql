@@ -13,8 +13,8 @@ CREATE TABLE notifications
 INSERT INTO notifications
   ( user, title, message)
 VALUES
-  ( 'cherrylin20172027@gmail.com', 'From Sara', 'super duper duper duper long long long long long long long long long long message 1'),
-  ( 'cherrylin20172027@gmail.com', 'Inventory Management', 'message 2'),
+  ( "manager", "New Customer Enquiry","Enquiry regarding 'Opening hours'"),
+  ( "some_staff_email", "Roster Request Approved!","Your manager has approved your request!"),
   ( 'cherrylin20172027@gmail.com', 'Critical','message 3'),
   ( 'cherrylincyl@gmail.com', 'Roster Request','message 4');
   
@@ -184,7 +184,7 @@ CREATE TABLE dish
     dishPic TEXT,
     description TEXT,
     allergies TEXT,
-    day INTEGER DEFAULT NULL
+    day INTEGER DEFAULT 10
 );
 
 INSERT INTO dish
@@ -277,7 +277,8 @@ DROP TABLE IF EXISTS roster_requests;
 CREATE TABLE roster_requests
 (
     request_id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    employee TEXT NOT NULL,
+    employee_email TEXT NOT NULL,
+    employee_name TEXT NOT NULL,
     message TEXT,
     response TEXT,
     date_received TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -373,17 +374,16 @@ CREATE TABLE reviews
     comment TEXT,
     rating INTEGER,
     dish_name TEXT,
-    dish_id INTEGER,
-    dish_name TEXT
+    dish_id INTEGER
 );
 
 INSERT INTO reviews
   ( username, comment, rating, dish_id, dish_name)
 VALUES
-  ("benc190514@gmail.com", "good", 5, 1), 
-  ("benc190514@gmail.com", "bad", 2, 2), 
-  ("benc190514@gmail.com", "okay", 4, 3),
-  ("benc190514il.com", "AMAZING", 10, 5);
+  ("benc190514@gmail.com", "good", 5, 1, "potato"), 
+  ("benc190514@gmail.com", "bad", 2, 2, "potato"), 
+  ("benc190514@gmail.com", "okay", 4, 3, "potato"),
+  ("benc190514il.com", "AMAZING", 10, 5,"potato");
 
 DROP TABLE IF EXISTS modifications;
 

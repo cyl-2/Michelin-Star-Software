@@ -72,6 +72,17 @@
                                             {{ form.submit(class="submit btn btn-primary") }}
                                         </form>
                                     </div>
+                                    {% with messages = get_flashed_messages() %}
+                                    {% if messages %}
+                                        <div class="flash">
+                                            <div class="flash-blue">
+                                            {% for message in messages %}
+                                                <p> <b>{{ message }}</b> </p>
+                                            {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    {% endwith %}
                                 </div>
                             </div>
                         </div>

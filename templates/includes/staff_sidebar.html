@@ -22,13 +22,19 @@
                 </li>
 
                 <li class="nav-item">
+                    <a href="{{ url_for('kitchen') }}" class="nav-link">
+                        <span class="pcoded-micon"><i class="feather icon-star"></i></span><span class="pcoded-mtext">Kitchen View</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a href="{{ url_for('move_tables') }}" class="nav-link">
                         <span class="pcoded-micon"><i class="feather icon-move"></i></span><span class="pcoded-mtext">Move Table</span>
                     </a>
                 </li>
                 
                 <li class="nav-item pcoded-menu-caption">
-                    <label>Shift Management</label>
+                    <label>Your Shifts</label>
                 </li>
 
                 <li class="nav-item pcoded-hasmenu">
@@ -46,7 +52,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a href="{{ url_for('staff_profile') }}" class="nav-link">
+                    <a href="{{ url_for('edit_staff_profile') }}" class="nav-link">
                         <span class="pcoded-micon"><i class="feather icon-user"></i></span>
                             <span class="pcoded-mtext">Profile Page</span></a>
                 </li>

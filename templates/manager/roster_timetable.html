@@ -18,6 +18,18 @@
                     <div class="page-wrapper">
                         <div class="row">
                             <div class="col-sm-12">
+                                {% with messages = get_flashed_messages() %}
+                                {% if messages %}
+                                    <div class="flash">
+                                        <div class="flash-blue">
+                                        {% for message in messages %}
+                                            <p> <b>{{ message }}</b> </p>
+                                        {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                {% endwith %}
+                                <br>
                                 <div class="card">
                                     <div class="card-header">
                                         <h5>Roster Timetable</h5>

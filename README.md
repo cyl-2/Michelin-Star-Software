@@ -128,16 +128,48 @@ At this point, the app runs at `http://localhost:8080` or `http://127.0.0.1:5000
 ```bash
 $ pip install -r requirements.txt
 ```
+<br />
+
+> **Step 2** Set up the config file
+
+> Navigate to the `tests` directory and create a file called `config.py`
 
 <br />
 
-> **Step 2** Run the tests in the terminal
+> **Step 3** - Configure the connection parameters in `config.py`, as below:
+
+```python 
+1 MYSQL_USER = "your_username"
+2 MYSQL_PASSWORD = "your_password"
+3 MYSQL_DB = "your_schema"
+4 MYSQL_PORT = "your_port_number"
+5 MYSQL_HOST = "your_host"
+6 AUTH='mysql_native_password'
+7 T1='customer'
+8 T2='staff'
+9 config = {
+10    'host': "your_host" ,
+11    'user': "your_username",
+12    'password': "your_password",
+13    'database': "your_schema",
+14    'auth_plugin':'mysql_native_password'
+15 }
+```
+<br />
+
+> **Step 4** Run the tests in the terminal
 
 ```bash
 $ python -m pytest tests/
 // OR
 $ pytest
 ```
+
+<br />
+
+> Test Results
+
+![](tests_success.png)
 
 <br />
 
@@ -150,6 +182,11 @@ By default, the app redirects guest users to authenticate. In order to access th
   - `http://127.0.0.1:5000/registration`
 - Access the `sign in` page and authenticate
   - `http://127.0.0.1:5000/customer_login`
+- To access as a manager, navigate to the the `staff login` page and authenticate with the following details
+  - username: `manager`
+  - password: `123456`
+
+  Please change your email and password upon log in
 
 <br />
 
