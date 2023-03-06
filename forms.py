@@ -169,3 +169,7 @@ class StockForm(FlaskForm):
 class Supplier(FlaskForm):
     email = StringField()
     id = IntegerField()
+
+class EditSupplier(FlaskForm):
+    email = StringField()
+    id = IntegerField()

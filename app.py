@@ -1,14 +1,14 @@
 from flask import Flask, render_template, redirect, url_for, session, g, request, make_response, flash, Markup
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm, submitModifications, AddDishForm, UserPic, cardDetails, Review, makeBooking, StockForm, Supplier
+from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm, submitModifications, AddDishForm, UserPic, cardDetails, Review, makeBooking, StockForm, Supplier, EditSupplier
 from functools import wraps
 from flask_mysqldb import MySQL 
 from generate_roster import Roster
 import json
 from flask_mail import Mail, Message
 import datetime
-from datetime import datetime
+from datetime import datetime #
 import random, string, time
 from random import sample
 from werkzeug.utils import secure_filename
@@ -70,7 +70,7 @@ def get_staff_notifs():
 
 @app.before_request
 def logged_in():
-    g.user = session.get("username", None)
+    g.user = "cherrylin20172027@gmail.com"#session.get("username", None)
     g.access = "managerial" #session.get("access_level", None)
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
@@ -460,7 +460,7 @@ def confirm_code(email, table):
 
 #Customer profile - can see info about past transactions + leave a review
 @app.route('/customer_profile')
-@login_required
+@customer_only
 def customer_profile():
     username = session['username']
     cur = mysql.connection.cursor()
@@ -1062,11 +1062,11 @@ def manageStock():
                 FROM ingredient as i 
                 JOIN stock as s 
                 ON i.ingredient_id=s.ingredient_id
-                WHERE stock_delivery_status=%s;''', (date,))
+                WHERE expiry_date=%s;''', (date,))
     name=cur.fetchall()
 
     cur.execute('''DELETE FROM stock
-                WHERE stock_delivery_status=%s;''', (date,))
+                WHERE expiry_date=%s;''', (date,))
     mysql.connection.commit()
 
     message=""
@@ -1126,9 +1126,9 @@ scheduler.start()
 @manager_only
 def manager():
     cur = mysql.connection.cursor()
-    date = datetime.now().date()
+    date = datetime.date.today().strftime('%Y-%m-%d')
     
-    cur.execute("SELECT * FROM user_analytics")
+    cur.execute("SELECT * FROM user_analytics WHERE DATE(todays_date)=%s", (date,))
     user_analytics = cur.fetchone()
     
     # ================= START of fetching gross profit data for the past year, month and day ================= 
@@ -1204,13 +1204,15 @@ def manager():
 @manager_only
 def roster_approve(id):
     cur = mysql.connection.cursor()
-    status = "Approved"
-    cur.execute("""UPDATE roster_requests SET status=%s, last_updated=CURRENT_TIMESTAMP WHERE request_id= %s;""", (status, id))
+    cur.execute("""UPDATE roster_requests SET status='Approved', last_updated=CURRENT_TIMESTAMP WHERE request_id= %s;""", (id,))
     mysql.connection.commit()
-    cur.execute("""SELECT * roster_requests WHERE request_id= %s;""", (id,))
-    employee = cur.fetchone()
-    cur.execute("""INSERT INTO notifications (user, title, message)
-                    VALUES (%s, "Roster Request Approved!","Your manager has approved your request!");""", (employee["employee_email"],))
+
+    #cur.execute("SELECT * roster_requests WHERE request_id= %s", (id,))
+    #employee = cur.fetchone()
+    #email = employee["employee_email"]
+
+    #cur.execute("""INSERT INTO notifications (user, title, message)
+    #                VALUES (%s, 'Roster Request Approved!','Your manager has approved your request!');""", (email,))
     mysql.connection.commit()
     cur.close()
     return redirect(url_for("manager"))
@@ -1461,7 +1463,6 @@ def reply_email(id):
         flash("Message sent successfully.")
     return render_template("manager/reply_email.html",form=form, title="Reply", query=query)
 
-# Delete queries from users
 #@manager_only
 @app.route("/view_inventory", methods=["GET", "POST"])
 def view_inventory():
@@ -1476,6 +1477,17 @@ def view_inventory():
 @app.route("/add_supplier/<int:id>", methods=["GET", "POST"])
 def add_supplier(id):
     form = Supplier()
+    if form.validate_on_submit():
+        data = form.email.data
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE ingredient SET supplier_email = %s WHERE ingredient_id = %s;",(data, id))
+        mysql.connection.commit()
+        cur.close()
+    return redirect(url_for('view_inventory'))
+
+@app.route("/edit_supplier/<int:id>", methods=["GET", "POST"])
+def edit_supplier(id):
+    form = EditSupplier()
     if form.validate_on_submit():
         data = form.email.data
         cur = mysql.connection.cursor()
@@ -1642,7 +1654,7 @@ def stock():
         quantity = form.quantity.data
         cur.execute("SELECT ingredient_id FROM ingredient WHERE name = %s",(ingredient_name,))
         ingredient = cur.fetchall()
-        cur.execute("""INSERT INTO stock (ingredient_id, stock_delivery_status, quantity)
+        cur.execute("""INSERT INTO stock (ingredient_id, expiry_date, quantity)
                             VALUES (%s,%s,%s);""", (ingredient[0]['ingredient_id'], date, quantity))
         mysql.connection.commit()
         cur.execute("SELECT * FROM stock JOIN ingredient ON stock.ingredient_id = ingredient.ingredient_id")
@@ -2303,120 +2315,6 @@ def cancel_booking(booking_id):
     cur.close()
 
     return redirect(url_for('cancel_bookings'))
-
-
-#Allows all staff to view the breaklist for each individual day
-@app.route('/breaks', methods=['GET','POST'])
-def breakTimes():
-    cur = mysql.connection.cursor()
-    cur.execute('SELECT * FROM staff')
-    staff = cur.fetchall()
-    cur.execute("SELECT * FROM roster")
-    roster = cur.fetchall()
-    now = datetime.now()
-    day = (now.strftime("%a")).lower()
-    breaksAssigned = {}
-    workingToday = {}
-    for working in roster:
-        if working[day] != '':
-            shift = working[day]
-            workingToday[working['staff_id']] =shift
-    numWorkers = len(workingToday)
-    k= 0
-    while k <2:
-        assigned = 0
-        for employee in workingToday:
-            if k == 0:
-                shift = workingToday[employee]
-                hoursWorking= int(shift[0]+shift[1]) - int(shift[6]+shift[7])
-
-                hoursWorking = hoursWorking*-1
-                if hoursWorking >4 and hoursWorking >= 8:
-                    breaks = 2
-                    workingToday[employee] = [shift,breaks]
-                elif hoursWorking >4:
-                    breaks=1
-                    workingToday[employee] = [shift,breaks]
-                else: 
-                    breaks =0
-                    assigned +=1
-                    workingToday.append("-")
-                start = int(shift[0]+shift[1])
-                endShift = int(shift[6] + shift[7])
-                proposedBreak = 0
-            else:
-                start = workingToday[employee][2]
-            proposedBreak = 0
-            for j in range(4,1,-1):
-
-                if workingToday[employee][1] ==1 and len(working[employee] >=3):
-                    break
-                proposedBreak = start + j
-                if proposedBreak in breaksAssigned: 
-                    proposedBreak = 0
-                elif proposedBreak  >= endShift or (proposedBreak) >= endShift -1:
-                    proposedBreak =0
-                else:
-                    breaksAssigned[proposedBreak] =1
-                    start = start +j
-                    endBreak = start +0.45
-                    workingToday[employee].append(start)
-                    assigned +=1
-                    break
-        i = 2
-        while assigned != len(workingToday):
-            for employee in workingToday:
-                shift = workingToday[employee][0]
-                start = int(shift[0]+shift[1])
-                endShift = int(shift[6] + shift[7])
-                if k == 1:
-                    start = workingToday[employee][2]
-                if (len(workingToday[employee]) <3 and k ==0) or (len(workingToday[employee]) <4 and k==1):
-                    for j in range(4,1,-1):
-                        if workingToday[employee][1] ==1 and len(working[employee] >3): 
-                            break
-                        proposedBreak = start + j
-                        if proposedBreak in breaksAssigned and breaksAssigned[proposedBreak] >=i: 
-                            proposedBreak = 0
-                        elif proposedBreak  >= endShift or (proposedBreak) >= endShift -1:
-                            proposedBreak =0
-                        elif proposedBreak == start:
-                            proposedBreak = 0
-                        else:
-                            if proposedBreak not in breaksAssigned:
-                                breaksAssigned[proposedBreak] = 1
-                            else:
-                                breaksAssigned[proposedBreak] +=1
-                            start = start +j
-                            endBreak = start +0.45
-                            workingToday[employee].append(start)
-                            assigned +=1
-                            break
-                        if k ==1:
-                            proposedBreak =start+ 0.3 +j
-                            if proposedBreak in breaksAssigned and breaksAssigned[proposedBreak] >=i: 
-                                proposedBreak = 0
-                            elif proposedBreak  >= endShift or (proposedBreak) >= endShift -1:
-                                proposedBreak =0
-                            elif proposedBreak == start:
-                                proposedBreak = 0
-                            else:
-                                if proposedBreak not in breaksAssigned:
-                                    breaksAssigned[proposedBreak] = 1
-                                else:
-                                    breaksAssigned[proposedBreak] +=1
-                                start = proposedBreak
-                                endBreak = start +0.45
-                                workingToday[employee].append(start)
-                                assigned +=1
-                                break
-            i +=1
-        k +=1
-    for employee in workingToday:
-        if len(workingToday[employee]) >= 3:
-            workingToday[employee][2] = str(workingToday[employee][2]) + ":00"
-            #if len(workingToday[employee] ==5)
-    return render_template("staff/breaks.html",staff=staff, workingToday=workingToday)
 
 if __name__ == '__main__':
     app.run(debug=True)

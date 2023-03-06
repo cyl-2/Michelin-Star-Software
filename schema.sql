@@ -45,7 +45,7 @@ VALUES
   ( 'derek_don53@gmail.com', 'Derek', 'Donelly', 'ordinary staff', 'Waiter', 'Barista', 'pass'),
   ( 'markupineL@gmail.com', 'John', 'Walsh', 'ordinary staff', 'Waiter', 'Bus Boy', 'pass'),
   ( 'boscobox@gmail.com', 'Joey', 'Evans', 'ordinary staff', 'Waiter', 'Sommelier ', 'pass'),
-  ( 'rubricscube@gmail.com', 'Bart', 'Owens', 'ordinary staff', 'Waiter', 'Cleaner', 'pass'),
+  ( 'rubricscube@gmail.com', 'Bart', 'Bart', 'ordinary staff', 'Waiter', 'Cleaner', 'pass'),
   ( 'mbmuskery987', 'Mick', 'Burke', 'ordinary staff', 'Waiter', "Owner's son...", 'pass'),
   ( 'ailsbury23@gmail.com', 'Terry', 'McSweeney', 'ordinary staff', 'Waiter', 'Security', 'pass');
 
@@ -136,19 +136,19 @@ CREATE TABLE ingredient
 INSERT INTO ingredient
   ( name, supplier_email, status )
 VALUES
-  ('Patty', '', 'red'),
-  ('Chips', '', 'red'),
-  ('Chicken', '', 'amber'),
-  ('Fish', '', 'green'), 
+  ('Patty', '', 'amber'),
+  ('Chips', '', 'green'),
+  ('Chicken', '', 'green'),
+  ('Fish', '', 'red'), 
   ('Buns', '', 'green'),
   ('Soup', '', 'amber'),
-  ('Ice cream', '', 'red'),
-  ('Brownie', '', 'red'),
-  ('Water', '', '');
+  ('Ice cream', '', 'amber'),
+  ('Brownie', '', 'amber'),
+  ('Water', '', 'amber');
   
-INSERT INTO ingredient ( name, supplier_email )
+INSERT INTO ingredient ( name, supplier_email, status )
 VALUES
-('Lettuce', "cherrylin20172027@gmail.com");
+('Lettuce', "cherrylin20172027@gmail.com", 'green');
 
 DROP TABLE IF EXISTS stock;
 
@@ -156,37 +156,22 @@ CREATE TABLE stock
 (   
     batch_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     ingredient_id INTEGER NOT NULL,
-    stock_delivery_status INTEGER NOT NULL,
+    expiry_date DATE NOT NULL,
     quantity INTEGER NOT NULL
 );
 
 INSERT INTO stock
-( ingredient_id, stock_delivery_status, quantity)
+( ingredient_id, expiry_date, quantity)
 VALUES
-(1, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
-(2, DATE_ADD(CURDATE(), INTERVAL 0 DAY),  20),
-(3, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
-(4, DATE_ADD(CURDATE(), INTERVAL 10 DAY),  0),
-(5, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
-(6, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
-(7, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
-(8, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
-(9, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10);
-
-
-/*CREATE DEFINER=`root`@`localhost` TRIGGER `lowerIngredients` AFTER INSERT ON `orders` FOR EACH ROW BEGIN
-UPDATE stock
-SET quantity=quantity-1
-WHERE ingredient_id in (
-                    SELECT i.ingredient_id
-                    FROM orders as o
-                    JOIN dish_ingredient as di
-                    JOIN ingredient as i
-                    JOIN dish as d
-                    ON i.ingredient_id=di.ingredient_id AND di.dish_id=d.dish_id AND d.dish_id=o.dish_id
-                    WHERE di.dish_id=NEW.dish_id)
-END
-*/
+(1, DATE(DATE_ADD(CURDATE()), INTERVAL 30 DAY), 50),
+(2, DATE_ADD(CURDATE(), INTERVAL 0 DAY),  100),
+(3, DATE_ADD(CURDATE(), INTERVAL 15 DAY), 100),
+(4, DATE_ADD(CURDATE(), INTERVAL 10 DAY),  10),
+(5, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 100),
+(6, DATE_ADD(CURDATE(), INTERVAL 15 DAY), 60),
+(7, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 65),
+(8, DATE_ADD(CURDATE(), INTERVAL 100 DAY), 75),
+(9, DATE_ADD(CURDATE(), INTERVAL 20 DAY), 90);
 
 DROP TABLE IF EXISTS dish;
 
@@ -256,8 +241,6 @@ CREATE TABLE orders
     notes TEXT,
     status TEXT
 );
-
-
 
 DROP TABLE IF EXISTS tables;
 
@@ -417,104 +400,3 @@ CREATE TABLE modifications
   changes TEXT,
   user TEXT
 );
-
-
-/*
-############
-TRIGGER TO UPDATE STATUS AFTER UPDATING QUANTITY IN INGREDIENT TABLE
-
-CREATE DEFINER=`root`@`localhost` TRIGGER `ingredient_BEFORE_UPDATE` BEFORE UPDATE ON `ingredient` FOR EACH ROW BEGIN
-	IF NEW.quantity <= 10 THEN
-        SET NEW.status = 'RED';
-    END IF;
-    IF NEW.quantity >= 11 THEN
-        SET NEW.status = 'AMBER';
-    END IF;
-    IF NEW.quantity >= 50 THEN
-        SET NEW.status = 'GREEN';
-    END IF;
-END
-
-############
-CLEARS CODE AFTER 10 SECONDS OF INSERTING
-
-CREATE EVENT clear_code
-ON SCHEDULE
-EVERY 5 SECOND
-STARTS (CURRENT_TIMESTAMP + INTERVAL 10 SECOND)
-DO 
-UPDATE staff
-SET code = null WHERE TIMESTAMPDIFF(SECOND, last_updated, NOW()) >= 10 ;
-
-################
-customer -> AFTER INSERT TRIGGER for user_analytics "new_daily_users"
-
-CREATE DEFINER=`root`@`localhost` TRIGGER `customer_AFTER_INSERT` AFTER INSERT ON `customer` FOR EACH ROW BEGIN
-    -- check if there is already a row in user_analytics for today's date
-    IF NOT EXISTS (SELECT new_daily_users FROM user_analytics WHERE DATE(todays_date) = CURDATE()) THEN
-        -- insert a new row with new_daily_users = 1
-        INSERT INTO user_analytics (new_daily_users) VALUES (1);
-    ELSE
-        -- update the existing row by incrementing new_daily_users by 1
-        UPDATE user_analytics
-        SET new_daily_users = new_daily_users + 1
-        WHERE DATE(todays_date) = CURDATE();
-    END IF;
-END
-
-########################
-TRIGGER FOR DAILY USERS customer AFTER UPDATE
-
-CREATE DEFINER=`root`@`localhost` TRIGGER `customer_AFTER_UPDATE` AFTER UPDATE ON `customer` FOR EACH ROW BEGIN
-
-    IF DATE(OLD.last_updated) <> CURDATE() THEN
-		IF NOT EXISTS (SELECT daily_users FROM user_analytics WHERE DATE(todays_date) = CURDATE()) THEN
-			INSERT INTO user_analytics (daily_users) VALUES (1);
-		ELSE
-			UPDATE user_analytics
-			SET daily_users = daily_users + 1
-			WHERE DATE(todays_date) = CURDATE();
-		END IF;
-    END IF;
-END
-
-##########################
-EVENT THAT WOULD CALCULATE THE YEARLY SALES ON 01/01 OF EVERY YEAR AND THEN INSERT THE VALUE INTO "yearly_revenue"
-
-DELIMITER //
-CREATE EVENT IF NOT EXISTS `yearly_revenue_calculation`
-ON SCHEDULE EVERY 1 YEAR STARTS '2022-01-01 00:00:00'
-DO
-BEGIN
-  SET @total_cost = (
-    SELECT SUM(dish.cost)
-    FROM orders
-    INNER JOIN dish ON orders.dish_id = dish.dish_id
-    WHERE YEAR(orders.time) = YEAR(CURDATE())
-  );
-  INSERT INTO yearly_revenue (the_year, yearly_sales)
-  VALUES (YEAR(CURDATE()), @total_cost);
-END//
-DELIMITER ;
-
-##########################
-EVENT THAT WOULD CALCULATE THE MONTHLY SALES ON 01/01 OF EVERY YEAR AND THEN INSERT THE VALUE INTO "monthly_revenue"
-
-DELIMITER //
-CREATE EVENT IF NOT EXISTS `monthly_revenue_calculation`
-ON SCHEDULE
-EVERY 1 MONTH 
-STARTS ('2022-01-01 00:00:00')
-DO
-BEGIN
-SET @gross_profit = (
-  SELECT SUM(dish.cost)
-  FROM orders
-  INNER JOIN dish ON orders.dish_id = dish.dish_id
-  WHERE YEAR(orders.time) = YEAR(CURDATE()) AND MONTH(orders.time) = MONTH(CURDATE())
-);
-INSERT INTO monthly_revenue (the_month, monthly_sales)
-VALUES (DATE_FORMAT(CURDATE(), '%Y-%m-01'), @gross_profit);
-END//
-DELIMITER ;
-*/
