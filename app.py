@@ -564,7 +564,7 @@ def kitchen():
     return render_template('staff/kitchen.html',orderlist=orderlist)
 
 # updates the status of a meal
-@app.route('/<int:dish_id>,<int:order_id>,<int:time>/kitchenUpdate', methods=['GET','POST'])
+@app.route('/<int:dish_id>,<int:order_id>,<time>/kitchenUpdate', methods=['GET','POST'])
 def kitchenUpdate(dish_id,order_id, time):
     cur = mysql.connection.cursor()
     cur.execute('''UPDATE orders
@@ -584,7 +584,7 @@ def kitchenUpdate(dish_id,order_id, time):
                     ON i.ingredient_id=di.ingredient_id AND di.dish_id=d.dish_id AND d.dish_id=o.dish_id
                     WHERE di.dish_id=%s''',(dish_id,))
     ingredientDict=cur.fetchall()
-    for ingredient in ingredientDict[0]:
+    for ingredient in ingredientDict:
         cur.execute('''UPDATE stock
                         SET quantity=quantity-1
                         WHERE ingredient_id=%s
@@ -595,7 +595,7 @@ def kitchenUpdate(dish_id,order_id, time):
     return redirect(url_for('kitchen'))
 
 # updates meal status to sent out
-@app.route('/<int:order_id>,<int:time>/kitchenDelete', methods=['GET','POST'])
+@app.route('/<int:order_id>,<time>/kitchenDelete', methods=['GET','POST'])
 def kitchenSentOut(order_id, time):
 
     cur = mysql.connection.cursor()
@@ -610,7 +610,7 @@ def kitchenSentOut(order_id, time):
     return redirect(url_for('kitchen'))
 
 # changes an order to complete and re-routes to kitchen
-@app.route('/<int:order_id>,<int:time>/kitchenComplete', methods=['GET','POST'])
+@app.route('/<int:order_id>,<time>/kitchenComplete', methods=['GET','POST'])
 def kitchenComplete(order_id, time):
 
     cur = mysql.connection.cursor()
