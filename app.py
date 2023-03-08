@@ -50,7 +50,7 @@ mysql = MySQL(app)
 def get_personal_notifs():
     cur = mysql.connection.cursor()
     notifications = cur.execute("SELECT * FROM notifications WHERE user = %s", (g.user,))
-    notifications = cur.fetchall()
+    notifications =  cur.fetchall()
     cur.close()
     return notifications
 
@@ -71,7 +71,7 @@ def get_staff_notifs():
 @app.before_request
 def logged_in():
     g.user = session.get("username", None)
-    g.access = "managerial" #session.get("access_level", None)
+    g.access = session.get("access_level", None)
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
     g.notifications_staff = get_staff_notifs()
@@ -460,7 +460,6 @@ def confirm_code(email, table):
 
 #Customer profile - can see info about past transactions + leave a review
 @app.route('/customer_profile')
-@login_required
 def customer_profile():
     username = session['username']
     cur = mysql.connection.cursor()
@@ -780,7 +779,7 @@ def waiter_customize_dish(table, dish_id):
             session['mods'][table] = {}
         cur.execute('SELECT ingredient_id FROM dish_ingredient WHERE dish_id = %s',(dish_id,))
         ingredient_ids = cur.fetchall()
-        
+        """
         min = 100
         for id in ingredient_ids:
             cur.execute('''SELECT MIN(quantity) FROM stock WHERE ingredient_id = %s
@@ -790,6 +789,8 @@ def waiter_customize_dish(table, dish_id):
             if value['MIN(quantity)'] < min:
                 min = value['MIN(quantity)']
         if min > 0:
+        """
+        if True:
             for ingredient in ingredients:
                 ingredient_id = ingredient['ingredient_id']
                 if ingredient_id not in session[str(dish_id)]:
@@ -843,6 +844,7 @@ def add_order(table, meal):
     for id in dish_ids:
         cur.execute('SELECT ingredient_id FROM dish_ingredient WHERE dish_id = %s',(id['dish_id'],))
         ingredient_ids = cur.fetchall()
+    """
     min = 100
     for id in ingredient_ids:
         cur.execute('SELECT MIN(quantity) FROM stock WHERE ingredient_id = %s ORDER BY batch_id LIMIT 1',(id['ingredient_id'],))
@@ -850,6 +852,8 @@ def add_order(table, meal):
         if value['MIN(quantity)'] < min:
             min = value['MIN(quantity)']
     if min > 0:
+    """
+    if True:
         mods = {}
         if table in session['mods']:
             if session['mods'][table] != {}:
@@ -883,7 +887,7 @@ def cancel_meal(table, meal_id):
             WHERE table_id = %s 
             AND status != %s
             AND order_id = %s
-        """,(table, 'complete', meal_id)
+        """,(table, 'completed', meal_id)
     )
     mysql.connection.commit()
 
@@ -1655,119 +1659,6 @@ def stock():
 
     return render_template("manager/stock.html", stockList=stock, ingredientList=ingredientList, form=form)
 
-#Allows all staff to view the breaklist for each individual day
-@app.route('/breaks', methods=['GET','POST'])
-@business_only
-def breakTimes():
-    cur = mysql.connection.cursor()
-    cur.execute('SELECT * FROM staff')
-    staff = cur.fetchall()
-    cur.execute("SELECT * FROM roster")
-    roster = cur.fetchall()
-    now = datetime.now()
-    day = (now.strftime("%a")).lower()
-    breaksAssigned = {}
-    workingToday = {}
-    for working in roster:
-        if working[day] != '':
-            shift = working[day]
-            workingToday[working['staff_id']] =shift
-    numWorkers = len(workingToday)
-    k= 0
-    while k <2:
-        assigned = 0
-        for employee in workingToday:
-            if k == 0:
-                shift = workingToday[employee]
-                hoursWorking= int(shift[0]+shift[1]) - int(shift[6]+shift[7])
-
-                hoursWorking = hoursWorking*-1
-                if hoursWorking >4 and hoursWorking >= 8:
-                    breaks = 2
-                    workingToday[employee] = [shift,breaks]
-                elif hoursWorking >4:
-                    breaks=1
-                    workingToday[employee] = [shift,breaks]
-                else: 
-                    breaks =0
-                    assigned +=1
-                    workingToday.append("-")
-                start = int(shift[0]+shift[1])
-                endShift = int(shift[6] + shift[7])
-                proposedBreak = 0
-            else:
-                start = workingToday[employee][2]
-            proposedBreak = 0
-            for j in range(4,1,-1):
-
-                if workingToday[employee][1] ==1 and len(working[employee] >=3):
-                    break
-                proposedBreak = start + j
-                if proposedBreak in breaksAssigned: 
-                    proposedBreak = 0
-                elif proposedBreak  >= endShift or (proposedBreak) >= endShift -1:
-                    proposedBreak =0
-                else:
-                    breaksAssigned[proposedBreak] =1
-                    start = start +j
-                    endBreak = start +0.45
-                    workingToday[employee].append(start)
-                    assigned +=1
-                    break
-        i = 2
-        while assigned != len(workingToday):
-            for employee in workingToday:
-                shift = workingToday[employee][0]
-                start = int(shift[0]+shift[1])
-                endShift = int(shift[6] + shift[7])
-                if k == 1:
-                    start = workingToday[employee][2]
-                if (len(workingToday[employee]) <3 and k ==0) or (len(workingToday[employee]) <4 and k==1):
-                    for j in range(4,1,-1):
-                        if workingToday[employee][1] ==1 and len(working[employee] >3): 
-                            break
-                        proposedBreak = start + j
-                        if proposedBreak in breaksAssigned and breaksAssigned[proposedBreak] >=i: 
-                            proposedBreak = 0
-                        elif proposedBreak  >= endShift or (proposedBreak) >= endShift -1:
-                            proposedBreak =0
-                        elif proposedBreak == start:
-                            proposedBreak = 0
-                        else:
-                            if proposedBreak not in breaksAssigned:
-                                breaksAssigned[proposedBreak] = 1
-                            else:
-                                breaksAssigned[proposedBreak] +=1
-                            start = start +j
-                            endBreak = start +0.45
-                            workingToday[employee].append(start)
-                            assigned +=1
-                            break
-                        if k ==1:
-                            proposedBreak =start+ 0.3 +j
-                            if proposedBreak in breaksAssigned and breaksAssigned[proposedBreak] >=i: 
-                                proposedBreak = 0
-                            elif proposedBreak  >= endShift or (proposedBreak) >= endShift -1:
-                                proposedBreak =0
-                            elif proposedBreak == start:
-                                proposedBreak = 0
-                            else:
-                                if proposedBreak not in breaksAssigned:
-                                    breaksAssigned[proposedBreak] = 1
-                                else:
-                                    breaksAssigned[proposedBreak] +=1
-                                start = proposedBreak
-                                endBreak = start +0.45
-                                workingToday[employee].append(start)
-                                assigned +=1
-                                break
-            i +=1
-        k +=1
-    for employee in workingToday:
-        if len(workingToday[employee]) >= 3:
-            workingToday[employee][2] = str(workingToday[employee][2]) + ":00"
-    return render_template("staff/breaks.html",staff=staff, workingToday=workingToday)
-
 ##############################################################################################################################################
 ##############################################################################################################################################
 ##############################################################################################################################################
@@ -2267,12 +2158,11 @@ def booking():
                 """
                 mail.send(msg)
 
-                cur.execute("""INSERT INTO notifications (user, title, message)
-                        VALUES (%s, "Reservation Confirmed","Your reservation has been confirmed, please check your email.");""", (g.user, booking_id))
-                mysql.connection.commit()
-                cur.close()
+                cur.execute('SELECT booking_id FROM bookings WHERE time = %s AND date = %s AND booker_id = %s',(time, date, customer_id))
+                booking = cur.fetchall()
+                booking_id = booking[0]['booking_id']
 
-                return redirect(url_for('menu'))
+                return redirect(url_for('cancel_bookings'))
     return render_template('customer/booking.html', form=form)
 
 # menu where customers' bookings can be cancelled

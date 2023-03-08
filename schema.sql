@@ -95,33 +95,7 @@ VALUES
   ('borthwick@gmail.com', 'Markus', 'Smith', 'pass', 'emptycart.jpg'),
   ('owenfarrel@gmail.com', 'Owen', 'Farrell', 'pass', 'emptycart.jpg');
 
-DROP TABLE IF EXISTS roster;
 
-CREATE TABLE roster 
-(
-    staff_id INTEGER PRIMARY KEY,
-    mon TEXT,
-    tue TEXT,
-    wed TEXT,
-    thu TEXT,
-    fri TEXT,
-    sat TEXT,
-    sun TEXT
-);
-
-INSERT INTO roster
-  ( staff_id, mon, tue, wed, thu, fri, sat, sun )
-VALUES
-  (1, '', '', '09:00-17:00', '09:00-17:00', '00:00-08:00', '09:00-17:00', '09:00-17:00'),
-  (2, '09:00-17:00', '', '', '09:00-17:00', '08:00-16:00', '09:00-17:00', '09:00-17:00'),
-  (3, '09:00-17:00', '09:00-17:00', '', '', '00:00-08:00', '09:00-17:00', '09:00-17:00'),
-  (4, '09:00-17:00', '09:00-17:00', '09:00-17:00', '', '', '09:00-17:00', '09:00-17:00'),
-  (5, '', '', '09:00-17:00', '09:00-17:00', '00:00-08:00', '09:00-17:00', '09:00-17:00'),
-  (6, '09:00-17:00', '', '', '09:00-17:00', '08:00-16:00', '09:00-17:00', '09:00-17:00'),
-  (7, '09:00-17:00', '09:00-17:00', '', '', '08:00-16:00', '09:00-17:00', '09:00-17:00'),
-  (8, '09:00-17:00', '09:00-17:00', '', '', '16:00-24:00', '09:00-17:00', '09:00-17:00'),
-  (9, '09:00-17:00', '', '09:00-17:00', '09:00-17:00', '16:00-24:00', '', '09:00-17:00').
-  (10, '09:00-17:00', '09:00-17:00', '', '09:00-17:00', '16:00-24:00', '', '09:00-17:00');
   
 
 DROP TABLE IF EXISTS ingredient;
@@ -204,20 +178,9 @@ CREATE TABLE dish
 );
 
 INSERT INTO dish
-  ( name, cost, cook_time, dishType, dishPic, description, allergies )
-VALUES
-  ('Burger and Chips', 20, 30, 'main', '1', 'burger and chips description', ''),
-  ('Chicken and Chips', 15, 20, 'main', '1', 'chicken and chips description', ''),
-  ('Fish and Chips', 25, 20, 'main', '1', 'fish and chips description', ''),
-  ('Tomato Soup', 20, 30, 'starter', '1', 'Soup description', ''),
-  ('Chicken Salad', 15, 20, 'starter', '1', 'Chicken salad description', ''),
-  ('Ice Cream', 20, 30, 'dessert', '1', 'Ice cream description', ''),
-  ('Chocolate Brownie', 15, 20, 'dessert', '1', 'brownie description', '');
-
-INSERT INTO dish
   ( name, cost, cook_time, dishType, dishPic, description, allergies, day )
 VALUES
-  ('Mondays Beef', 50, 10, 'special', '1', 'beef description', '', 0),
+  ('C', 50, 10, 'special', '1', 'beef description', '', 0),
   ('Tuedays Beef', 50, 10, 'special', '1', 'beef description', '', 1),
   ('Wednesdays Beef', 50, 10, 'special', '1', 'beef description', '', 2),
   ('Thursdays Beef', 50, 10, 'special', '1', 'beef description', '', 3),
@@ -232,18 +195,6 @@ CREATE TABLE dish_ingredient
     ingredient_id INTEGER NOT NULL,
     dish_id INTEGER NOT NULL
 );
-
-INSERT INTO dish_ingredient
-VALUES
-  ( 1, 1),
-  ( 2, 1),
-  ( 3, 2),
-  ( 4, 3),
-  ( 5, 1),
-  ( 6, 4),
-  ( 7, 6),
-  ( 8, 7),
-  ( 9, 5);
   
 DROP TABLE IF EXISTS orders;
 
@@ -257,7 +208,22 @@ CREATE TABLE orders
     status TEXT
 );
 
-
+INSERT INTO orders
+  ( time, dish_id, table_id, notes, status )
+VALUES
+  ('22:31:55', 3, 5, "tomato-0", "unmade"),
+  ('22:31:55', 5, 5, "", "unmade"),
+  ('22:31:55', 1, 5, "", "unmade"),
+  ('22:31:55', 7, 5, "", "unmade"),
+  ('22:31:55', 3, 5, "", "unmade"),
+  
+  ('22:11:55', 4, 3, "Priority", "unmade"),
+  ('22:11:55', 2, 3, "", "unmade"),
+  ('22:11:55', 5, 3, "", "unmade"),
+  
+  ('22:52:56', 3, 5, "Priority", "unmade"),
+  ('22:52:56', 4, 5, "", "unmade")
+  ;
 
 DROP TABLE IF EXISTS tables;
 
@@ -293,8 +259,7 @@ CREATE TABLE bookings
 
 INSERT INTO bookings ( booker_id, table_id, name, date, time)
 VALUES
-(5, 1, 'Emma', '2023-03-07', 19),
-(5, 1, 'Emma', '2023-04-16', 17);
+(5, 5, 'Emma', '2023-03-07', 20);
 
 DROP TABLE IF EXISTS roster_requests;
 
@@ -403,10 +368,39 @@ CREATE TABLE reviews
 INSERT INTO reviews
   ( username, comment, rating, dish_id, dish_name)
 VALUES
-  ("benc190514@gmail.com", "good", 5, 1, ""), 
-  ("benc190514@gmail.com", "bad", 2, 2, ""), 
-  ("benc190514@gmail.com", "okay", 4, 3, ""),
-  ("benc190514il.com", "AMAZING", 10, 5,"");
+  ("benc190514@gmail.com", "I really like the pepperoni", 5, 1, "Pizza"), 
+  ("James", "Best cripsy base", 5, 1, "Pizza"),
+  ("John", "Delish dish", 5, 1, "Pizza"),
+  
+  ("Kevin", "Love this", 4, 2, "Veg Soup"),
+  ("Kevin", "Salty", 2, 2, "Veg Soup"),
+  
+  ("Will", "Dish was served to me cold...", 1, 3, "Beef Burger"), 
+  ("Billy", "Great", 4, 3, "Beef Burger"),
+  ("Sean", "", 3, 3, "Beef Burger"),
+  
+  ("Steve", "Portion was absolutely huge", 5, 4, "Roast Chicken"),
+  ("Trevor", "Great family meal", 5, 4, "Roast Chicken"),
+  ("Bob", "Would recommend", 5, 4, "Roast Chicken"),
+  
+  ("Bart", "Great insta pic", 4, 5, "Smoked Salmon"),
+  ("Billy", "Too expensive", 4, 5, "Smoked Salmon"),
+  
+  ("Aaron", "cheap and cheerful", 4, 6, "Carbonara"),
+  
+  ("Megan", "not even free", 1, 7, "Bread Basket"),
+  ("Sandra", "very fresh", 4, 7, "Bread Basket"),
+  
+  ("Samantha", "yum yum yum", 5, 8, "Share Platter Chicken Wings"),
+  
+  ("Samantha", "Too spicy", 5, 9, "Hot Share Platter Chicken Wings"),
+  
+  ("Rachel", "Nice", 4, 10, "Ceasar Salad"),
+  ("Billy", "Very nice", 4, 3, "Selection of Ice Cream"),
+  ("Billy", "Cupcake", 4, 3, "tastes like my mom's fr fr"),
+  ("Billy", "Wow I just love oreo what a fantastic ", 4, 3, "Oreo Cheesecake"),
+  
+  ("benc190514il.com", "AMAZING", 5, 5,"");
 
 DROP TABLE IF EXISTS modifications;
 
@@ -418,6 +412,80 @@ CREATE TABLE modifications
   user TEXT
 );
 
+
+INSERT INTO dish
+  ( name, cost, cook_time, dishType, description, allergies, day)
+VALUES
+('Pizza', '13', '15', 'main', ' Italian origin consisting of a usually round, flat base of leavened wheat-based dough topped with tomatoes, cheese and other toppings', 'gluten', '10'),
+('Veg Soup', '6', '3', 'starter', 'A hearty soup consisting of mainly vegetables and a base of vegetable broth topped with delicious croutons', 'gluten', '10'),
+('Beef Burger', '10', '10', 'main', 'Classic Beef burger topped with lettuce, tomato, bacon and pickles', 'gluten', '10'),
+('Roast chicken', '6', '3', 'main', 'Succulent roast chicken served with gravy, comes with a side of mixed veg and mashed potatoes', 'Non applicable', '10'),
+('Smoked Salmon', '15', '16', 'main', 'Salmon fillet that has been cured and hot smoked topped with our secret sauce', 'soya', '10'),
+('Carbonara', '13', '10', 'main', 'Carbonara is a Roman pasta dish made with eggs, hard cheese, cured pork and black pepper', 'Dairy', '10'),
+('Bread Basket', '5', '2', 'starter', 'Selection of Bread served with a series of dips, cheese and olives', 'Cheese, Gluten', '10'),
+('Share platter chicken Wings (mild)', '20', '13', 'starter', 'Platter of BBQed chicken wings covered in our mild seasoning served with ranch', 'Dairy', '10'),
+('Hot share platter chicken Wings', '29', '13', 'starter', 'Platter of BBQed chicken wings covered in our homemade hot sauce, order if you dare!', 'Dairy', '10'),
+('Caesar Salad', '13', '6', 'main', 'Green salad of romaine lettuce and croutons dressed with lemon juice, olive oil, egg, Worcestershire sauce, anchovies, garlic, Dijon mustard, Parmesan cheese, and black pepper', 'Dairy', '10'),
+('Selction of Ice-cream', '6', '4', 'dessert', 'Selection of vanilla, chocolate and strawberry served with cream', 'Dairy', '10'),
+('Cupcake', '4', '6', 'dessert', 'Classic sponge cupcake with buttercream icing', 'Dairy', '10'),
+('Oreo Cheesecake', '6', '5', 'dessert', 'Delicious oreo cheesecake', 'Dairy', '10'),
+('Chicken Tikka Masala','15','18','main','Chicken tikka masala is a dish consisting of roasted marinated chicken chunks in a spiced sauce. The sauce is usually creamy and orange-coloured','Dairy','0');
+
+
+
+
+
+
+INSERT INTO ingredient
+(name,supplier_email,status)
+VALUES
+('lettuce',"",""),
+('tomato','',''),
+('vanilla icecream','',''),
+('chocolate icrecream','',''),
+('strawberry icrecream','',''),
+('salmon fillet','',''),
+('potatoes','',''),
+('spagetti','',''),
+('bacon','',''),
+('cheese','',''),
+('pepperoni','',''),
+('broccoli','',''),
+('carrots','',''),
+('oreo','',''),
+('croutons','',''),
+('Burger buns','',''),
+('buttercream','',''),
+('sprinkles','',''),
+('chicken','',''),
+('ranch','',''),
+('whipped cream','','');
+
+
+INSERT INTO dish_ingredient
+(dish_id,ingredient_id)
+VALUES
+(1,2),
+(1,11),
+(1,10),
+(2,15),
+(3,16),
+(3,9),
+(3,1),
+(3,2),
+(4,7),
+(4,13),
+(4,12),
+(4,1),
+(5,6),
+(6,8),
+(6,9),
+(8,20),
+(9,20),
+(10,20),
+(10,1),
+(10,2),
+(10,15);
 
 /*
 ############
