@@ -40,10 +40,10 @@ app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
-app.config['MYSQL_USER'] = 'er12' # someone's deets
-app.config['MYSQL_PASSWORD'] = 'meiph' # someone's deets
-app.config['MYSQL_HOST'] = 'cs1.ucc.ie'
-app.config['MYSQL_DB'] = 'cs2208_er12' # someone's deets
+app.config['MYSQL_USER'] = credentials.user
+app.config['MYSQL_PASSWORD'] = credentials.password
+app.config['MYSQL_HOST'] = credentials.host
+app.config['MYSQL_DB'] = credentials.db
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
@@ -1223,12 +1223,12 @@ def roster_approve(id):
     cur.execute("""UPDATE roster_requests SET status='Approved', last_updated=CURRENT_TIMESTAMP WHERE request_id= %s;""", (id,))
     mysql.connection.commit()
 
-    #cur.execute("SELECT * roster_requests WHERE request_id= %s", (id,))
-    #employee = cur.fetchone()
-    #email = employee["employee_email"]
+    cur.execute("SELECT * roster_requests WHERE request_id= %s", (id,))
+    employee = cur.fetchone()
+    email = employee["employee_email"]
 
-    #cur.execute("""INSERT INTO notifications (user, title, message)
-    #                VALUES (%s, 'Roster Request Approved!','Your manager has approved your request!');""", (email,))
+    cur.execute("""INSERT INTO notifications (user, title, message)
+                    VALUES (%s, 'Roster Request Approved!','Your manager has approved your request!');""", (email,))
     mysql.connection.commit()
     cur.close()
     return redirect(url_for("manager"))
