@@ -50,20 +50,26 @@
                                                                                    
                                                                                         <tr>
                                                                                             <th>Dish</th>
+                                                                                            <th></th>
                                                                                             <th>Quantity</th>
                                                                                             <th>Price per dish</th>
                                                                                         </tr>
                                                                                         {% for dish_id in cart %}
+                                                                                        {%for meal in dishes%}
+                                                                                        {%if meal['dish_id']==dish_id%}
                                                                                             <tr>
-                                                                                                <td><img src="/static/picture/{{dish['dishPic']}}" class="dishPic" alt="profile image"></td>
+                                                                                                <td><img src="/static/picture/{{meal['dishPic']}}" class="dishPic" alt="profile image"></td>
                                                                                                 <td>{{ names[dish_id]}}</td>
                                                                                                 <td>{{ cart[dish_id] }}</td>
                                                                                                 <td>{{dish['cost']}}</td>
-                                                                                                <!-- We do be a gobshite i can't believe it took me like 4 hours to figure out book_id = book_id wtf is wrong with me-->
+                                                                                            
                                                                                                 
                                                                                 
                                                                                             </tr>
+                                                                                        {%endif%}    
+                                                                                        {%endfor%}
                                                                                         {% endfor %}
+                                                                                        
                                                                                 {%endif%}
                                                                             </tbody>
                                                                         </table>

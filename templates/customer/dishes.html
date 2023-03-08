@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="static/assets/css/menu.css">
 {% endblock stylesheets %}
 
-
 {% block content %}
 <!-- header section starts -->
 
@@ -45,7 +44,7 @@
                             <a href="{{url_for('add_default_meal', dish_id=meal['dish_id'])}}" class="btn">order now</a>
                         </div>
                         <div class="image">
-                            <img src="static/images-menu/{{ meal['dishPic'] }}" alt="">
+                            <img src="static/picture/{{ meal['dishPic'] }}" alt="">
                         </div>
                     </div>
                 {% endfor %}
@@ -84,10 +83,11 @@
     <div class="container">
         <section class="menu" id="menu">
             <div class="box-container">
-                {% for dish in starter%}
+                {% for dish in starters%}
                 <div class="box">
                     <div class="image">
-                        <img src="/static/picture/{{ dish['dishPic'] }}" class="dishPic">
+                        
+                        <img src="static/picture/{{dish['dishPic']}}" class="dishPic">
                         <a href="#" class="fas fa-heart"></a>
                     </div>
                     <div class="content">
@@ -123,7 +123,7 @@
                 {% for dish in mainCourse%}
                 <div class="box">
                     <div class="image">
-                        <img src="/static/picture/{{dish['dishPic']}}" class="dishPic">
+                        <img src="static/picture/{{dish['dishPic']}}" class="dishPic">
                         <a href="#" class="fas fa-heart"></a>
                     </div>
                     <div class="content">
@@ -141,7 +141,6 @@
                             {% endif %}
                         </div>
                         <h3>{{dish['name']}}</h3>
-                        <p>{{dish['cost']}}</p>
                         <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
                         <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
                         <span class="price">€{{dish['cost']}}</span>
@@ -160,7 +159,7 @@
                 {% for dish in side%}
                 <div class="box">
                     <div class="image">
-                        <img src="/static/picture/{{dish['dishPic']}}" class="dishPic">
+                        <img src="static/picture/{{dish['dishPic']}}" class="dishPic">
                         <a href="#" class="fas fa-heart"></a>
                     </div>
                     <div class="content">
@@ -198,7 +197,7 @@
                 {% for dish in dessert %}
                 <div class="box">
                     <div class="image">
-                        <img src="/static/picture/{{dish['dishPic']}}" class="dishPic">
+                        <img src="static/picture/{{dish['dishPic']}}" class="dishPic">
                         <a href="#" class="fas fa-heart"></a>
                     </div>
                     <div class="content">
@@ -227,6 +226,44 @@
     </div>
 </div>
 
+
+<div id="Drinks" class="tabcontent">
+    <div class="container">
+        <section class="menu" id="menu">
+            <div class="box-container">
+                {% for dish in drink %}
+                <div class="box">
+                    <div class="image">
+                        <img src="static/picture/{{dish['dishPic']}}" class="dishPic">
+                        <a href="#" class="fas fa-heart"></a>
+                    </div>
+                    <div class="content">
+                        <div class="stars">
+                            {% set full_stars = dish['avg_rating'] | int %}
+                            {% set half_stars = dish['avg_rating'] % 1 == 0.5 %}
+                            {% for i in range(full_stars) %}
+                                <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% if half_stars %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% endif %}
+                            {% if dish['avg_rating'] == 0 %}
+                                <p> No review yet </p>
+                            {% endif %}
+                        </div>
+                        <h3>{{dish['name']}}</h3>
+                        <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
+                        <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
+                        <span class="price">€{{dish['cost']}}</span>
+                    </div>
+                </div>
+                {%endfor%}
+            </div>
+        </section>
+    </div>
+</div>
+
+
 <div id="Special" class="tabcontent">
     <div class="container">
         <section class="menu" id="menu">
@@ -245,8 +282,8 @@
                             <i class="fas fa-star"></i>
                             <i class="fas fa-star-half-alt"></i>
                         </div>
+                        
                         <h3>{{dish['name']}}</h3>
-                        <p>{{dish['cost']}}</p>
                         <p><a href="{{url_for('dish', dish_id=dish['dish_id'])}}">Dish Information</a></p>
                         <p><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">Add to cart</a></p>
                         <span class="price">€{{dish['cost']}}</span>
@@ -292,7 +329,6 @@
     </section>
 </div>
 <!-- review section ends -->
-
 {% block javascripts %}
 <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 
