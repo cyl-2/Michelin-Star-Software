@@ -6,7 +6,6 @@
 
     <div class="pcoded-main-container">
         <div class="pcoded-wrapper">
-    <!-- [ basic-table ] start -->
     <div class="col-xl-12">
         <div class="card">
             <div class="card-header">
@@ -39,7 +38,7 @@
                                         {%endfor%}
                                     </ul>
                                 </td>
-                                <td><a href="{{url_for('add_default_meal', dish_id=dish['dish_id'])}}">+</a>  {{ cart[dish_id] }}   </td>
+                                <td><a href="{{url_for('add_default_meal', dish_id=dish_id)}}">+</a>  {{ cart[dish_id] }}   </td>
                                 <td><b>€{{dish['cost']}}.00</b> &emsp;   </li> </td>
                                 <td><span class="badge badge-secondary2"><a href="{{url_for('remove',dish_id=dish_id)}}" id="remove">X</a></span></td>
                             </tr>
@@ -52,7 +51,6 @@
                 <p><a href="{{url_for('clearCart')}}" style="float:right;" class="label theme-bg text-white f-12">Clear Cart</a></p>
         </div>
     </div>
-    <!-- [ basic-table ] end -->
 
     <div class="col-md-6 col-xl-4" style="float:right;">
         <div class="card Monthly-sales">
