@@ -21,6 +21,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 
+
 app.config["SECRET_KEY"] = "MY_SECRET_KEY"
 UPLOAD_FOLDER = "static/picture"
 app.config['DEBUG'] = False
@@ -39,10 +40,11 @@ app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
-app.config['MYSQL_USER'] = credentials.user
-app.config['MYSQL_PASSWORD'] = credentials.password
-app.config['MYSQL_HOST'] = credentials.host
-app.config['MYSQL_DB'] = credentials.db
+app.config['MYSQL_USER'] = 'er12' # someone's deets
+app.config['MYSQL_PASSWORD'] = 'meiph' # someone's deets
+app.config['MYSQL_HOST'] = 'cs1.ucc.ie'
+app.config['MYSQL_DB'] = 'cs2208_er12' # someone's deets
+app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
@@ -460,6 +462,7 @@ def confirm_code(email, table):
 
 #Customer profile - can see info about past transactions + leave a review
 @app.route('/customer_profile')
+@customer_only
 def customer_profile():
     username = session['username']
     cur = mysql.connection.cursor()
@@ -478,7 +481,6 @@ def customer_profile():
     if transactionHistory is not None:
         message = "You've made no transactions yet"
     cur.close()
-    #return render_template("customer/profile.html", title="My Profile")
     return render_template('customer/customer_profile.html',image=image, transactionHistory=transactionHistory,dishes=dishes,user=g.user)
 
 @app.route('/user_pic', methods=['GET','POST'])
@@ -540,6 +542,7 @@ def undoList():
 
 # organises and displays priority queue
 @app.route('/kitchen', methods=['GET','POST'])
+@staff_only
 def kitchen():
     if 'undoList' not in session:
         undoList()
@@ -564,6 +567,7 @@ def kitchen():
 
 # updates the status of a meal
 @app.route('/<int:dish_id>,<int:order_id>,<int:time>/kitchenUpdate', methods=['GET','POST'])
+@staff_only
 def kitchenUpdate(dish_id,order_id, time):
     cur = mysql.connection.cursor()
     cur.execute('''UPDATE orders
@@ -595,6 +599,7 @@ def kitchenUpdate(dish_id,order_id, time):
 
 # updates meal status to sent out
 @app.route('/<int:order_id>,<int:time>/kitchenDelete', methods=['GET','POST'])
+@staff_only
 def kitchenSentOut(order_id, time):
 
     cur = mysql.connection.cursor()
@@ -610,6 +615,7 @@ def kitchenSentOut(order_id, time):
 
 # changes an order to complete and re-routes to kitchen
 @app.route('/<int:order_id>,<int:time>/kitchenComplete', methods=['GET','POST'])
+@staff_only
 def kitchenComplete(order_id, time):
 
     cur = mysql.connection.cursor()
@@ -625,6 +631,7 @@ def kitchenComplete(order_id, time):
 
 # undo previous action
 @app.route('/kitchenUndo', methods=['GET','POST'])
+@staff_only
 def kitchenUndo():
     if session['undoList']==[]:
         return redirect(url_for('kitchen'))
@@ -678,6 +685,7 @@ def kitchenUndo():
 
 # Waiter chooses a table to take an order from
 @app.route("/choose_table", methods=["GET","POST"])
+@staff_only
 def choose_table():
     cur = mysql.connection.cursor()
         
@@ -710,6 +718,7 @@ def choose_table():
 
 # offers a simple view of the menu, ordered meals and an order list similar to a waiter's notepad
 @app.route("/<int:table>/take_order", methods=["GET","POST"])
+@staff_only
 def take_order(table):  
     cur = mysql.connection.cursor()
     cur.execute('SELECT * FROM dish')
@@ -755,6 +764,7 @@ def take_order(table):
 
 # allows waiter to customize ingredients in a meal and add it to the order
 @app.route('/<int:table>/waiter_customize_dish/<int:dish_id>', methods=['GET','POST'])
+@staff_only
 def waiter_customize_dish(table, dish_id):
     if str(dish_id) not in session:
         session[str(dish_id)]={}
@@ -808,7 +818,7 @@ def waiter_customize_dish(table, dish_id):
 
 # increases portion of an ingredient in a dish
 @app.route('/<int:table>/waiter_inc_quantity_ingredient/<int:ingredient_id>')
-#@staff_only
+@staff_only
 def waiter_inc_quantity_ingredient(table, ingredient_id):
     dish_id = session['CurrentDish'] # put this as input
     if ingredient_id not in session[str(dish_id)]:
@@ -818,7 +828,7 @@ def waiter_inc_quantity_ingredient(table, ingredient_id):
 
 # decreases portion of an ingredient in a dish
 @app.route('/<int:table>/waiter_dec_quantity_ingredient/<int:ingredient_id>')
-#@staff_only
+@staff_only
 def waiter_dec_quantity_ingredient(table, ingredient_id):
     dish_id = session['CurrentDish']
     if ingredient_id not in session[str(dish_id)]:
@@ -829,6 +839,7 @@ def waiter_dec_quantity_ingredient(table, ingredient_id):
 
 # adds meal to order if ingredients are available
 @app.route("/<int:table>/add_order/<meal>", methods=["GET","POST"])
+@staff_only
 def add_order(table, meal):
     if 'mods' not in session:
         session['mods'] = {}
@@ -870,6 +881,7 @@ def add_order(table, meal):
 
 # remove a meal from the ordering list
 @app.route("/<int:table>/remove_meal/<meal>/<int:index>", methods=["GET","POST"])
+@staff_only
 def remove_meal(table, meal, index):
     session['ordering'][table][meal].pop(index)
     if len(session['ordering'][table][meal]) == 0:
@@ -877,7 +889,8 @@ def remove_meal(table, meal, index):
     return redirect(url_for("take_order", table=table))
 
 # cancel a meal that has been sent to the kitchen
-@app.route("/<int:table>/cancel_meal/<int:meal_id>", methods=["GET","POST"])##c
+@app.route("/<int:table>/cancel_meal/<int:meal_id>", methods=["GET","POST"])
+@staff_only
 def cancel_meal(table, meal_id):
     
     cur = mysql.connection.cursor()
@@ -899,6 +912,7 @@ def cancel_meal(table, meal_id):
 
 # prioritise a meal that has been sent to the kitchen
 @app.route("/<int:table>/prioritise/<int:meal_id>", methods=["GET","POST"])
+@staff_only
 def prioritise(table, meal_id):
     cur = mysql.connection.cursor()
     cur.execute('SELECT notes FROM orders WHERE table_id = %s AND order_id = %s',(table, meal_id))
@@ -917,6 +931,7 @@ def prioritise(table, meal_id):
 
 # cancel all meals in the ordering section
 @app.route("/<int:table>/cancel_order", methods=["GET","POST"])
+@staff_only
 def cancel_order(table):
     session['mods'][table] = {}
     session['ordering'][table] = {}
@@ -924,6 +939,7 @@ def cancel_order(table):
 
 # send ordering list to the kitchen, displayed in orders
 @app.route("/<int:table>/complete_order", methods=["GET","POST"])
+@staff_only
 def complete_order(table):  
     cur = mysql.connection.cursor()
     if table in session['ordering']:
@@ -959,7 +975,7 @@ def take_payment(table):
 
 # drag and drop table icons on GUI
 @app.route("/move_tables", methods=["GET","POST"])
-#@business_only
+@business_only
 def move_tables():
     cur = mysql.connection.cursor()
     
@@ -1000,7 +1016,7 @@ def allocate_table(table):
     return redirect(url_for('take_order', table=table))
 
 @app.route("/roster_request", methods=["GET", "POST"])
-#@staff_only
+@staff_only
 def roster_request():
     cur = mysql.connection.cursor()
     form = RosterRequestForm()
@@ -1282,6 +1298,7 @@ def delete_from_roster():
 
 # removes shift from roster for a staff member
 @app.route("/remove_roster_slot/<int:staff_id>/<int:day>", methods=["GET","POST"])
+@manager_only
 def remove_roster_slot(staff_id, day):
     week = ['mon','tue','wed','thu','fri','sat','sun']
     cur = mysql.connection.cursor()
@@ -1369,7 +1386,7 @@ def manage_shift_requirements():
     return render_template("manager/shift_requirements.html", requirements=requirements, staff=staff, week=week, form=form)
 
 # View and manage all employees
-#@manager_only
+@manager_only
 @app.route("/view_all_employees")
 def view_all_employees():
     cur = mysql.connection.cursor()
@@ -1380,7 +1397,7 @@ def view_all_employees():
 
 # Remove existing employee
 @app.route("/remove_employee/<int:id>")
-#@manager_only
+@manager_only
 def remove_employee(id):
     cur = mysql.connection.cursor()
     cur.execute("""DELETE FROM staff WHERE staff_id=%s""", (id,))
@@ -1390,7 +1407,7 @@ def remove_employee(id):
 
 # Add new employee
 @app.route("/add_new_employee", methods=["GET", "POST"])
-#@manager_only
+@manager_only
 def add_new_employee():
     form = EmployeeForm()
     if form.validate_on_submit():
@@ -1421,8 +1438,8 @@ def add_new_employee():
     return render_template("manager/add_new_staff.html", form=form, title="Add New Employee")   
 
 # View queries from users
-#@manager_only
 @app.route("/view_query")
+@manager_only
 def view_query():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM user_queries")
@@ -1431,8 +1448,9 @@ def view_query():
     return render_template("manager/queries.html", queries=queries)
 
 # Delete queries from users
-#@manager_only
+
 @app.route("/delete_query/<int:id>")
+@manager_only
 def delete_query(id):
     cur = mysql.connection.cursor()
     cur.execute("DELETE FROM user_queries WHERE query_id=%s", (id,))
@@ -1443,8 +1461,9 @@ def delete_query(id):
     return redirect(url_for("view_query"))
 
 # Manager can reply to user queries
-#@manager_only
+
 @app.route("/reply_email/<id>", methods=["GET", "POST"])
+@manager_only
 def reply_email(id):
     cur = mysql.connection.cursor()
     form = ReplyForm()
@@ -1466,8 +1485,9 @@ def reply_email(id):
     return render_template("manager/reply_email.html",form=form, title="Reply", query=query)
 
 # Delete queries from users
-#@manager_only
+
 @app.route("/view_inventory", methods=["GET", "POST"])
+@manager_only
 def view_inventory():
     form = Supplier()
     cur = mysql.connection.cursor()
@@ -1476,8 +1496,9 @@ def view_inventory():
     cur.close()
     return render_template("manager/inventory.html",form=form, inventory=inventory, title="Inventory List")
 
-#@manager_only
+
 @app.route("/add_supplier/<int:id>", methods=["GET", "POST"])
+@manager_only
 def add_supplier(id):
     form = Supplier()
     if form.validate_on_submit():
@@ -1489,6 +1510,7 @@ def add_supplier(id):
     return redirect(url_for('view_inventory'))
 
 @app.route("/delete_ingredient/<int:id>")
+@manager_only
 def delete_ingredient(id):
     cur = mysql.connection.cursor()
     cur.execute("DELETE FROM ingredient WHERE ingredient_id = %s", (id,))
@@ -1499,6 +1521,7 @@ def delete_ingredient(id):
 
 # Add a new dish to the menu
 @app.route('/addDish', methods=['GET','POST'])
+@manager_only
 def addDish():
     cur = mysql.connection.cursor()
     form = AddDishForm()
@@ -1555,7 +1578,7 @@ def addDish():
 # View and manage all existing menu items
 #@manager_only
 @app.route("/view_all_menu_items")
-#@manager_only
+@manager_only
 def view_all_menu_items():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM dish")
@@ -1565,7 +1588,7 @@ def view_all_menu_items():
 
 # Remove menu items
 @app.route("/remove_menu_item/<int:id>")
-#@manager_only
+@manager_only
 def remove_menu_item(id):
     cur = mysql.connection.cursor()
     cur.execute("""DELETE FROM dish WHERE dish_id=%s""", (id,))
@@ -1604,6 +1627,7 @@ def add_table():
 
 # displays tables which can be deleted
 @app.route("/remove_table_menu", methods=["GET","POST"])
+@manager_only
 def remove_table_menu():
     cur = mysql.connection.cursor()
     cur.execute('SELECT table_id, x, y FROM tables ORDER BY table_id')
@@ -1616,6 +1640,7 @@ def remove_table_menu():
 
 # removes a table from the system, called from /remove_table_menu
 @app.route("/<int:table>/remove_table", methods=["GET", "POST"])
+@manager_only
 def remove_table(table):
     cur = mysql.connection.cursor()
         
@@ -1629,6 +1654,7 @@ def remove_table(table):
 
 # display ingredient batches ordered and expiry dates
 @app.route("/stock", methods=["GET", "POST"])
+@manager_only
 def stock():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM stock JOIN ingredient ON stock.ingredient_id = ingredient.ingredient_id")
@@ -1677,35 +1703,35 @@ def menu():
     cur=mysql.connection.cursor()
     
     if session['order_by'] == 'low':
-        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        cur.execute("""SELECT d.cost, d.description, d.dishPic,d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                       FROM dish AS d
                       LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                       WHERE d.dishType='starter'
                       GROUP BY dish_id
                       ORDER BY cost;""")
         starters = cur.fetchall()
-        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        cur.execute("""SELECT d.cost, d.description, d.name,d.dishPic ,d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                       FROM dish AS d
                       LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                       WHERE d.dishType='main'
                       GROUP BY dish_id
                       ORDER BY cost;""")
         mainCourse = cur.fetchall()
-        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        cur.execute("""SELECT d.cost, d.description, d.name,d.dishPic, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                       FROM dish AS d
                       LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                       WHERE d.dishType='dessert'
                       GROUP BY dish_id
                       ORDER BY cost;""")
         dessert = cur.fetchall()
-        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        cur.execute("""SELECT d.cost, d.description, d.name,d.dishPic, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                       FROM dish AS d
                       LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                       WHERE d.dishType='drink'
                       GROUP BY dish_id
                       ORDER BY cost;""")
         drink = cur.fetchall()
-        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        cur.execute("""SELECT d.cost, d.description, d.dishPic,d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                       FROM dish AS d
                       LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                       WHERE d.dishType='side'
@@ -1714,35 +1740,35 @@ def menu():
         side = cur.fetchall()
     
     else:
-        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        cur.execute("""SELECT d.cost, d.description, d.dishPic,d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                         FROM dish AS d
                         LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                         WHERE d.dishType='starter'
                         GROUP BY dish_id
                         ORDER BY cost DESC;""")
         starters = cur.fetchall()
-        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        cur.execute("""SELECT d.cost, d.description, d.name, d.dishPic,d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                         FROM dish AS d
                         LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                         WHERE d.dishType='main'
                         GROUP BY dish_id
                         ORDER BY cost DESC;""")
         mainCourse = cur.fetchall()
-        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        cur.execute("""SELECT d.cost, d.description, d.name,d.dishPic ,d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                         FROM dish AS d
                         LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                         WHERE d.dishType='dessert'
                         GROUP BY dish_id
                         ORDER BY cost DESC;""")
         dessert = cur.fetchall()
-        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        cur.execute("""SELECT d.cost, d.description, d.name, d.dishPic,d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                         FROM dish AS d
                         LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                         WHERE d.dishType='drink'
                         GROUP BY dish_id
                         ORDER BY cost DESC;""")
         drink = cur.fetchall()
-        cur.execute("""SELECT d.cost, d.description, d.name, d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
+        cur.execute("""SELECT d.cost, d.description, d.name, d.dishPic,d.dish_id, IFNULL(ROUND(avg(rating)*2)/2, 0) AS avg_rating
                         FROM dish AS d
                         LEFT JOIN reviews AS r ON d.dish_id = r.dish_id
                         WHERE d.dishType='side'
@@ -1758,7 +1784,7 @@ def menu():
                     """)
     reviews=cur.fetchall()
     
-    cur.execute("SELECT dish_id FROM reviews ORDER BY rating DESC LIMIT 3")
+    cur.execute("SELECT dish_id FROM dish where name='Beef Burger' or name='Roast chicken' or name='Cupcake' LIMIT 3")
     slider_ids = cur.fetchall()
     slider_list = []
     for id in slider_ids:
@@ -1784,7 +1810,7 @@ def swap_sort():
 
 # Customer can give a rating and comment for a dish they've purchased
 @app.route('/review_dish/<int:dish_id>',methods=['GET', 'POST'])
-#@customer_only
+@customer_only
 def review_dish(dish_id):
     cur=mysql.connection.cursor()
     cur.execute('''SELECT * FROM dish WHERE dish_id = %s''',(dish_id,))
@@ -1810,6 +1836,7 @@ def review_dish(dish_id):
 
 # Detailed view of dish - allows place to leave a review and make dish modifications 
 @app.route('/dish/<int:dish_id>', methods=['GET','POST'])
+@customer_only
 def dish(dish_id):
     if str(dish_id) not in session:
         session[str(dish_id)]={}
@@ -1841,7 +1868,6 @@ def dish(dish_id):
             ingredient_id = ingredient['ingredient_id']
             cur.execute("SELECT * FROM ingredient WHERE ingredient_id=%s",(ingredient_id,))
             ing_name=cur.fetchone()['name']
-            #ingredient_name = ingredient['name']
             if ingredient_id not in session[str(dish_id)]:
                 session[str(dish_id)][ingredient_id] =1
             else:
@@ -1862,7 +1888,6 @@ def inc_quantity_ingredient(ingredient_id):
     dish_id = session['CurrentDish']
     cur.execute("SELECT * FROM dish_ingredient WHERE ingredient_id=%s",(ingredient_id,))
     result=cur.fetchone()
-    #dish_id = result['dish_id']
     if ingredient_id not in session[str(dish_id)]:
         session[str(dish_id)][ingredient_id] = 1
     session[str(dish_id)][ingredient_id] = session[str(dish_id)][ingredient_id] +1
@@ -1876,7 +1901,6 @@ def dec_quantity_ingredient(ingredient_id):
     dish_id = session['CurrentDish']
     cur.execute("SELECT * FROM dish_ingredient WHERE ingredient_id=%s",(ingredient_id,))
     result=cur.fetchone()
-    #dish_id = result['dish_id']
     if ingredient_id not in session[str(dish_id)]:
         session[str(dish_id)][ingredient_id] = 1
     if session[str(dish_id)][ingredient_id] !=0:
@@ -1913,7 +1937,6 @@ def cart():
             changes =vals['notes']
             list.append(changes)
         modifications[dish_id] = list
-    #cur.close()
     return render_template('customer/cart.html', cart=session['cart'], dishes=dishes,mods=modifications,names=names, dish=dish, full=full)
 
 # Adds the default item to cart
@@ -1934,7 +1957,6 @@ def add_default_meal(dish_id):
         changes+=str(name)+":" "1 "
     cur.execute("INSERT INTO modifications(dish_id,notes,user) VALUES(%s,%s,%s)",(dish_id,changes,g.user))
     mysql.connection.commit()
-    #cur.close()
     return redirect(url_for('cart'))
 
 @app.route('/add_to_cart/<int:dish_id>')
@@ -1949,6 +1971,7 @@ def add_to_cart(dish_id):
 
 # Remove a specific modification from cart based on the changes made and the dish_id
 @app.route('/remove_specific/<string:changes>/<int:dish_id>')
+@customer_only
 def remove_specific(changes,dish_id):
     if changes=="":
         if dish_id not in session['cart']:
@@ -1957,7 +1980,7 @@ def remove_specific(changes,dish_id):
             session['cart'][dish_id] = session['cart'][dish_id] -1
         return redirect(url_for('cart')) 
     cur = mysql.connection.cursor()
-    cur.execute("Select * FROM modifications WHERE user=%s AND changes=%s AND dish_id=%s",(g.user,changes,dish_id))
+    cur.execute("Select * FROM modifications WHERE user=%s AND notes=%s AND dish_id=%s",(g.user,changes,dish_id))
     modificationId = cur.fetchone()['modifications_id']
     cur.execute('DELETE FROM modifications WHERE modifications_id=%s',(modificationId,))
     mysql.connection.commit()
@@ -1971,8 +1994,14 @@ def remove_specific(changes,dish_id):
 
 # Completely clears cart of any orders
 @app.route('/clearCart')
+@customer_only
 def clearCart():
+    cur = mysql.connection.cursor()
+    for dish_id in session['cart']:
+        cur.execute('DELETE FROM modifications where dish_id=%s',(dish_id,))
+        mysql.connection.commit()
     session['cart'].clear()
+
     return redirect(url_for('cart'))
 
 # Deletes all menu items with specified dish_id
@@ -1991,12 +2020,16 @@ def remove(dish_id):
 
 # Allows user to pay for items selected
 @app.route('/checkout', methods=['GET','POST'])
+@customer_only
 def checkout():
+    cur = mysql.connection.cursor()
     full =0
     form = cardDetails()
     names = {}
     username = g.user
-    cur = mysql.connection.cursor()
+    cur.execute('select * from dish')
+    dishes = cur.fetchall()
+
     for dish_id in session['cart']:
         cur.execute('SELECT * FROM dish WHERE dish_id=%s;',(dish_id,))
         name = cur.fetchone()['name']
@@ -2046,7 +2079,7 @@ def checkout():
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('menu'))
-    return render_template('customer/checkout.html', cart=session['cart'],form=form,full=full,names=names,dish=dish)
+    return render_template('customer/checkout.html', cart=session['cart'],form=form,full=full,names=names,dish=dish,dishes=dishes)
 
 
 ##############################################################################################################################################
@@ -2167,6 +2200,7 @@ def booking():
 
 # menu where customers' bookings can be cancelled
 @app.route('/cancel_bookings', methods=['GET','POST'])
+@customer_only
 def cancel_bookings():
     cur = mysql.connection.cursor()
     cur.execute('SELECT customer_id FROM customer WHERE email = %s',(g.user,))
@@ -2183,6 +2217,7 @@ def cancel_bookings():
 
 # cancels a customers' booking
 @app.route('/cancel_booking/<int:booking_id>', methods=['GET','POST'])
+@staff_only
 def cancel_booking(booking_id):
     cur = mysql.connection.cursor()
     cur.execute('DELETE FROM bookings WHERE booking_id = %s',(booking_id,))
@@ -2197,6 +2232,7 @@ def cancel_booking(booking_id):
 
 #Allows all staff to view the breaklist for each individual day
 @app.route('/breaks', methods=['GET','POST'])
+@staff_only
 def breakTimes():
     cur = mysql.connection.cursor()
     cur.execute('SELECT * FROM staff')
@@ -2302,10 +2338,18 @@ def breakTimes():
                                 break
             i +=1
         k +=1
+    print(workingToday)
     for employee in workingToday:
         if len(workingToday[employee]) >= 3:
             workingToday[employee][2] = str(workingToday[employee][2]) + ":00"
-            #if len(workingToday[employee] ==5)
+
+            if len(workingToday[employee]) ==4:
+                string =str(workingToday[employee][3])
+                print(string)
+                if len(string)>2:
+                    workingToday[employee][3] = (str(workingToday[employee][3]))[0]  +(str(workingToday[employee][3]))[1] + ":" + (str(workingToday[employee][3]))[3] + "0"
+                else:
+                    workingToday[employee][3] = str(workingToday[employee][3]) + ":00"
     return render_template("staff/breaks.html",staff=staff, workingToday=workingToday)
 
 if __name__ == '__main__':
