@@ -36,25 +36,17 @@
                                             <table class="table table-hover">
                                                 <thead>
                                                     <tr>
-                                                        <th>Item</th>
-                                                        <th>Quantity</th>
-                                                        <th>Status</th>
-                                                        <th>Supplier Email</th>
-                                                        <th></th>
+                                                        <th class="col-sm-2">Item</th>
+                                                        <th class="col-sm-3">Supplier Email</th>
+                                                        <th class="col-sm-1"></th>
+                                                        <th class="col-sm-2">Status</th>
+                                                        <th class="col-sm-1"></th>
                                                     </tr>
                                                 </thead>
                                                 {% for item in inventory %}
                                                 <tbody>
                                                     <tr>
-                                                        <td> {{ item ["name"] }} </td>
-                                                        <td> {{ item ["quantity"] }} </td>
-                                                        {% if item["status"] == "amber" %}
-                                                            <td class="text-left"><i class="fas fa-circle text-c-amber f-15"></i> </td>
-                                                        {% elif item["status"] == "green" %}
-                                                            <td><i class="fas fa-circle text-c-green f-15"></i> </td>
-                                                        {% else %}
-                                                            <td><i class="fas fa-circle text-c-red f-15"></i> </td>
-                                                        {% endif %}
+                                                        <td > {{ item ["name"] }} </td>
                                                         <td>
                                                             {% if item["supplier_email"] == '' %}
                                                             <form action="http://localhost:5000/add_supplier/{{ item['ingredient_id'] }}" method="post" enctype="multipart/form-data" novalidate>
@@ -70,15 +62,19 @@
                                                                     </span>
                                                                     
                                                                 </div>
-                                                                <!--
-                                                                    {{form.hidden_tag()}}
-                                                                {{form.id(value= item['ingredient_id'] )}}
-                                                                -->
                                                             </form>
                                                             {% else %}
                                                             {{ item['supplier_email'] }}
                                                             {% endif %}
                                                         </td>
+                                                        <td><a href="{{ url_for('edit_supplier', id=item['ingredient_id']) }}" class="text-c-blue"> Edit </a></td>
+                                                        {% if item["status"] == "amber" %}
+                                                            <td class="text-left"><i class="fas fa-circle text-c-amber f-15"></i> </td>
+                                                        {% elif item["status"] == "green" %}
+                                                            <td><i class="fas fa-circle text-c-green f-15"></i> </td>
+                                                        {% else %}
+                                                            <td><i class="fas fa-circle text-c-red f-15"></i> </td>
+                                                        {% endif %}
                                                         <td><a href="{{ url_for('delete_ingredient', id=item['ingredient_id']) }}" class="text-c-red"> Delete </a></td>
                                                     </tr>
                                                 </tbody>

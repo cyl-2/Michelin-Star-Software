@@ -153,10 +153,7 @@
                                                     {% for req in approved_requests %}
                                                     <tr>
                                                         <td>
-                                                            <h6 class="m-0"><img class="rounded-circle m-r-10"
-                                                                                    style="width:40px;"
-                                                                                    src="/static/assets/images/user/avatar-1.jpg"
-                                                                                    alt="activity-user">{{ req["employee"] }}</h6>
+                                                            {{ req["employee_name"] }}
                                                         </td>
                                                         <td>
                                                             <h6 class="m-0">{{ req["message"] }}</h6>
@@ -195,12 +192,7 @@
                                                     <tbody>
                                                     {% for req in pending_requests %}
                                                     <tr>
-                                                        <td>
-                                                            <h6 class="m-0"><img class="rounded-circle m-r-10"
-                                                                                    style="width:40px;"
-                                                                                    src="/static/assets/images/user/avatar-1.jpg"
-                                                                                    alt="activity-user">{{ req["employee"] }}</h6>
-                                                        </td>
+                                                        <td> {{ req["employee_name"] }} </td>
                                                         <td>
                                                             <h6 class="m-0">{{ req["message"] }}</h6>
                                                         </td>
@@ -245,10 +237,7 @@
                                                     {% for req in rejected_requests %}
                                                     <tr>
                                                         <td>
-                                                            <h6 class="m-0"><img class="rounded-circle m-r-10"
-                                                                                    style="width:40px;"
-                                                                                    src="/static/assets/images/user/avatar-1.jpg"
-                                                                                    alt="activity-user">{{ req["employee"] }}</h6>
+                                                            {{ req["employee_name"] }}
                                                         </td>
                                                         <td>
                                                             <h6 class="m-0">{{ req["message"] }}</h6>

@@ -24,9 +24,8 @@
                                                     <tr>
                                                         <th scope="col">Batch ID</th>
                                                         <th scope="col">Name</th>
-                                                        <th scope="col">Expiry Date</th>
                                                         <th scope="col">Quantity</th>
-                                                        <th scope="col">Pending Restock</th>
+                                                        <th scope="col">Expiry Date</th>
                                                     </tr>
                                                 </thead>
                                                 {% for stock in stockList %}
@@ -34,16 +33,8 @@
                                                     <tr>
                                                         <th scope="row">{{ stock['batch_id'] }}</th>
                                                         <td>{{ stock['name'] }}</td>
-                                                        <td>{{ stock['expiry_date'] }}</td>
                                                         <td>{{ stock['quantity'] }}</td>
-                                                        <td>
-                                                            {% if stock['pending_restock'] == 0 %}
-                                                                <img center" src="{{ url_for('static', filename='ex.png' ) }}" style="width: 20px; padding: 0em auto;"/>
-                                                            {% else %}
-                                                            <img src="{{ url_for('static', filename='tick.png' ) }}" style="width: 20px;"/>
-                                                            {% endif %}
-                                                        </td>
-                                                        <td></td>
+                                                        <td>{{ stock['expiry_date'] }}</td>
                                                     </tr>
                                                 </tbody>
                                                 {% endfor %}
