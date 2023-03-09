@@ -83,16 +83,30 @@ VALUES (DATE_FORMAT(CURDATE(), '%Y-%m-01'), @gross_profit);
 END//
 DELIMITER ;
 
-/* TRIGGER TO UPDATE STATUS AFTER UPDATING QUANTITY IN INGREDIENT TABLE */
+/* TRIGGER TO UPDATE 'STATUS' AFTER UPDATING QUANTITY IN INGREDIENT TABLE */
 
 CREATE DEFINER=`root`@`localhost` TRIGGER `ingredient_BEFORE_UPDATE` BEFORE UPDATE ON `ingredient` FOR EACH ROW BEGIN
-	IF NEW.quantity <= 10 THEN
+	IF NEW.quantity <= 49 THEN
         SET NEW.status = 'RED';
     END IF;
-    IF NEW.quantity >= 11 THEN
+    IF NEW.quantity >= 50 THEN
         SET NEW.status = 'AMBER';
     END IF;
-    IF NEW.quantity >= 50 THEN
+    IF NEW.quantity >= 100 THEN
         SET NEW.status = 'GREEN';
     END IF;
 END
+
+/*CREATE DEFINER=`root`@`localhost` TRIGGER `lowerIngredients` AFTER INSERT ON `orders` FOR EACH ROW BEGIN
+UPDATE stock
+SET quantity=quantity-1
+WHERE ingredient_id in (
+                    SELECT i.ingredient_id
+                    FROM orders as o
+                    JOIN dish_ingredient as di
+                    JOIN ingredient as i
+                    JOIN dish as d
+                    ON i.ingredient_id=di.ingredient_id AND di.dish_id=d.dish_id AND d.dish_id=o.dish_id
+                    WHERE di.dish_id=NEW.dish_id)
+END
+*/

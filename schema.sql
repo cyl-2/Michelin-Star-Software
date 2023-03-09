@@ -10,14 +10,6 @@ CREATE TABLE notifications
     received TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-INSERT INTO notifications
-  ( user, title, message)
-VALUES
-  ( "manager", "New Customer Enquiry","Enquiry regarding 'Opening hours'"),
-  ( "some_staff_email", "Roster Request Approved!","Your manager has approved your request!"),
-  ( 'cherrylin20172027@gmail.com', 'Critical','message 3'),
-  ( 'cherrylincyl@gmail.com', 'Roster Request','message 4');
-  
 DROP TABLE IF EXISTS staff;
 
 CREATE TABLE staff 
@@ -35,21 +27,6 @@ CREATE TABLE staff
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-INSERT INTO staff
-  ( email, first_name, last_name, access_level, role, bio, password)
-VALUES
-  ( 'benc190514@gmail.com', 'Ben', 'Cahill', 'ordinary staff', 'Waiter', 'Head Waiter', 'pass'),
-  ('emma@gmail.com', 'Emma', 'Rainsford', 'managerial', 'Manager', 'Floor Manager', 'pass'),
-  ('cherrylin20172027@gmail.com', 'Cherry', 'Lin', 'managerial', 'Manager', 'Operations Manager', 'pass'),
-  ('aodh@gmail.com', 'Aodh', "O' Gallochoir", 'ordinary staff', 'Chef', 'Head Chef', 'pass'),
-  ( 'derek_don53@gmail.com', 'Derek', 'Donelly', 'ordinary staff', 'Waiter', 'Barista', 'pass'),
-  ( 'markupineL@gmail.com', 'John', 'Walsh', 'ordinary staff', 'Waiter', 'Bus Boy', 'pass'),
-  ( 'boscobox@gmail.com', 'Joey', 'Evans', 'ordinary staff', 'Waiter', 'Sommelier ', 'pass'),
-  ( 'rubricscube@gmail.com', 'Bart', 'Owens', 'ordinary staff', 'Waiter', 'Cleaner', 'pass'),
-  ( 'mbmuskery987', 'Mick', 'Burke', 'ordinary staff', 'Waiter', "Owner's son...", 'pass'),
-  ( 'ailsbury23@gmail.com', 'Terry', 'McSweeney', 'ordinary staff', 'Waiter', 'Security', 'pass');
-
-
 DROP TABLE IF EXISTS shift_requirements;
 
 CREATE TABLE shift_requirements 
@@ -60,17 +37,6 @@ CREATE TABLE shift_requirements
     min_workers INTEGER,
     unavailable TEXT
 );
-
-INSERT INTO shift_requirements
-  ( day, opening_time, closing_time, min_workers, unavailable )
-VALUES
-  ('mon', 9, 17, 3, '[1]'),
-  ('tue', 9, 17, 3, '[5]'),
-  ('wed', 9, 17, 3, '[]'),
-  ('thu', 9, 17, 3, '[]'),
-  ('fri', 0, 24, 3, '[]'),
-  ('sat', 9, 17, 3, '[]'),
-  ('sun', 9, 17, 2, '[]');
 
 DROP TABLE IF EXISTS customer;
 
@@ -97,6 +63,19 @@ VALUES
 
 
   
+DROP TABLE IF EXISTS roster;
+
+CREATE TABLE roster 
+(
+    staff_id INTEGER PRIMARY KEY,
+    mon TEXT,
+    tue TEXT,
+    wed TEXT,
+    thu TEXT,
+    fri TEXT,
+    sat TEXT,
+    sun TEXT
+);
 
 DROP TABLE IF EXISTS ingredient;
 CREATE TABLE ingredient
@@ -107,60 +86,15 @@ CREATE TABLE ingredient
     status TEXT
 );
 
-INSERT INTO ingredient
-  ( name, supplier_email, status )
-VALUES
-  ('Patty', '', 'red'),
-  ('Chips', '', 'red'),
-  ('Chicken', '', 'amber'),
-  ('Fish', '', 'green'), 
-  ('Buns', '', 'green'),
-  ('Soup', '', 'amber'),
-  ('Ice cream', '', 'red'),
-  ('Brownie', '', 'red'),
-  ('Water', '', '');
-  
-INSERT INTO ingredient ( name, supplier_email )
-VALUES
-('Lettuce', "cherrylin20172027@gmail.com");
-
 DROP TABLE IF EXISTS stock;
 
 CREATE TABLE stock
 (   
     batch_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     ingredient_id INTEGER NOT NULL,
-    stock_delivery_status INTEGER NOT NULL,
+    expiry_date DATE NOT NULL,
     quantity INTEGER NOT NULL
 );
-
-INSERT INTO stock
-( ingredient_id, stock_delivery_status, quantity)
-VALUES
-(1, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
-(2, DATE_ADD(CURDATE(), INTERVAL 0 DAY),  20),
-(3, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
-(4, DATE_ADD(CURDATE(), INTERVAL 10 DAY),  0),
-(5, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
-(6, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
-(7, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
-(8, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10),
-(9, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 10);
-
-
-/*CREATE DEFINER=`root`@`localhost` TRIGGER `lowerIngredients` AFTER INSERT ON `orders` FOR EACH ROW BEGIN
-UPDATE stock
-SET quantity=quantity-1
-WHERE ingredient_id in (
-                    SELECT i.ingredient_id
-                    FROM orders as o
-                    JOIN dish_ingredient as di
-                    JOIN ingredient as i
-                    JOIN dish as d
-                    ON i.ingredient_id=di.ingredient_id AND di.dish_id=d.dish_id AND d.dish_id=o.dish_id
-                    WHERE di.dish_id=NEW.dish_id)
-END
-*/
 
 DROP TABLE IF EXISTS dish;
 
@@ -235,16 +169,6 @@ CREATE TABLE tables
     y TEXT NOT NULL
 );
 
-INSERT INTO tables
-  ( table_id, seats, x, y )
-VALUES
-  (1, 4, "300px", "300px"), 
-  (2, 4, "450px", "300px"), 
-  (3, 4, "300px", "450px"),
-  (4, 4, "450px", "450px"),
-  (5, 4, "600px", "300px"),
-  (6, 4, "600px", "450px");
-
 DROP TABLE IF EXISTS bookings;
 
 CREATE TABLE bookings
@@ -292,35 +216,12 @@ CREATE TABLE monthly_revenue
   monthly_sales FLOAT DEFAULT 0
 );
 
-INSERT INTO monthly_revenue (the_month, monthly_sales)
-VALUES
-('2022-01-01', 5300),
-('2022-02-01', 1000),
-('2022-03-01', 5500),
-('2022-04-01', 6040),
-('2022-05-01', 7000),
-('2022-06-01', 8000),
-('2022-07-01', 8288),
-('2022-08-01', 9929),
-('2022-09-01', 10020),
-('2022-10-01', 10520),
-('2022-11-01', 11220),
-('2022-12-01', 20020);
-
 DROP TABLE IF EXISTS yearly_revenue;
 CREATE TABLE yearly_revenue
 (
 	the_year TEXT NOT NULL,
   yearly_sales FLOAT DEFAULT 0
 );
-
-INSERT INTO yearly_revenue (the_year, yearly_sales)
-VALUES
-('2020-01-01', 213500),
-('2021-01-01', 531350),
-('2022-01-01', 554685),
-('2023-01-01', 663000);
-
 
 DROP TABLE IF EXISTS user_queries;
 
@@ -345,15 +246,6 @@ CREATE TABLE transactions
     date TEXT
 );
 
-INSERT INTO transactions
-  ( username, dish_id, cost, quantity, date )
-VALUES
-  ("benc190514@gmail.com", 1, 2, 1, null), 
-  ("benc190514@gmail.com", 2, 2, 1, null), 
-  ("benc190514@gmail.com", 3, 2, 1, null),
-  ("benc190514il.com", 5, 2, 1, null);
-  
- 
 DROP TABLE IF EXISTS reviews;
 
 CREATE TABLE reviews

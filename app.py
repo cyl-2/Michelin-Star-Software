@@ -1,14 +1,14 @@
 from flask import Flask, render_template, redirect, url_for, session, g, request, make_response, flash, Markup
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm, submitModifications, AddDishForm, UserPic, cardDetails, Review, makeBooking, StockForm, Supplier
+from forms import RegistrationForm, LoginForm, ContactForm, ReplyForm, EmployeeForm, ResetPasswordForm, NewPasswordForm, CodeForm, TableForm, AddToRosterForm, RosterRequestForm, RosterRequirementsForm, ProfileForm, RejectRosterRequestForm, submitModifications, AddDishForm, UserPic, cardDetails, Review, makeBooking, StockForm, Supplier, EditSupplier
 from functools import wraps
 from flask_mysqldb import MySQL 
 from generate_roster import Roster
 import json
 from flask_mail import Mail, Message
 import datetime
-from datetime import datetime
+from datetime import datetime #
 import random, string, time
 from random import sample
 from werkzeug.utils import secure_filename
@@ -40,10 +40,10 @@ app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail.init_app(app)
 
-app.config['MYSQL_USER'] = 'er12' # someone's deets
-app.config['MYSQL_PASSWORD'] = 'meiph' # someone's deets
-app.config['MYSQL_HOST'] = 'cs1.ucc.ie'
-app.config['MYSQL_DB'] = 'cs2208_er12' # someone's deets
+app.config['MYSQL_USER'] = credentials.user
+app.config['MYSQL_PASSWORD'] = credentials.password
+app.config['MYSQL_HOST'] = credentials.host
+app.config['MYSQL_DB'] = credentials.db
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
@@ -566,6 +566,7 @@ def kitchen():
     return render_template('staff/kitchen.html',orderlist=orderlist)
 
 # updates the status of a meal
+
 @app.route('/<int:dish_id>,<int:order_id>,<int:time>/kitchenUpdate', methods=['GET','POST'])
 @staff_only
 def kitchenUpdate(dish_id,order_id, time):
@@ -587,7 +588,7 @@ def kitchenUpdate(dish_id,order_id, time):
                     ON i.ingredient_id=di.ingredient_id AND di.dish_id=d.dish_id AND d.dish_id=o.dish_id
                     WHERE di.dish_id=%s''',(dish_id,))
     ingredientDict=cur.fetchall()
-    for ingredient in ingredientDict[0]:
+    for ingredient in ingredientDict:
         cur.execute('''UPDATE stock
                         SET quantity=quantity-1
                         WHERE ingredient_id=%s
@@ -1082,11 +1083,11 @@ def manageStock():
                 FROM ingredient as i 
                 JOIN stock as s 
                 ON i.ingredient_id=s.ingredient_id
-                WHERE stock_delivery_status=%s;''', (date,))
+                WHERE expiry_date=%s;''', (date,))
     name=cur.fetchall()
 
     cur.execute('''DELETE FROM stock
-                WHERE stock_delivery_status=%s;''', (date,))
+                WHERE expiry_date=%s;''', (date,))
     mysql.connection.commit()
 
     message=""
@@ -1146,9 +1147,9 @@ scheduler.start()
 @manager_only
 def manager():
     cur = mysql.connection.cursor()
-    date = datetime.now().date()
+    date = datetime.date.today().strftime('%Y-%m-%d')
     
-    cur.execute("SELECT * FROM user_analytics")
+    cur.execute("SELECT * FROM user_analytics WHERE DATE(todays_date)=%s", (date,))
     user_analytics = cur.fetchone()
     
     # ================= START of fetching gross profit data for the past year, month and day ================= 
@@ -1224,13 +1225,15 @@ def manager():
 @manager_only
 def roster_approve(id):
     cur = mysql.connection.cursor()
-    status = "Approved"
-    cur.execute("""UPDATE roster_requests SET status=%s, last_updated=CURRENT_TIMESTAMP WHERE request_id= %s;""", (status, id))
+    cur.execute("""UPDATE roster_requests SET status='Approved', last_updated=CURRENT_TIMESTAMP WHERE request_id= %s;""", (id,))
     mysql.connection.commit()
-    cur.execute("""SELECT * roster_requests WHERE request_id= %s;""", (id,))
+
+    cur.execute("SELECT * roster_requests WHERE request_id= %s", (id,))
     employee = cur.fetchone()
+    email = employee["employee_email"]
+
     cur.execute("""INSERT INTO notifications (user, title, message)
-                    VALUES (%s, "Roster Request Approved!","Your manager has approved your request!");""", (employee["employee_email"],))
+                    VALUES (%s, 'Roster Request Approved!','Your manager has approved your request!');""", (email,))
     mysql.connection.commit()
     cur.close()
     return redirect(url_for("manager"))
@@ -1461,7 +1464,6 @@ def delete_query(id):
     return redirect(url_for("view_query"))
 
 # Manager can reply to user queries
-
 @app.route("/reply_email/<id>", methods=["GET", "POST"])
 @manager_only
 def reply_email(id):
@@ -1484,8 +1486,8 @@ def reply_email(id):
         flash("Message sent successfully.")
     return render_template("manager/reply_email.html",form=form, title="Reply", query=query)
 
-# Delete queries from users
 
+# View the ingredients masterlist
 @app.route("/view_inventory", methods=["GET", "POST"])
 @manager_only
 def view_inventory():
@@ -1496,7 +1498,7 @@ def view_inventory():
     cur.close()
     return render_template("manager/inventory.html",form=form, inventory=inventory, title="Inventory List")
 
-
+# Associate a supplier to an ingredient 
 @app.route("/add_supplier/<int:id>", methods=["GET", "POST"])
 @manager_only
 def add_supplier(id):
@@ -1509,6 +1511,19 @@ def add_supplier(id):
         cur.close()
     return redirect(url_for('view_inventory'))
 
+# Edit supplier email if the email is incorrect/supplier is changed
+@app.route("/edit_supplier/<int:id>", methods=["GET", "POST"])
+def edit_supplier(id):
+    form = EditSupplier()
+    if form.validate_on_submit():
+        data = form.email.data
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE ingredient SET supplier_email = %s WHERE ingredient_id = %s;",(data, id))
+        mysql.connection.commit()
+        cur.close()
+    return redirect(url_for('view_inventory'))
+
+# Delete an ingredient from the masterlist
 @app.route("/delete_ingredient/<int:id>")
 @manager_only
 def delete_ingredient(id):
@@ -1672,7 +1687,7 @@ def stock():
         quantity = form.quantity.data
         cur.execute("SELECT ingredient_id FROM ingredient WHERE name = %s",(ingredient_name,))
         ingredient = cur.fetchall()
-        cur.execute("""INSERT INTO stock (ingredient_id, stock_delivery_status, quantity)
+        cur.execute("""INSERT INTO stock (ingredient_id, expiry_date, quantity)
                             VALUES (%s,%s,%s);""", (ingredient[0]['ingredient_id'], date, quantity))
         mysql.connection.commit()
         cur.execute("SELECT * FROM stock JOIN ingredient ON stock.ingredient_id = ingredient.ingredient_id")
@@ -2228,7 +2243,6 @@ def cancel_booking(booking_id):
     cur.close()
 
     return redirect(url_for('cancel_bookings'))
-
 
 #Allows all staff to view the breaklist for each individual day
 @app.route('/breaks', methods=['GET','POST'])
