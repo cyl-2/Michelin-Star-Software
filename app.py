@@ -72,8 +72,8 @@ def get_staff_notifs():
 
 @app.before_request
 def logged_in():
-    g.user = session.get("username", None)
-    g.access = session.get("access_level", None)
+    g.user = "benc190514@gmail.com"#session.get("username", None)
+    g.access = "ordinary staff"#session.get("access_level", None)
     g.notifications_personal = get_personal_notifs()
     g.notifications_managerial = get_managerial_notifs()
     g.notifications_staff = get_staff_notifs()
@@ -790,7 +790,6 @@ def waiter_customize_dish(table, dish_id):
             session['mods'][table] = {}
         cur.execute('SELECT ingredient_id FROM dish_ingredient WHERE dish_id = %s',(dish_id,))
         ingredient_ids = cur.fetchall()
-        """
         min = 100
         for id in ingredient_ids:
             cur.execute('''SELECT MIN(quantity) FROM stock WHERE ingredient_id = %s
@@ -800,8 +799,6 @@ def waiter_customize_dish(table, dish_id):
             if value['MIN(quantity)'] < min:
                 min = value['MIN(quantity)']
         if min > 0:
-        """
-        if True:
             for ingredient in ingredients:
                 ingredient_id = ingredient['ingredient_id']
                 if ingredient_id not in session[str(dish_id)]:
@@ -856,7 +853,6 @@ def add_order(table, meal):
     for id in dish_ids:
         cur.execute('SELECT ingredient_id FROM dish_ingredient WHERE dish_id = %s',(id['dish_id'],))
         ingredient_ids = cur.fetchall()
-    """
     min = 100
     for id in ingredient_ids:
         cur.execute('SELECT MIN(quantity) FROM stock WHERE ingredient_id = %s ORDER BY batch_id LIMIT 1',(id['ingredient_id'],))
@@ -864,8 +860,6 @@ def add_order(table, meal):
         if value['MIN(quantity)'] < min:
             min = value['MIN(quantity)']
     if min > 0:
-    """
-    if True:
         mods = {}
         if table in session['mods']:
             if session['mods'][table] != {}:
