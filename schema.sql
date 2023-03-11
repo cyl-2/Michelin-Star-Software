@@ -102,17 +102,6 @@ CREATE TABLE dish
     day INTEGER DEFAULT 10
 );
 
-INSERT INTO dish
-  ( name, cost, cook_time, dishType, dishPic, description, allergies, day )
-VALUES
-  ('C', 50, 10, 'special', '1', 'beef description', '', 0),
-  ('Tuedays Beef', 50, 10, 'special', '1', 'beef description', '', 1),
-  ('Wednesdays Beef', 50, 10, 'special', '1', 'beef description', '', 2),
-  ('Thursdays Beef', 50, 10, 'special', '1', 'beef description', '', 3),
-  ('Fridays Beef', 50, 10, 'special', '1', 'beef description', '', 4),
-  ('Saturdays Beef', 50, 10, 'special', '1', 'beef description', '', 5),
-  ('Sundays Beef', 50, 10, 'special', '1', 'beef description', '', 6);
-  
 DROP TABLE IF EXISTS dish_ingredient;
 
 CREATE TABLE dish_ingredient
@@ -236,78 +225,3 @@ CREATE TABLE modifications
   changes TEXT,
   user TEXT
 );
-
-
-INSERT INTO dish
-  ( name, cost, cook_time, dishType, description, allergies, day)
-VALUES
-('Pizza', '13', '15', 'main', ' Italian origin consisting of a usually round, flat base of leavened wheat-based dough topped with tomatoes, cheese and other toppings', 'gluten', '10'),
-('Veg Soup', '6', '3', 'starter', 'A hearty soup consisting of mainly vegetables and a base of vegetable broth topped with delicious croutons', 'gluten', '10'),
-('Beef Burger', '10', '10', 'main', 'Classic Beef burger topped with lettuce, tomato, bacon and pickles', 'gluten', '10'),
-('Roast chicken', '6', '3', 'main', 'Succulent roast chicken served with gravy, comes with a side of mixed veg and mashed potatoes', 'Non applicable', '10'),
-('Smoked Salmon', '15', '16', 'main', 'Salmon fillet that has been cured and hot smoked topped with our secret sauce', 'soya', '10'),
-('Carbonara', '13', '10', 'main', 'Carbonara is a Roman pasta dish made with eggs, hard cheese, cured pork and black pepper', 'Dairy', '10'),
-('Bread Basket', '5', '2', 'starter', 'Selection of Bread served with a series of dips, cheese and olives', 'Cheese, Gluten', '10'),
-('Share platter chicken Wings (mild)', '20', '13', 'starter', 'Platter of BBQed chicken wings covered in our mild seasoning served with ranch', 'Dairy', '10'),
-('Hot share platter chicken Wings', '29', '13', 'starter', 'Platter of BBQed chicken wings covered in our homemade hot sauce, order if you dare!', 'Dairy', '10'),
-('Caesar Salad', '13', '6', 'main', 'Green salad of romaine lettuce and croutons dressed with lemon juice, olive oil, egg, Worcestershire sauce, anchovies, garlic, Dijon mustard, Parmesan cheese, and black pepper', 'Dairy', '10'),
-('Selction of Ice-cream', '6', '4', 'dessert', 'Selection of vanilla, chocolate and strawberry served with cream', 'Dairy', '10'),
-('Cupcake', '4', '6', 'dessert', 'Classic sponge cupcake with buttercream icing', 'Dairy', '10'),
-('Oreo Cheesecake', '6', '5', 'dessert', 'Delicious oreo cheesecake', 'Dairy', '10'),
-('Chicken Tikka Masala','15','18','main','Chicken tikka masala is a dish consisting of roasted marinated chicken chunks in a spiced sauce. The sauce is usually creamy and orange-coloured','Dairy','0');
-
-
-
-
-
-
-INSERT INTO ingredient
-(name,supplier_email,status)
-VALUES
-('lettuce',"",""),
-('tomato','',''),
-('vanilla icecream','',''),
-('chocolate icrecream','',''),
-('strawberry icrecream','',''),
-('salmon fillet','',''),
-('potatoes','',''),
-('spagetti','',''),
-('bacon','',''),
-('cheese','',''),
-('pepperoni','',''),
-('broccoli','',''),
-('carrots','',''),
-('oreo','',''),
-('croutons','',''),
-('Burger buns','',''),
-('buttercream','',''),
-('sprinkles','',''),
-('chicken','',''),
-('ranch','',''),
-('whipped cream','','');
-
-
-INSERT INTO dish_ingredient
-(dish_id,ingredient_id)
-VALUES
-(1,2),
-(1,11),
-(1,10),
-(2,15),
-(3,16),
-(3,9),
-(3,1),
-(3,2),
-(4,7),
-(4,13),
-(4,12),
-(4,1),
-(5,6),
-(6,8),
-(6,9),
-(8,20),
-(9,20),
-(10,20),
-(10,1),
-(10,2),
-(10,15);
