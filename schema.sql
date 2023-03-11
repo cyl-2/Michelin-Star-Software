@@ -53,6 +53,7 @@ CREATE TABLE customer
     profile_pic varchar(45)
 );
 
+  
 DROP TABLE IF EXISTS roster;
 
 CREATE TABLE roster 

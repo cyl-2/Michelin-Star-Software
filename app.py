@@ -52,7 +52,7 @@ mysql = MySQL(app)
 def get_personal_notifs():
     cur = mysql.connection.cursor()
     notifications = cur.execute("SELECT * FROM notifications WHERE user = %s", (g.user,))
-    notifications = cur.fetchall()
+    notifications =  cur.fetchall()
     cur.close()
     return notifications
 
@@ -790,7 +790,6 @@ def waiter_customize_dish(table, dish_id):
             session['mods'][table] = {}
         cur.execute('SELECT ingredient_id FROM dish_ingredient WHERE dish_id = %s',(dish_id,))
         ingredient_ids = cur.fetchall()
-        
         min = 100
         for id in ingredient_ids:
             cur.execute('''SELECT MIN(quantity) FROM stock WHERE ingredient_id = %s
@@ -896,7 +895,7 @@ def cancel_meal(table, meal_id):
             WHERE table_id = %s 
             AND status != %s
             AND order_id = %s
-        """,(table, 'complete', meal_id)
+        """,(table, 'completed', meal_id)
     )
     mysql.connection.commit()
 
@@ -1695,7 +1694,6 @@ def stock():
 
     return render_template("manager/stock.html", stockList=stock, ingredientList=ingredientList, form=form)
 
-
 ##############################################################################################################################################
 ##############################################################################################################################################
 ##############################################################################################################################################
@@ -2202,12 +2200,11 @@ def booking():
                 """
                 mail.send(msg)
 
-                cur.execute("""INSERT INTO notifications (user, title, message)
-                        VALUES (%s, "Reservation Confirmed","Your reservation has been confirmed, please check your email.");""", (g.user, booking_id))
-                mysql.connection.commit()
-                cur.close()
+                cur.execute('SELECT booking_id FROM bookings WHERE time = %s AND date = %s AND booker_id = %s',(time, date, customer_id))
+                booking = cur.fetchall()
+                booking_id = booking[0]['booking_id']
 
-                return redirect(url_for('menu'))
+                return redirect(url_for('cancel_bookings'))
     return render_template('customer/booking.html', form=form)
 
 # menu where customers' bookings can be cancelled

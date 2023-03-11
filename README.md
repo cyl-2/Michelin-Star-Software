@@ -192,7 +192,61 @@ By default, the app redirects guest users to authenticate. In order to access th
 
 ## Code-base structure
 
-> some tree
+C:.
+├───picture
+├───static
+│   ├───assets
+│   │   ├───css
+│   │   ├───fonts
+│   │   │   ├───datta
+│   │   │   │   └───fonts
+│   │   │   ├───feather
+│   │   │   │   ├───css
+│   │   │   │   └───fonts
+│   │   │   └───fontawesome
+│   │   │       ├───css
+│   │   │       └───webfonts
+│   │   ├───images
+│   │   │   ├───browser
+│   │   │   ├───slider
+│   │   │   ├───user
+│   │   │   └───widget
+│   │   ├───js
+│   │   │   └───pages
+│   │   ├───plugins
+│   │   │   ├───amchart
+│   │   │   │   └───js
+│   │   │   │       └───images
+│   │   │   ├───animation
+│   │   │   │   └───css
+│   │   │   ├───bootstrap
+│   │   │   │   ├───css
+│   │   │   │   └───js
+│   │   │   ├───chart-morris
+│   │   │   │   ├───css
+│   │   │   │   └───js
+│   │   │   ├───google-maps
+│   │   │   │   └───js
+│   │   │   ├───jquery
+│   │   │   │   └───js
+│   │   │   ├───jquery-scrollbar
+│   │   │   │   ├───css
+│   │   │   │   └───js
+│   │   │   └───jquery-ui
+│   │   │       └───js
+│   │   └───scss
+│   ├───images-menu
+│   └───picture
+├───templates
+│   ├───customer
+│   ├───includes
+│   ├───layouts
+│   ├───manager
+│   ├───password_management
+│   └───staff
+└───tests
+    ├───functional
+    └───unit
 
 <br />
 
